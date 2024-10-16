@@ -1,0 +1,27 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Sun Sep  1 11:49:42 CEST 2024
+* Job name:             run_posterior
+* Job id:               23179718
+* User:                 cmurray
+* Account:              lsst
+* Submit host:          cca001
+* Partition:            htc
+* Quality of service:   normal
+* Nodelist:             ccwslurm0141
+* Operating System:     CentOS Linux release 7.9.2009 (Core)
+* Architecture:         x86_64
+**********************************************************************
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Sun Sep  1 11:49:57 CEST 2024
+Job informations can be found using these commands:
+Accounting:
+sacct -j 23179718
+Efficiency:
+seff 23179718
+****************************************************************
