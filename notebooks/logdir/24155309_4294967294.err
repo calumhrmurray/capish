@@ -1,0 +1,26 @@
+Running 300000 simulations in 300000 batches.:   0%|          | 0/300000 [00:00<?, ?it/s]Running 300000 simulations in 300000 batches.:   0%|          | 0/300000 [00:21<?, ?it/s]
+Traceback (most recent call last):
+  File "/pbs/home/c/cmurray/cluster_likelihood/run_posteriors.py", line 235, in <module>
+    unbinned_posterior = infer( unbinned_simulator.run_simulation , 
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/sbi/inference/base.py", line 72, in infer
+    theta, x = simulate_for_sbi(
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/sbi/inference/base.py", line 495, in simulate_for_sbi
+    x = simulate_in_batches(
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/sbi/simulators/simutils.py", line 74, in simulate_in_batches
+    simulation_outputs = Parallel(n_jobs=num_workers)(
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 1952, in __call__
+    return output if self.return_generator else list(output)
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 1595, in _get_outputs
+    yield from self._retrieve()
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 1699, in _retrieve
+    self._raise_error_fast()
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 1734, in _raise_error_fast
+    error_job.get_result(self.timeout)
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 736, in get_result
+    return self._return_or_raise()
+  File "/pbs/home/c/cmurray/.conda/envs/sbi/lib/python3.9/site-packages/joblib/parallel.py", line 754, in _return_or_raise
+    raise self._result
+joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated. This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker.
+
+The exit codes of the workers are {SIGKILL(-9), SIGKILL(-9), SIGKILL(-9), SIGKILL(-9)}
+slurmstepd: error: Detected 23 oom_kill events in StepId=24155309.batch. Some of the step tasks have been OOM Killed.

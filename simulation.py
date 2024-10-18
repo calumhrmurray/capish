@@ -28,7 +28,8 @@ class Universe_simulation:
             'c': 3,
             'sigma': 0.3,
             'r': 0.0,
-            'beta': 0
+            'beta': 0,
+            'c_rho': 0.0
         }
 
         # Specify the variable and fixed parameters
@@ -69,6 +70,8 @@ class Universe_simulation:
         self.z_bins_sel = None
         self.l_bins_sel = None
         self.selection_function = None
+        self.correlation_mass_evolution = False
+        self.cme_mu_bins = None
 
     def _get_parameter_set(self, param_values):
         """
@@ -108,7 +111,7 @@ class Universe_simulation:
         Core function to simulate cluster catalogs and selection function.
         """
         # make cosmo
-        Om0, sigma8, w0 , wa, alpha_l , c_l , sigma_l, r, beta = full_parameter_set
+        Om0, sigma8, w0 , wa, alpha_l , c_l , sigma_l, r, beta, c_rho = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         Om0 = float(Om0)
@@ -156,7 +159,7 @@ class Universe_simulation:
         scale_factors = 1 / (z_bin_centers + 1)
 
         # Compute comoving volumes only once
-        dV = cosmo.comoving_volume_element( scale_factors ) #cosmo.comoving_volume( scale_factor_bins[1:]) - cosmo.comoving_volume( scale_factor_bins[:-1] )
+        dV = cosmo.comoving_volume_element( scale_factors ) 
         da = scale_factor_bins[:-1] - scale_factor_bins[1:]
         
         cluster_abundance = []
@@ -178,54 +181,83 @@ class Universe_simulation:
 
         return cat_mu, cat_redshift
 
-    def mass_observable_relation( self, mu , z , full_parameter_set , cosmo ):
-        
-        Om0, sigma8, w0 , wa, alpha_l , c_l , sigma_l, r , beta_l = full_parameter_set
+    def mass_observable_relation(self, mu, z, full_parameter_set, cosmo):
+        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         alpha_l = float(alpha_l)
         sigma_l = float(sigma_l)
         c_l = float(c_l)
         r = float(r)
-        
 
-        # I don't know if a pivot redshift is needed or not, I think it does help
-        mean_l = c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0( 1/(1+z) ) / cosmo.h_over_h0( 1/( 1 + self.z_p )) )
+        # Pivot redshift for mass-observable relation
+        mean_l = c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
         mean_mwl = self.c_mwl + self.alpha_mwl * mu
 
-        cov = [ [ sigma_l**2 , r * self.sigma_mwl * sigma_l ] , 
-                [ r * self.sigma_mwl * sigma_l , self.sigma_mwl**2 ] ]
-        
         sampled_l = []
         sampled_mwl = []
         sampled_z = []
-        
-        # selection function
+        sampled_mu = []
+
+        # Selection function
         if self.use_selection_function:
-            for i in np.arange( 0 , len( self.z_bins_sel[1:] ) ):
-                for j in np.arange( 0 , len( self.l_bins_sel[1:] ) ):
-                    bin_indices = np.where( ( z > self.z_bins_sel[i] ) & \
-                                            ( z < self.z_bins_sel[i+1]  ) & \
-                                            ( mean_l > self.l_bins_sel[j] ) & \
-                                            ( mean_l < self.l_bins_sel[j+1]  ) )[0]
-                    # randomly sample indices
-                    sampled_indices = np.random.choice( bin_indices , 
-                                                        int( self.selection_function[i][j] * len( mu[ bin_indices ] ) ), 
-                                                        replace = False )        
-                    sampled_l.append( mean_l[ sampled_indices ] )
-                    sampled_mwl.append( mean_mwl[ sampled_indices ] )
-                    sampled_z.append( z[ sampled_indices ] )
-                    
-        mean_l = np.concatenate( sampled_l )
-        mean_mwl = np.concatenate( sampled_mwl )
-        z = np.concatenate( sampled_z )
+            for i in np.arange(0, len(self.z_bins_sel[1:])):
+                for j in np.arange(0, len(self.l_bins_sel[1:])):
+                    bin_indices = np.where((z > self.z_bins_sel[i]) &
+                                           (z < self.z_bins_sel[i+1]) &
+                                           (mean_l > self.l_bins_sel[j]) &
+                                           (mean_l < self.l_bins_sel[j+1]))[0]
+                    # Randomly sample indices
+                    sampled_indices = np.random.choice(bin_indices, 
+                                                       int(self.selection_function[i][j] * len(mu[bin_indices])), 
+                                                       replace=False)
+                    sampled_l.append( mean_l[sampled_indices] )
+                    sampled_mwl.append( mean_mwl[sampled_indices] )
+                    sampled_z.append( z[sampled_indices] )
+                    sampled_mu.append( mu[sampled_indices] )
 
-        noise = np.random.multivariate_normal( [ 0 , 0 ] , cov = cov  , size = len( mean_l ) )
+            mean_l = np.concatenate( sampled_l )
+            mean_mwl = np.concatenate( sampled_mwl )
+            z = np.concatenate( sampled_z )
+            mu = np.concatenate( sampled_mu )
 
-        ln_richness = mean_l + noise.T[0]
-        lnM_wl = mean_mwl + noise.T[1]
 
-        return np.exp( ln_richness  ) , np.log10( np.exp( lnM_wl ) ) , z
+        # Initialize noise array
+        total_noise = np.zeros( (len( mu ) , 2 ) )
+
+        # Mass-evolution correlation
+        if self.correlation_mass_evolution:
+
+            for i in np.arange( 0 , len( self.cme_mu_bins[:-1] ) ):
+                
+                bin_indices = np.where( ( mu > self.cme_mu_bins[i] ) & ( mu < self.cme_mu_bins[i+1] ))[0]
+
+                # Calculate mass-evolution-dependent covariance for each bin
+                r_mu = r #* np.mean( mus[bin_indices] ) + c_rho
+                
+                cov = [[ sigma_l**2, r_mu * sigma_l * self.sigma_mwl ], 
+                       [ r_mu * sigma_l * self.sigma_mwl, self.sigma_mwl**2 ]]
+                
+                noise = np.random.multivariate_normal( [0, 0], 
+                                                       cov = cov, 
+                                                       size=len( mu[bin_indices] ) )
+
+                # Add noise to corresponding indices
+                total_noise[bin_indices] = noise
+
+        else:
+            # Default covariance without mass evolution
+            cov = [[sigma_l**2, r * sigma_l * self.sigma_mwl], 
+                   [r * sigma_l * self.sigma_mwl, self.sigma_mwl**2]]
+
+            total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
+
+        # Apply noise to mean values
+        ln_richness = mean_l + total_noise.T[0]
+        lnM_wl = mean_mwl + total_noise.T[1]
+
+        return np.exp(ln_richness), np.log10(np.exp(lnM_wl)), z
+
     
 
     def three_dim_counts(self, richness, log10M_wl, z_clusters ):
