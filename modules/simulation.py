@@ -187,7 +187,7 @@ class Universe_simulation:
 
         # replace this with equation (7), then poisson sample it
         if self.richness_mass_relation == 'hod-like':
-            mean_l = np.log( ( ))c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
+            mean_l = c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
         elif self.richness_mass_relation == 'power-law':
             mean_l = c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
             
