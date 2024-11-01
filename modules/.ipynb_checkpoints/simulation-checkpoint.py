@@ -41,13 +41,13 @@ class Universe_simulation:
         self.for_simulate_for_sbi = for_simulate_for_sbi
         # HMF properties
         self.dlog10m = 0.01
-        self.log10ms = np.arange(13., 15.5, self.dlog10m)
+        self.log10ms = np.arange( 13., 15.5, self.dlog10m )
         self.Ms = 10**self.log10ms
         self.hmf = ccl.halos.MassFuncTinker10(mass_def='200m')
         # Create mass and redshift grids
         self.z_bins = np.arange(0, 1.2, 0.05)
         self.zs = (self.z_bins[1:] + self.z_bins[:-1]) / 2.
-        mass_grid, redshift_grid = np.meshgrid(self.log10ms, self.zs)
+        mass_grid, redshift_grid = np.meshgrid( self.log10ms, self.zs )
         self.mass_grid = mass_grid
         self.redshift_grid = redshift_grid
         self.mass_values = self.mass_grid.flatten()
@@ -72,6 +72,30 @@ class Universe_simulation:
         self.selection_function = None
         self.correlation_mass_evolution = False
         self.cme_mu_bins = None
+        self.richness_mass_relation = 'power-law'
+    
+    def set_bins( self, z_bins=None, log10m_bins=None ):
+        """
+        Set new redshift and mass bins and reinitialize dependent properties.
+
+        Parameters:
+            z_bins (np.ndarray): Array of redshift bin edges.
+            m_bins (np.ndarray): Array of log10 mass bin edges.
+        """
+        if z_bins is not None:
+            self.z_bins = z_bins
+            self.zs = (self.z_bins[1:] + self.z_bins[:-1]) / 2.
+
+        if m_bins is not None:
+            self.log10ms = log10m_bins
+            self.Ms = 10**self.log10ms
+
+        # Reinitialize any dependent properties
+        mass_grid, redshift_grid = np.meshgrid(self.log10ms, self.zs)
+        self.mass_grid = mass_grid
+        self.redshift_grid = redshift_grid
+        self.mass_values = self.mass_grid.flatten()
+        self.redshift_values = self.redshift_grid.flatten()
 
     def _get_parameter_set(self, param_values):
         """
@@ -170,8 +194,8 @@ class Universe_simulation:
         cluster_abundance = np.array(cluster_abundance).flatten()
 
         # Use np.repeat to create the catalog based on counts in cluster_abundance
-        cat_mass = np.repeat(self.mass_values, cluster_abundance)
-        cat_redshift = np.repeat(self.redshift_values, cluster_abundance)
+        cat_mass = np.repeat( self.mass_values, cluster_abundance )
+        cat_redshift = np.repeat( self.redshift_values, cluster_abundance )
         cat_mu = np.log( 10 ** cat_mass / 1e14 )
 
         return cat_mu, cat_redshift
