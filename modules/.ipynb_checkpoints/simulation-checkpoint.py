@@ -72,7 +72,7 @@ class Universe_simulation:
         self.selection_function = None
         self.correlation_mass_evolution = False
         self.cme_mu_bins = None
-        self.richness_mass_relation = 'power-law'
+        self.richness_mass_relation = self.power_law
     
     def set_bins( self, z_bins=None, log10m_bins=None ):
         """
@@ -86,7 +86,7 @@ class Universe_simulation:
             self.z_bins = z_bins
             self.zs = (self.z_bins[1:] + self.z_bins[:-1]) / 2.
 
-        if m_bins is not None:
+        if log10m_bins is not None:
             self.log10ms = log10m_bins
             self.Ms = 10**self.log10ms
 
@@ -199,8 +199,11 @@ class Universe_simulation:
         cat_mu = np.log( 10 ** cat_mass / 1e14 )
 
         return cat_mu, cat_redshift
+    
+    def power_law( self , mu , z , alpha_l , c_l , beta_l , cosmo ):
+        return c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
 
-    def mass_observable_relation(self, mu, z, full_parameter_set, cosmo):
+    def mass_observable_relation(self, mu, z, full_parameter_set, cosmo ):
         Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
@@ -209,12 +212,7 @@ class Universe_simulation:
         c_l = float(c_l)
         r = float(r)
 
-        # replace this with equation (7), then poisson sample it
-        if self.richness_mass_relation == 'hod-like':
-            mean_l = c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
-        elif self.richness_mass_relation == 'power-law':
-            mean_l = c_l + alpha_l * mu + beta_l * np.log(cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p)))
-            
+        mean_l = self.richness_mass_relation( mu , z , alpha_l , c_l , beta_l , cosmo )
         mean_mwl = self.c_mwl + self.alpha_mwl * mu
 
         sampled_l = []
