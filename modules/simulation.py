@@ -29,7 +29,9 @@ class Universe_simulation:
             'sigma': 0.3,
             'r': 0.0,
             'beta': 0,
-            'c_rho': 0.0
+            'c_rho': 0.0,
+            'B':0,
+            'log10Mmin':0,
         }
 
         # Specify the variable and fixed parameters
@@ -41,7 +43,7 @@ class Universe_simulation:
         self.for_simulate_for_sbi = for_simulate_for_sbi
         # HMF properties
         self.dlog10m = 0.01
-        self.log10ms = np.arange( 13., 15.5, self.dlog10m )
+        self.log10ms = np.arange( 13., 16, self.dlog10m )
         self.Ms = 10**self.log10ms
         self.hmf = ccl.halos.MassFuncTinker10(mass_def='200m')
         # Create mass and redshift grids
@@ -55,7 +57,7 @@ class Universe_simulation:
         # Bin settings for stacked and unbinned counts
         self.richness_bins = np.logspace(np.log10(20), np.log10(300), 15)
         self.redshift_bins = np.linspace(0.025, 1.125, 6)
-        self.small_log10Mwl_bins = np.arange(12.5, 15.5, 0.1)
+        self.small_log10Mwl_bins = np.arange(12.5, 16, 0.1)
         self.small_richness_bins = np.logspace(np.log10(20), np.log10(300), 15)
         self.small_redshift_bins = np.linspace(0.025, 1.125, 6)
         self.dOmega = 0.5 * 4 * np.pi
@@ -73,6 +75,14 @@ class Universe_simulation:
         self.correlation_mass_evolution = False
         self.cme_mu_bins = None
         self.richness_mass_relation = self.power_law
+    
+    def set_richness_mass_relation( self , richness_mass_relation_name ):
+        if richness_mass_relation_name == 'power law':
+            self.richness_mass_relation = self.power_law
+        elif richness_mass_relation_name == 'halo model':
+            self.richness_mass_relation = self.halo_model
+        else:
+            print('That mass richness relation is not implemented.')
     
     def set_bins( self, z_bins=None, log10m_bins=None ):
         """
@@ -135,7 +145,7 @@ class Universe_simulation:
         Core function to simulate cluster catalogs and selection function.
         """
         # make cosmo
-        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho = full_parameter_set
+        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         Om0 = float(Om0)
@@ -199,12 +209,9 @@ class Universe_simulation:
         cat_mu = np.log( 10 ** cat_mass / 1e14 )
 
         return cat_mu, cat_redshift
-    
-    def power_law( self , mu , z , alpha_l , c_l , beta_l , cosmo ):
-        return c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
 
     def mass_observable_relation(self, mu, z, full_parameter_set, cosmo ):
-        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho = full_parameter_set
+        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         alpha_l = float(alpha_l)
@@ -212,7 +219,7 @@ class Universe_simulation:
         c_l = float(c_l)
         r = float(r)
 
-        mean_l = self.richness_mass_relation( mu , z , alpha_l , c_l , beta_l , cosmo )
+        mean_l = self.richness_mass_relation( mu , z , Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo )
         mean_mwl = self.c_mwl + self.alpha_mwl * mu
 
         sampled_l = []
@@ -278,8 +285,20 @@ class Universe_simulation:
         lnM_wl = mean_mwl + total_noise.T[1]
 
         return np.exp(ln_richness), np.log10(np.exp(lnM_wl)), z
-
     
+    def power_law( self ,  mu , z , Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
+        mean_ln_l = c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
+        # poisson realisation of this values
+        ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l ) ) )
+        return ln_l
+    
+    def halo_model( self , mu , z ,  Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo ):
+        Mmin = 10**log10Mmin
+        M1 = 10**( B ) * Mmin
+        M = ( np.exp( mu ) * 1e14 )
+        mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + 1 ) )**beta_l
+        mean_l[np.logical_or(mean_l < 0, np.isnan(mean_l))] = 0
+        return np.log( np.random.poisson( lam = mean_l ) + 1 )
 
     def three_dim_counts(self, richness, log10M_wl, z_clusters ):
         """
