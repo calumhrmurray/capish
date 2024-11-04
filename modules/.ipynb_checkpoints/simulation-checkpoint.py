@@ -22,6 +22,7 @@ class Universe_simulation:
         self.available_params = {
             'omega_m': 0.3,
             'sigma_8': 0.8,
+            'h': 0.7,
             'w_0': -1,
             'w_a': 0,
             'alpha': 0.8,
@@ -64,7 +65,6 @@ class Universe_simulation:
         self.alpha_mwl = 1
         self.sigma_mwl = 0.3
         self.c_mwl = np.log(1e14)
-        self.H0 = 70
         self.transfer_function = 'boltzmann_camb'
         self.include_mwl_measurement_errors = False
         self.z_p = 0.3
@@ -75,6 +75,10 @@ class Universe_simulation:
         self.correlation_mass_evolution = False
         self.cme_mu_bins = None
         self.richness_mass_relation = self.power_law
+        # for the hmf correction, default is set to no correction values
+        self.s = 0
+        self.q = 1
+        self.Mstar = 10**13.8
     
     def set_richness_mass_relation( self , richness_mass_relation_name ):
         if richness_mass_relation_name == 'power law':
@@ -145,18 +149,19 @@ class Universe_simulation:
         Core function to simulate cluster catalogs and selection function.
         """
         # make cosmo
-        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
+        Om0, sigma8, h, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         Om0 = float(Om0)
         sigma8 = float(sigma8)
+        h = float(h)
         w0 = float(w0)
         wa = float(wa)
                         
         cosmo_params = {
                         'Omega_c': Om0 -0.05, 
                         'Omega_b': 0.05,
-                        'h': self.H0 / 100,    
+                        'h': h,    
                         'n_s': 0.96,
                         'sigma8': sigma8,   
                         'Omega_k': 0.0 ,
@@ -195,7 +200,7 @@ class Universe_simulation:
 
         for i, a in enumerate(scale_factors):
             # Calculate halo mass function for the current redshift (as scalar `a`)
-            dndlog10M = self.hmf( cosmo, self.Ms, a )
+            dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
 
             # Compute counts in each bin
             counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega * da[i] )
@@ -210,10 +215,14 @@ class Universe_simulation:
 
         return cat_mu, cat_redshift
 
+    def hmf_correction( self , M , Mstar , s , q ):
+        return s * np.log10( M / Mstar ) + q
+
     def mass_observable_relation(self, mu, z, full_parameter_set, cosmo ):
-        Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
+        Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
+        # I am not sure that this is needed actually
         alpha_l = float(alpha_l)
         sigma_l = float(sigma_l)
         c_l = float(c_l)
@@ -296,7 +305,7 @@ class Universe_simulation:
         Mmin = 10**log10Mmin
         M1 = 10**( B ) * Mmin
         M = ( np.exp( mu ) * 1e14 )
-        mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + 1 ) )**beta_l
+        mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + self.z_p ) )**beta_l
         mean_l[np.logical_or(mean_l < 0, np.isnan(mean_l))] = 0
         return np.log( np.random.poisson( lam = mean_l ) + 1 )
 

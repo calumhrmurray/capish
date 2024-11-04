@@ -68,42 +68,65 @@ mwl_std = np.array( [ mwl_std_0, mwl_std_1, mwl_std_2 ] ).T
 stacked_simulator = simulation.Universe_simulation( 'stacked_counts' ,
                                                     variable_params=['omega_m', 
                                                                      'sigma_8', 
+                                                                     'h',
                                                                      'alpha' , 
                                                                      'B' ,
                                                                      'log10Mmin',
+                                                                     'beta'
                                                                      'sigma' ],
-                                                    fixed_params={'w_0': -1, 'w_a': 0 , 'beta':0} )
+                                                    fixed_params={'w_0': -1, 'w_a': 0 } )
 stacked_simulator.selection_richness = 0
 stacked_simulator.dOmega = 1500/41253 * 4*np.pi
 stacked_simulator.richness_bins = des_lambda_bins
 stacked_simulator.redshift_bins = des_z_bins
 stacked_simulator.sigma_mwl = 0.3
-#stacked_simulator.dlog10m = 0.01
-#stacked_simulator.log10ms = np.arange( 13.1, 15.5, stacked_simulator.dlog10m)
 stacked_simulator.include_mwl_measurement_errors = True
+# measure errors for weak lensing masses
 stacked_simulator.mwl_std = mwl_std
 stacked_simulator.correlation_mass_evolution = False
 stacked_simulator.set_richness_mass_relation( 'halo model' )
+# set the Aemulus correction to the halo mass function
+stacked_simulator.s = 0.037
+stacked_simulator.q = 1.008
 
-
+# set the binning used to simulate a cluster catalogue
 stacked_simulator.set_bins( z_bins = np.arange( 0.15 , 0.7 , 0.05 ) , log10m_bins =  np.arange( 12.8, 16 , 0.01))
 
 # Assuming the arrays are already of the same shape and are 2D
 n_clusters = np.array( [ n_clusters_0, n_clusters_1, n_clusters_2 ]).T
 mwl_mean = np.array( [ mwl_mean_0, mwl_mean_1, mwl_mean_2 ] ).T
 
-# make sure that this is the correct size
-prior = utils.BoxUniform( low = [ 0.05 , 0.5 , 0.4 , np.log10( 10. ) , 10. , 0.05 ] , 
-                          high = [ 1.0 , 1.5 , 2, np.log10( 30. ) , 14. , 0.5  ] )
+# bit messy at the moment
+from torch.distributions import Distribution, Uniform, Normal
 
-# infer posteriors
-des_posterior = infer( stacked_simulator.run_simulation ,
-                       prior,
-                       method = "SNPE",
-                       num_simulations = 60000 ,
-                       num_workers = 128 )
+# Define individual priors with float32 tensors
+dtype = torch.float32
+prior_om = Uniform(torch.tensor([0.05], dtype=dtype), torch.tensor([1.0], dtype=dtype))
+prior_s8 = Uniform(torch.tensor([0.5], dtype=dtype), torch.tensor([1.5], dtype=dtype))
+prior_h = Normal(torch.tensor([0.7], dtype=dtype), torch.tensor([0.1], dtype=dtype))  # Normal prior on h
+prior_alpha = Uniform(torch.tensor([0.4], dtype=dtype), torch.tensor([1.2], dtype=dtype))
+prior_B = Uniform(torch.tensor([np.log10(10)], dtype=dtype), torch.tensor([np.log10(30)], dtype=dtype))
+prior_log10Mmin = Uniform(torch.tensor([10.0], dtype=dtype), torch.tensor([14.0], dtype=dtype))
+prior_beta = Uniform(torch.tensor([-5.0], dtype=dtype), torch.tensor([5.0], dtype=dtype))
+prior_sigma = Uniform(torch.tensor([0.05], dtype=dtype), torch.tensor([0.5], dtype=dtype))
 
-with open('/sps/euclid/Users/cmurray/clusters_likelihood/des_posterior_halo_model.pkl', "wb") as handle:
+# Combine the priors into a list
+priors = [prior_om, prior_s8, prior_h, prior_alpha, prior_B, prior_log10Mmin, prior_beta, prior_sigma]
+
+
+# Process the combined prior to be used in inference
+#prior = process_prior(priors)
+
+# Run inference
+des_posterior = infer(
+    stacked_simulator.run_simulation,
+    priors,
+    method="SNPE",
+    num_simulations=20000,
+    num_workers=128
+)
+
+with open('/sps/euclid/Users/cmurray/clusters_likelihood/des_posterior_halo_model_redshift_evolution_with_h_normal_prior.pkl', "wb") as handle:
     pickle.dump( des_posterior, handle)
 
 
