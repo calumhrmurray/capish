@@ -122,7 +122,7 @@ des_posterior = infer(
     stacked_simulator.run_simulation,
     priors,
     method="SNPE",
-    num_simulations=20000,
+    num_simulations=60000,
     num_workers=128
 )
 
