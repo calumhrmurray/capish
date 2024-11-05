@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # SLURM options:
-#SBATCH --job-name=lensing_masses    # Job name
+#SBATCH --job-name=run_pinocchio    # Job name
 #SBATCH --output=/sps/euclid/Users/cmurray/sel_function_logs/logdir/%A_%a.out
 #SBATCH --error=/sps/euclid/Users/cmurray/sel_function_logs/logdir/%A_%a.err
 #SBATCH --partition=hpc               # Partition choice (htc by default)
