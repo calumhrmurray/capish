@@ -14,6 +14,7 @@ import pickle
 import scipy.stats as stats
 from matplotlib.cm import get_cmap
 from torch.distributions import Distribution, Uniform, Normal
+import pyccl as ccl
 
 pinocchio_mock = np.load('/pbs/home/c/cmurray/cluster_likelihood/pinocchio_data_vector/data_vector_pinocchio_mock_0.pkl' , allow_pickle= True )
 
