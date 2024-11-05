@@ -284,7 +284,7 @@ class Universe_simulation:
 
         else:
             # Default covariance without mass evolution
-            cov = [[sigma_l**2, r * sigma_l * self.sigma_mwl], 
+            cov = [[sigma_l**2 , r * sigma_l * self.sigma_mwl], 
                    [r * sigma_l * self.sigma_mwl, self.sigma_mwl**2]]
 
             total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
