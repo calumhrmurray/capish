@@ -1,4 +1,4 @@
-from scipy.stats import norm
+from scipy.stats import norm, poisson
 import numpy as np
 
 class Richness_mass_relation():
@@ -54,10 +54,12 @@ class Richness_mass_relation():
 
         mu = self.proxy_mu_f(logm, z, theta_rm)
         sigma = self.proxy_sigma_f(logm, z, theta_rm)
+        if 'poisson_scatter' not in self.which: 
+            return mu + sigma * np.random.randn(len(logm))
         if 'poisson_scatter' in self.which: 
-            sigma2 = sigma**2 + 1/np.exp(mu)  
-            sigma = sigma2**.5
-        return mu + sigma * np.random.randn(len(logm))
+            l_mu = np.exp(mu)
+            ln_l_mu_rand_poisson = np.log(np.random.poisson(lam = l_mu))
+        return ln_l_mu_rand_poisson + sigma * np.random.randn(len(logm))
 
     
     
