@@ -7,7 +7,7 @@ from scipy import interpolate
 import model_completeness as comp
 import model_purity as pur
 import model_halo_mass_function as hmf
-import model_richness_mass_relation as rm_relation
+import class_richness_mass_relation as rm_relation
 
 def binning(edges): return [[edges[i],edges[i+1]] for i in range(len(edges)-1)]
 
@@ -82,34 +82,14 @@ def compute_halo_bias_grid(logm_grid, z_grid, cosmo, cM = 'Diemer15'):
         tabulated dzdlogMdOmega
     """
     concentration_grid = np.zeros([len(logm_grid), len(z_grid)])
-    halo_bias_200m = np.zeros([len(logm_grid), len(z_grid)])
-    deff = ccl.halos.massdef.MassDef(200, 'critical')
-    if cM == 'Diemer15':
-        conc = ccl.halos.concentration.ConcentrationDiemer15(mass_def=deff)
-    if cM == 'Duffy08':
-        conc = ccl.halos.concentration.ConcentrationDuffy08(mass_def=deff)
-    if cM == 'Prada12':
-        conc = ccl.halos.concentration.ConcentrationPrada12(mass_def=deff)
-    if cM == 'Bhattacharya13':
-        conc = ccl.halos.concentration.ConcentrationBhattacharya13(mass_def=deff)
-    
-    for i, z in enumerate(z_grid):
-        lnc = np.log(conc._concentration(cosmo, 10**logm_grid, 1./(1. + z))) 
-        concentration_grid[:,i] = np.exp(lnc)  
-        
-    definition_200m = ccl.halos.massdef.MassDef(200, 'matter')
-    halobias_200m_fct = ccl.halos.hbias.tinker10.HaloBiasTinker10(mass_def='200m', mass_def_strict=True)
-    m200c_to_m200m = ccl.halos.massdef.mass_translator(mass_in=deff, mass_out=definition_200m, concentration=conc)
+    halo_bias = np.zeros([len(logm_grid), len(z_grid)])
+    massdef = ccl.halos.massdef.MassDef('vir', 'critical')
+    halobias_fct = ccl.halos.hbias.tinker10.HaloBiasTinker10(mass_def=massdef, mass_def_strict=True)
 
     for i, z in enumerate(z_grid):
-        logm_grid_200m = np.log10(m200c_to_m200m(cosmo, 10**logm_grid, 1/(1+z)))
-        halo_bias_200m[:,i] = halobias_200m_fct(cosmo, 10**logm_grid_200m, 1/(1+z))
+        halo_bias[:,i] = halobias_fct(cosmo, 10**logm_grid, 1/(1+z))
+    return halo_bias
 
-    return halo_bias_200m
-    
-    for i, z in enumerate(z_grid):
-        dNdzdlogMdOmega_grid[:,i] = hmf.dndlog10M(logm_grid ,z, cosmo, hmd) * hmf.dVdzdOmega(z, cosmo)
-    return dNdzdlogMdOmega_grid
 
 def compute_purity_grid(richness_grid, z_grid, theta_purity):
     r"""
@@ -155,7 +135,7 @@ def compute_completeness_grid(logm_grid, z_grid, theta_completeness):
     completeness_grid = np.reshape(completeness_flat, [len(logm_grid), len(z_grid)])
     return completeness_grid
 
-def compute_richness_mass_relation_grid(richness_grid, logm_grid, z_grid, theta_rm):
+def compute_richness_mass_relation_grid(richness_grid, logm_grid, z_grid, theta_rm, model_richness_mass_relation):
     r"""
     based on https://arxiv.org/pdf/1904.07524.pdf
     Attributes:
@@ -173,6 +153,8 @@ def compute_richness_mass_relation_grid(richness_grid, logm_grid, z_grid, theta_
     rm_grid : array
         tabulated richness-mass relation
     """
+    RM = rm_relation.Richness_mass_relation()
+    RM.select(which = model_richness_mass_relation)
     rm_relation_grid = np.zeros([len(richness_grid), len(logm_grid), len(z_grid)])
     richness_tab = np.zeros([len(richness_grid), len(logm_grid), len(z_grid)])
     logm_tab = np.zeros([len(richness_grid), len(logm_grid), len(z_grid)])
@@ -180,11 +162,12 @@ def compute_richness_mass_relation_grid(richness_grid, logm_grid, z_grid, theta_
     for i, richness in enumerate(richness_grid): richness_tab[i,:,:] = richness
     for i, logm in enumerate(logm_grid): logm_tab[:,i,:] = logm
     for i, z in enumerate(z_grid): z_tab[:,:,i] = z
-    mu = rm_relation.proxy_mu_f(logm_tab, z_tab, theta_rm)
-    sigma = rm_relation.proxy_sigma_f(logm_tab, z_tab, theta_rm)
-    pdf = (1/richness_tab)*np.exp(-(np.log(richness_tab)-mu)**2/(2*sigma**2))/(np.sqrt(2*np.pi*sigma**2))
-    #pdf = rm_relation.pdf_richness_mass_relation(richness_tab, logm_tab, z_tab, theta_rm)
+    mu = RM.proxy_mu_f(logm_tab, z_tab, theta_rm)
+    sigma = RM.proxy_sigma_f(logm_tab, z_tab, theta_rm)
+    pdf = RM.pdf_richness_mass_relation(richness_tab, logm_tab, z_tab, theta_rm)
     return pdf, mu, sigma
+
+#pdf = (1/richness_tab)*np.exp(-(np.log(richness_tab)-mu)**2/(2*sigma**2))/(np.sqrt(2*np.pi*sigma**2))
 
 def recompute_count_modelling(count_modelling, compute = None, grids = None, params = None):
     r"""
@@ -226,7 +209,8 @@ def recompute_count_modelling(count_modelling, compute = None, grids = None, par
         pdf_map, mu_map, sigma_map = compute_richness_mass_relation_grid(grids['richness_grid'], 
                                                                          grids['logm_grid'], 
                                                                          grids['z_grid'], 
-                                                                         params['params_richness_mass_relation'])
+                                                                         params['params_richness_mass_relation'],
+                                                                         params['model_richness_mass_relation'])
         count_modelling['richness_mass_relation'] = pdf_map
         count_modelling['richness_mass_relation - mean'] = mu_map
         count_modelling['richness_mass_relation - sigma'] = sigma_map
