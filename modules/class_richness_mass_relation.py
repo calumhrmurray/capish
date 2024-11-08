@@ -31,7 +31,7 @@ class Richness_mass_relation():
         proxy_mu = self.proxy_mu_f(logm, z, theta_rm)
         proxy_sigma = self.proxy_sigma_f(logm, z, theta_rm)
 
-        if 'poisson_scatter' in self.which: 
+        if 'poisson_scatter' in self.which or 'poisson_log_scatter' in self.which: 
             proxy_sigma2 = proxy_sigma**2 + 1/np.exp(proxy_mu)  
             proxy_sigma = proxy_sigma2**.5
 
@@ -54,12 +54,19 @@ class Richness_mass_relation():
 
         mu = self.proxy_mu_f(logm, z, theta_rm)
         sigma = self.proxy_sigma_f(logm, z, theta_rm)
-        if 'poisson_scatter' not in self.which: 
+        
+        if 'poisson_log_scatter' in self.which: 
+            sigma2 = sigma**2 + 1/np.exp(mu) 
+            sigma = sigma2**.5
             return mu + sigma * np.random.randn(len(logm))
+        
         if 'poisson_scatter' in self.which: 
             l_mu = np.exp(mu)
             ln_l_mu_rand_poisson = np.log(np.random.poisson(lam = l_mu))
-        return ln_l_mu_rand_poisson + sigma * np.random.randn(len(logm))
+            return ln_l_mu_rand_poisson + sigma * np.random.randn(len(logm))
+        
+        if 'poisson_scatter' not in self.which and 'poisson_log_scatter' not in self.which: 
+            return mu + sigma * np.random.randn(len(logm))
 
     
     
