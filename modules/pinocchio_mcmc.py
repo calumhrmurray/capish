@@ -107,11 +107,10 @@ compute = {'compute_dNdzdlogMdOmega':True,
 
 logger.info('[load theory]: compute HMF+bias mass-redshift grids at fixed cosmology')
 
-
 count_modelling_new = cl_count.recompute_count_modelling(count_modelling, grids = grids, compute = compute, params = params)
 
-
 logger.info('[load theory]: Compute Sij matrix (SSC) from PySSC (Lacasa et al.)')
+
 f_sky = 0.25
 CLCovar = cl_covar.Covariance_matrix()
 Sij_partialsky = CLCovar.compute_theoretical_Sij(Z_bin, cosmo, f_sky)
@@ -119,31 +118,34 @@ Sij_partialsky = CLCovar.compute_theoretical_Sij(Z_bin, cosmo, f_sky)
 def prior(theta, fit_cosmo):
     
     if number_params_scaling_relation == 4:
-        if fit_cosmo==True:
+        if fit_cosmo:
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, Omegam, Sigma8 = theta
         else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0 = theta
     
     elif number_params_scaling_relation == 6:
-        if fit_cosmo==True:
+        if fit_cosmo:
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m, Omegam, Sigma8 = theta
         else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta
     
-    if fit_cosmo==True:
-        if Omegam < 0.2: return -np.inf
-        if Omegam > 0.5: return -np.inf
-        if Sigma8 < 0.6: return -np.inf
-        if Sigma8 > .95: return -np.inf
+    if proxy_mu0 < 0: return 1
+    if proxy_muz < -2: return 1
+    if proxy_muz > 2: return 1
+    if proxy_mulog10m < 0: return 1
+
+    if fit_cosmo:
+        if Omegam < 0: return 1
+        if Omegam > 0.6: return 1
+        if Sigma8 < 0.4: return 1
+        if Sigma8 > 1: return 1
     #mean parameter priors
-    if proxy_mu0 < 0: return -np.inf
-    if proxy_muz < -2: return -np.inf
-    if proxy_muz > 2: return -np.inf
-    if proxy_mulog10m < 0: return -np.inf
     
     if number_params_scaling_relation == 6:
-        if proxy_sigmaz < -2: return -np.inf
-        if proxy_sigmaz > 2: return -np.inf
-        if proxy_sigmalog10m < -2: return -np.inf
-        if proxy_sigmalog10m > 2: return -np.inf
+        if proxy_sigmaz < -2: return 1
+        if proxy_sigmaz > 2: return 1
+        if proxy_sigmalog10m < -2: return 1
+        if proxy_sigmalog10m > 2: return 1
+    
+    return 0
 
 def lnL(theta, fit_cosmo):
 
@@ -151,14 +153,17 @@ def lnL(theta, fit_cosmo):
     if number_params_scaling_relation == 4:
         if fit_cosmo==True:
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, Omegam, Sigma8 = theta
-        else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0 = theta
+        else: 
+            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0 = theta
         
     if number_params_scaling_relation == 6:
         if fit_cosmo==True:
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m, Omegam, Sigma8 = theta
-        else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta
+        else: 
+            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta
 
-    prior(theta, fit_cosmo)
+    prior_value = prior(theta, fit_cosmo)
+    if prior_value == 1: return -np.inf
 
     if number_params_scaling_relation == 4:
         theta_rm_new = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, 0, 0]
@@ -229,13 +234,20 @@ labels += [r'\Omega_m', r'\sigma_8'] if fit_cosmo else []
 fit_cosmo_str = 'fit_cosmo' if fit_cosmo else 'fixed_cosmo'
 where_to_save = '/pbs/throng/lsst/users/cpayerne/capish/chains/'
 name_save=where_to_save+f'pinochio_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}.pkl'
-print(name_save)
+logger.info('[Saving chains]: The chains will be saved in the file '+ name_save)
 ndim=len(initial)
 t = time.time()
-logger.info('Test likelihood')
-logger.info(lnL(initial, fit_cosmo))
+initial_str = ''
+for i in range(len(initial)):
+    initial_str = labels[i] + ' = '+str(initial[i])
+    logger.info('[MCMC]: Initial position: ' + initial_str )
+
+t = time.time()
+lnL_start = lnL(initial, fit_cosmo)
 tf = time.time()
-logger.info('time:' +str(tf-t))
+
+logger.info(f'[First test]: lnL(initial) = {lnL_start:.2f} computed in {tf-t:.2f} seconds')
+
 nwalker = 60
 pos = np.array(initial) + .01*np.random.randn(nwalker, ndim)
 sampler = emcee.EnsembleSampler(nwalker, ndim, lnL, args=[fit_cosmo])
