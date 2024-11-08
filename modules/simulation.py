@@ -22,6 +22,7 @@ class Universe_simulation:
         self.available_params = {
             'omega_m': 0.3,
             'sigma_8': 0.8,
+            'ln_1010_As': 4.21,
             'h': 0.7,
             'w_0': -1,
             'w_a': 0,
@@ -79,6 +80,7 @@ class Universe_simulation:
         self.s = 0
         self.q = 1
         self.Mstar = 10**13.8
+        self.omega_b_h2 = 0.02208
     
     def set_richness_mass_relation( self , richness_mass_relation_name ):
         if richness_mass_relation_name == 'power law':
@@ -149,7 +151,7 @@ class Universe_simulation:
         Core function to simulate cluster catalogs and selection function.
         """
         # make cosmo
-        Om0, sigma8, h, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
+        Om0, sigma8 , ln_1010_As , h, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         Om0 = float(Om0)
@@ -157,10 +159,12 @@ class Universe_simulation:
         h = float(h)
         w0 = float(w0)
         wa = float(wa)
-                        
+
+        Omega_b = self.omega_b_h2 / h**2
+        
         cosmo_params = {
-                        'Omega_c': Om0 -0.05, 
-                        'Omega_b': 0.05,
+                        'Omega_c': Om0 - Omega_b, 
+                        'Omega_b': Omega_b,
                         'h': h,    
                         'n_s': 0.96,
                         'sigma8': sigma8,   
@@ -200,9 +204,11 @@ class Universe_simulation:
 
         for i, a in enumerate(scale_factors):
             # Calculate halo mass function for the current redshift (as scalar `a`)
+            # Mstar units were Msun/h so we need to divide to get it into sensible units
             dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
 
             # Compute counts in each bin
+            # I don't know why I had a factor of a[i] in here
             counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega * da[i] )
             cluster_abundance.append(counts_per_bin)
 
@@ -211,7 +217,8 @@ class Universe_simulation:
         # Use np.repeat to create the catalog based on counts in cluster_abundance
         cat_mass = np.repeat( self.mass_values, cluster_abundance )
         cat_redshift = np.repeat( self.redshift_values, cluster_abundance )
-        cat_mu = np.log( 10 ** cat_mass / 1e14 )
+        # should we correct for little h here?
+        cat_mu = np.log( 10 ** cat_mass / 1e14  )
 
         return cat_mu, cat_redshift
 
@@ -219,7 +226,7 @@ class Universe_simulation:
         return s * np.log10( M / Mstar ) + q
 
     def mass_observable_relation(self, mu, z, full_parameter_set, cosmo ):
-        Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
+        Om0, sigma8 , ln_1010_As , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
         # Ensure that parameters are native Python floats (not PyTorch tensors)
         # I am not sure that this is needed actually
@@ -228,7 +235,7 @@ class Universe_simulation:
         c_l = float(c_l)
         r = float(r)
 
-        mean_l = self.richness_mass_relation( mu , z , Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo )
+        mean_l = self.richness_mass_relation( mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo )
         mean_mwl = self.c_mwl + self.alpha_mwl * mu
 
         sampled_l = []
@@ -284,7 +291,7 @@ class Universe_simulation:
 
         else:
             # Default covariance without mass evolution
-            cov = [[sigma_l**2, r * sigma_l * self.sigma_mwl], 
+            cov = [[sigma_l**2 , r * sigma_l * self.sigma_mwl], 
                    [r * sigma_l * self.sigma_mwl, self.sigma_mwl**2]]
 
             total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
@@ -295,14 +302,15 @@ class Universe_simulation:
 
         return np.exp(ln_richness), np.log10(np.exp(lnM_wl)), z
     
-    def power_law( self ,  mu , z , Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
+    def power_law( self ,  mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
         mean_ln_l = c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
         # poisson realisation of this values
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l ) ) )
         return ln_l
     
-    def halo_model( self , mu , z ,  Om0, sigma8, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo ):
-        Mmin = 10**log10Mmin
+    def halo_model( self , mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo ):
+        # unfortunately we need to add in the h dependence
+        Mmin = 10**log10Mmin / h
         M1 = 10**( B ) * Mmin
         M = ( np.exp( mu ) * 1e14 )
         mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + self.z_p ) )**beta_l
@@ -377,7 +385,7 @@ class Universe_simulation:
         with np.errstate(divide='ignore', invalid='ignore'):
             mean_log10M_wl = np.where( observed_cluster_abundance > 0, 
                                        sum_log10M_wl / observed_cluster_abundance, 
-                                       -1 )
+                                       1 )
             mean_log10M_wl = np.log10( mean_log10M_wl**3 )
             
         # add measurement and systematic uncertainties

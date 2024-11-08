@@ -72,7 +72,7 @@ stacked_simulator = simulation.Universe_simulation( 'stacked_counts' ,
                                                                      'alpha' , 
                                                                      'B' ,
                                                                      'log10Mmin',
-                                                                     'beta'
+                                                                     'beta',
                                                                      'sigma' ],
                                                     fixed_params={'w_0': -1, 'w_a': 0 } )
 stacked_simulator.selection_richness = 0
@@ -90,7 +90,7 @@ stacked_simulator.s = 0.037
 stacked_simulator.q = 1.008
 
 # set the binning used to simulate a cluster catalogue
-stacked_simulator.set_bins( z_bins = np.arange( 0.15 , 0.7 , 0.05 ) , log10m_bins =  np.arange( 12.8, 16 , 0.01))
+stacked_simulator.set_bins( z_bins = np.arange( 0.15 , 0.7 , 0.05 ) , log10m_bins =  np.arange( 13.2, 16 , 0.01))
 
 # Assuming the arrays are already of the same shape and are 2D
 n_clusters = np.array( [ n_clusters_0, n_clusters_1, n_clusters_2 ]).T
@@ -122,7 +122,7 @@ des_posterior = infer(
     stacked_simulator.run_simulation,
     priors,
     method="SNPE",
-    num_simulations=20000,
+    num_simulations=60000,
     num_workers=128
 )
 
