@@ -61,7 +61,7 @@ class Universe_simulation:
         self.small_log10Mwl_bins = np.arange(12.5, 16, 0.1)
         self.small_richness_bins = np.logspace(np.log10(20), np.log10(300), 15)
         self.small_redshift_bins = np.linspace(0.025, 1.125, 6)
-        self.dOmega = 0.5 * 4 * np.pi
+        self.dOmega = None
         self.alpha_mwl = 1
         self.sigma_mwl = 0.25
         self.c_mwl = np.log(1e14)
@@ -191,7 +191,7 @@ class Universe_simulation:
     def get_cluster_catalogue( self, cosmo ):
 
         z_bin_centers = (self.z_bins[:-1] + self.z_bins[1:]) / 2.
-        scale_factor_bins = 1/( self.z_bins + 1 )
+        scale_factor_bins = 1 / ( self.z_bins + 1 )
         scale_factors = 1 / (z_bin_centers + 1)
 
         # Compute comoving volumes only once
@@ -206,7 +206,7 @@ class Universe_simulation:
             dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
 
             # Compute counts in each bin
-            counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega * da[i] )
+            counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega( z_bin_centers[i] ) * da[i] )
             cluster_abundance.append( counts_per_bin )
 
         cluster_abundance = np.array( cluster_abundance ).flatten()
