@@ -16,7 +16,7 @@ class Covariance_matrix():
         self.name = 'name'
         return None
     
-    def compute_theoretical_Sij(self, Z_bin, cosmo, f_sky, flat_sky = True):
+    def compute_theoretical_Sij(self, Z_bin, cosmo, f_sky, S_ij_type = 'full_sky_rescaled_approx', path = None):
         default_cosmo_params = {'omega_b':cosmo['Omega_b']*cosmo['h']**2, 
                                 'omega_cdm':cosmo['Omega_c']*cosmo['h']**2, 
                                 'H0':cosmo['h']*100, 
@@ -33,12 +33,12 @@ class Covariance_matrix():
                     if ((z>z_bin[0]) and (z<=z_bin[1])):
                         windows_T[i,k] = 1
         
-        if flat_sky:  
+        if S_ij_type == 'full_sky_rescaled_approx':  
             
             Sij_fullsky = PySSC.Sij_alt_fullsky(z_arr, windows_T, order=1, cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0)
             Sij_partialsky = Sij_fullsky/f_sky
             
-        else: 
+        elif S_ij_type == 'full_sky_rescaled': 
             
             Sij_fullsky = PySSC.Sij(z_arr, windows_T, order=1, sky='full', method='classic', 
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
@@ -47,6 +47,14 @@ class Covariance_matrix():
                                     AngPow_path=None, verbose=False, debug=False)
             
             Sij_partialsky = Sij_fullsky/f_sky
+        
+        elif S_ij_type == 'exact':
+
+            Sij_partialsky = PySSC.Sij(z_arr, windows_T, order=1, sky='psky', method='classic', 
+                                    cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
+                                    precision=10, clmask=None, mask=path, mask2=None, 
+                                    var_tol=0.05, machinefile=None, Nn=None, Np='default', 
+                                    AngPow_path=None, verbose=False, debug=False)
         
         return Sij_partialsky 
     
