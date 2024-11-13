@@ -17,15 +17,18 @@ class Covariance_matrix():
         return None
     
     def compute_theoretical_Sij(self, Z_bin, cosmo, f_sky, S_ij_type = 'full_sky_rescaled_approx', path = None):
+        
         default_cosmo_params = {'omega_b':cosmo['Omega_b']*cosmo['h']**2, 
                                 'omega_cdm':cosmo['Omega_c']*cosmo['h']**2, 
                                 'H0':cosmo['h']*100, 
                                 'n_s':cosmo['n_s'], 
                                 'sigma8': cosmo['sigma8'],
                                 'output' : 'mPk'}
+        
         z_arr = np.linspace(0.1,1.2,1000)
         nbins_T   = len(Z_bin)
         windows_T = np.zeros((nbins_T,len(z_arr)))
+        
         for i, z_bin in enumerate(Z_bin):
                 Dz = z_bin[1]-z_bin[0]
                 z_arr_cut = z_arr[(z_arr > z_bin[0])*(z_arr < z_bin[1])]
@@ -34,28 +37,23 @@ class Covariance_matrix():
                         windows_T[i,k] = 1
         
         if S_ij_type == 'full_sky_rescaled_approx':  
-            
             Sij_fullsky = PySSC.Sij_alt_fullsky(z_arr, windows_T, order=1, cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0)
             Sij_partialsky = Sij_fullsky/f_sky
             
         elif S_ij_type == 'full_sky_rescaled': 
-            
             Sij_fullsky = PySSC.Sij(z_arr, windows_T, order=1, sky='full', method='classic', 
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
                                     precision=10, clmask=None, mask=None, mask2=None, 
                                     var_tol=0.05, machinefile=None, Nn=None, Np='default', 
                                     AngPow_path=None, verbose=False, debug=False)
-            
             Sij_partialsky = Sij_fullsky/f_sky
         
         elif S_ij_type == 'exact':
-
             Sij_partialsky = PySSC.Sij(z_arr, windows_T, order=1, sky='psky', method='classic', 
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
                                     precision=10, clmask=None, mask=path, mask2=None, 
                                     var_tol=0.05, machinefile=None, Nn=None, Np='default', 
                                     AngPow_path=None, verbose=False, debug=False)
-        
         return Sij_partialsky 
     
     def sample_covariance_full_sky(self, Z_bin, Proxy_bin, NBinned_halo_bias, Sij):
