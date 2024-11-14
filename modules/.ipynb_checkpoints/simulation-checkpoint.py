@@ -202,7 +202,7 @@ class Universe_simulation:
 
         for i, a in enumerate( scale_factors ):
             # Calculate halo mass function for the current redshift (as scalar `a`)
-            # Mstar units were Msun/h so we need to divide to get it into sensible units
+            # Mstar units were Msun/h so we need to divide to get it into Msun units
             dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
 
             # Compute counts in each bin
@@ -294,9 +294,16 @@ class Universe_simulation:
 
             total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
 
-        # Apply noise to mean values
+        # Apply intrinsic noise to mean values
         ln_richness = mean_l + total_noise.T[0]
         lnM_wl = mean_mwl + total_noise.T[1]
+
+        # # Apply observational noise to the richness
+        # if self.add_richness_observational_scatter == True:
+        #     # background-subtraction noise
+        #     delta_bkg = np.random
+        #     # projection noise
+        #     delta_prj = ( 1 - f_prj ) 
 
         return np.exp( ln_richness ), np.log10( np.exp( lnM_wl ) ), z
     
@@ -316,12 +323,12 @@ class Universe_simulation:
         return ln_l
     
     def halo_model( self , mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo ):
-        # unfortunately we need to add in the h dependence
-        Mmin = 10**log10Mmin / h
+        Mmin = 10**log10Mmin
         M1 = 10**( B ) * Mmin
         M = ( np.exp( mu ) * 1e14 )
         mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + self.z_p ) )**beta_l
         mean_l[ np.logical_or( mean_l < 0, np.isnan(mean_l) ) ] = 0
+
         return np.log( np.random.poisson( lam = mean_l ) + 1 )
 
     def three_dim_counts(self, richness, log10M_wl, z_clusters ):
