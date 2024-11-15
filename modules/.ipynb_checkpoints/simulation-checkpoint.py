@@ -141,7 +141,8 @@ class Universe_simulation:
 
         # Return result in a format compatible with SBI
         if self.for_simulate_for_sbi:
-            return torch.tensor( self.summary_statistic(richness, log10M_wl, z_clusters))
+            return self.summary_statistic(richness, log10M_wl, z_clusters)
+        #     return torch.tensor( self.summary_statistic(richness, log10M_wl, z_clusters))
         else:
             return self.summary_statistic(richness, log10M_wl, z_clusters)
 
