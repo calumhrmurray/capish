@@ -189,37 +189,100 @@ class Universe_simulation:
         
         return richness, log10M_wl, z_clusters, mu_clusters
         
-    def get_cluster_catalogue( self, cosmo ):
-
-        z_bin_centers = (self.z_bins[:-1] + self.z_bins[1:]) / 2.
-        scale_factor_bins = 1 / ( self.z_bins + 1 )
-        scale_factors = 1 / (z_bin_centers + 1)
-
-        # Compute comoving volumes only once
-        dV = cosmo.comoving_volume_element( scale_factors ) 
-        da = scale_factor_bins[:-1] - scale_factor_bins[1:]
+    def get_cluster_catalogue( self, cosmo, add_SSC = False ):
         
-        cluster_abundance = []
+        if add_SSC==False:
 
-        for i, a in enumerate( scale_factors ):
-            # Calculate halo mass function for the current redshift (as scalar `a`)
-            # Mstar units were Msun/h so we need to divide to get it into Msun units
-            dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
+            z_bin_centers = (self.z_bins[:-1] + self.z_bins[1:]) / 2.
+            scale_factor_bins = 1 / ( self.z_bins + 1 )
+            scale_factors = 1 / (z_bin_centers + 1)
 
-            # Compute counts in each bin
-            counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega( z_bin_centers[i] ) * da[i] )
-            cluster_abundance.append( counts_per_bin )
+            # Compute comoving volumes only once
+            dV = cosmo.comoving_volume_element( scale_factors ) 
+            da = scale_factor_bins[:-1] - scale_factor_bins[1:]
 
-        cluster_abundance = np.array( cluster_abundance ).flatten()
+            cluster_abundance = []
 
-        # Use np.repeat to create the catalog based on counts in cluster_abundance
-        cat_mass = np.repeat( self.mass_values, cluster_abundance )
-        cat_redshift = np.repeat( self.redshift_values, cluster_abundance )
-        cat_mu = np.log( 10 ** cat_mass / 1e14 )
+            for i, a in enumerate( scale_factors ):
+                # Calculate halo mass function for the current redshift (as scalar `a`)
+                # Mstar units were Msun/h so we need to divide to get it into Msun units
+                dndlog10M = self.hmf( cosmo, self.Ms, a ) * self.hmf_correction( self.Ms , self.Mstar / cosmo['h'] , self.s , self.q )
 
-        print( np.sum( cluster_abundance ) , len( cat_mu ))
+                # Compute counts in each bin
+                counts_per_bin = np.random.poisson( dndlog10M * dV[i] * self.dlog10m * self.dOmega( z_bin_centers[i] ) * da[i] )
+                cluster_abundance.append( counts_per_bin )
 
-        return cat_mu, cat_redshift
+            cluster_abundance = np.array( cluster_abundance ).flatten()
+
+            # Use np.repeat to create the catalog based on counts in cluster_abundance
+            cat_mass = np.repeat( self.mass_values, cluster_abundance )
+            cat_redshift = np.repeat( self.redshift_values, cluster_abundance )
+            cat_mu = np.log( 10 ** cat_mass / 1e14 )
+
+            print( np.sum( cluster_abundance ) , len( cat_mu ))
+
+            return cat_mu, cat_redshift
+        
+        if add_SSC==True:
+            
+            Z_edges_SSC = self.Z_edges_SSC
+            Z_bin_SSC = self.Z_bin_SSC
+            z_grid = []
+            z_grid.append(Z_edges_SSC[0])
+            for i in range(len(Z_edges_SSC)-1):
+                x = list(np.linspace(Z_edges_SSC[i], Z_edges_SSC[i+1], 30))
+                z_grid.extend(x[1:-1])
+                z_grid.append(Z_edges_SSC[i+1])
+            z_grid = np.array(z_grid)
+            
+            #initialise cluster count object
+            import model_halo_abundance as cl_count
+            clc = cl_count.ClusterAbundance()
+            clc.set_cosmology(cosmo = cosmo, hmd = self.hmd, massdef = self.massdef)
+            clc.sky_area = self.f_sky * 4 * np.pi
+            dz_grid = z_grid[1] - z_grid[0]
+            logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1000)
+            dlogm_grid = logm_grid[1] - logm_grid[0]
+            clc.compute_multiplicity_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
+            halobias_fct = ccl.halos.hbias.tinker10.HaloBiasTinker10(mass_def=self.massdef)
+            clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = halobias_fct)
+
+            bdNdm_zbins = []
+            dNdm_zbins = []
+            average_bias_zbins = []
+            cumulative_zbins = []
+
+            #generate deltas in redshift bins
+            cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
+            mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
+            ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
+            delta = (np.exp(ln1_plus_delta_SSC) - 1)
+
+            N_obs = np.zeros([len(Z_bin_SSC), len(logm_grid)])
+            log10mass = []
+            redshift = []
+            for i, redshift_range in enumerate(self.Z_bin_SSC):
+                mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
+                integrand = 4 * np.pi * self.f_sky * clc.halo_biais * clc.dN_dzdlogMdOmega
+                bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
+                dNdm  = self.f_sky * 4 * np.pi * np.trapz(clc.dN_dzdlogMdOmega[:,mask], z_grid[mask], axis=1)
+                pdf   = self.f_sky * 4 * np.pi * clc.dN_dzdlogMdOmega[:,mask]
+                cumulative = np.cumsum(dz_grid * pdf, axis = 1)
+                bias = np.array(bdNdm)/np.array(dNdm)
+                delta_h = bias * delta[i]
+                delta_h = np.where(delta_h < -1, -1, delta_h)
+                dN =  dNdm * dlogm_grid * (1 + delta_h)
+                N_obs[i,:] = np.random.poisson(dN)
+                N_sample_obs_zbins = N_obs[i,:]
+                
+                for j in range(len(logm_grid)):
+                    log10mass.extend(list(np.zeros(int(N_sample_obs_zbins[j]))+logm_grid[j]))
+                    cumulative_rand = (cumulative[j][-1]-cumulative[j][0])*np.random.random(int(N_sample_obs_zbins[j]))+cumulative[j][0]
+                    redshift.extend(list(np.interp(cumulative_rand, cumulative[j], z_grid[mask])))
+            
+            return np.array(redshift), np.array(log10mass)
+            
+
 
     def hmf_correction( self , M , Mstar , s , q ):
         return s * np.log10( M / Mstar ) + q
