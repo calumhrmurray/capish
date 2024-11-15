@@ -60,13 +60,12 @@ def cat_to_hpx(lon, lat, nside, radec=True):
 
 where_pinocchio_cat = '/sps/lsst/users/cpayerne/1000xsimulations/1000_simulations/afumagalli/catalogs/plc_14/'
 file=glob.glob(where_pinocchio_cat+'*')
-nside = 512
+nside = 256
 mask_map = np.zeros(hp.nside2npix(nside), dtype=int)
 for i in range(500):
-    print('pinocchio simulation number' + str(i))
+    print('pinocchio simulation number = ' + str(i))
     dat = pd.read_csv(file[i] ,sep=' ',skiprows=12, names=['M','z','dec','ra'])
     ra, dec, redshift, Mvir_true = dat['ra'], dat['dec'], dat['z'], dat['M']/0.6777
     mask_map += cat_to_hpx(ra, dec, nside, radec=True)
-mask_map = np.where(mask_map != 0, 1, 0)
-
-hp.write_map("../data/pinocchio_mask_map_sky_coverage/pinocchio_mask_map_sky_coverage.fits", mask_map)
+    mask_map = np.where(mask_map != 0, 1, 0)
+    hp.write_map("../data/pinocchio_mask_map_sky_coverage/pinocchio_mask_map_sky_coverage.fits", mask_map, overwrite=True)
