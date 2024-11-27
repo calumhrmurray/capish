@@ -1,0 +1,16 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Wed Nov 13 11:02:21 AM CET 2024
+* Job name:             N
+* Job id:               34775367
+* User:                 cpayerne
+* Account:              lsst
+* Submit host:          jns-cpayerne.cc.in2p3.fr
+* Partition:            htc
+* Quality of service:   normal
+* Nodelist:             ccwslurm0086
+* Operating System:     Red Hat Enterprise Linux release 9.4 (Plow)
+* Architecture:         x86_64
+**********************************************************************
