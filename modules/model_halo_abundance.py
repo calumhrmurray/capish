@@ -34,8 +34,6 @@ class ClusterAbundance():
         self.cosmo = cosmo
         self.massdef = massdef
         self.hmd = hmd
-        #self.massdef = ccl.halos.massdef.MassDef('vir', 'critical', c_m_relation=None)
-        #self.hmd = ccl.halos.hmfunc.MassFuncDespali16(self.cosmo, mass_def=self.massdef)
         
     def dndlog10M(self, log10M, z):
         r"""

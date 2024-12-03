@@ -245,23 +245,19 @@ class Universe_simulation:
             logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1500)
             dlogm_grid = logm_grid[1] - logm_grid[0]
             
-            #here, we compute the HMF and halo bias grid
+            #here, we compute the HMF grid
             clc.compute_multiplicity_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
-            halobias_fct = ccl.halos.hbias.tinker10.HaloBiasTinker10(mass_def=self.massdef)
-            clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = halobias_fct)
-            
             #we consider using the trapezoidal integral method here, given by int = dx(f(a) + f(b))/2
             dN_dzdlogMdOmega_center = (clc.dN_dzdlogMdOmega[:-1] + clc.dN_dzdlogMdOmega[1:]) / 2
-            halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
             logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
+            hmf_correction = self.hmf_correction(10**logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
+            dN_dzdlogMdOmega_center *= np.tile(hmf_correction, (len(z_grid), 1)).T
 
-            bdNdm_zbins = []
-            dNdm_zbins = []
-            average_bias_zbins = []
-            cumulative_zbins = []
-            #generate deltas in redshift bins (log-normal probabilities)
 
             if (self.poisson_only == False): 
+                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = self.halobias_fct)
+                halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
+                #generate deltas in redshift bins (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
                 mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
                 ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
@@ -269,14 +265,13 @@ class Universe_simulation:
 
             N_obs = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
             N_th = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
-            log10mass = []
-            redshift = []
+            log10mass, redshift = [], []
+            
             for i, redshift_range in enumerate(Z_bin_hybrid):
                 mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
                 dNdm  = self.f_sky * 4 * np.pi * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
                 pdf   = self.f_sky * 4 * np.pi * dN_dzdlogMdOmega_center[:,mask]
-                cumulative = np.cumsum(dz_grid * pdf, axis = 1)               
-                corr = 1 
+                cumulative = np.cumsum(dz_grid * pdf, axis = 1)                
                 if self.poisson_only == False:
                     integrand = 4 * np.pi * self.f_sky * halo_bias_center * dN_dzdlogMdOmega_center
                     bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
@@ -284,6 +279,7 @@ class Universe_simulation:
                     delta_h = bias * delta[i]
                     delta_h = np.where(delta_h < -1, -1, delta_h) #we ensure that deltah = b*delta is > 1
                     corr = (1 + delta_h)
+                else: corr = 1
                 N_obs[i,:] = np.random.poisson(dNdm * dlogm_grid * corr)
                 N_th[i,:] = dNdm * dlogm_grid#we generate the observed count
                 N_sample_obs_zbins = N_obs[i,:]
