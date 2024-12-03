@@ -189,9 +189,9 @@ class Universe_simulation:
         
         return richness, log10M_wl, z_clusters, mu_clusters
         
-    def get_cluster_catalogue( self, cosmo, add_SSC = False ):
+    def get_cluster_catalogue( self, cosmo, return_Nth = False):
         
-        if add_SSC==False:
+        if (self.use_hybrid == False) & (self.poisson_only == True):
 
             z_bin_centers = (self.z_bins[:-1] + self.z_bins[1:]) / 2.
             scale_factor_bins = 1 / ( self.z_bins + 1 )
@@ -223,17 +223,17 @@ class Universe_simulation:
 
             return cat_mu, cat_redshift
         
-        if add_SSC==True:
+        if (self.use_hybrid == True):
             
-            Z_edges_SSC = self.Z_edges_SSC
-            Z_bin_SSC = [[Z_edges_SSC[i], Z_edges_SSC[i+1]] for i in range(len(Z_edges_SSC)-1)]
+            Z_edges_hybrid = self.Z_edges_hybrid
+            Z_bin_hybrid = [[Z_edges_hybrid[i], Z_edges_hybrid[i+1]] for i in range(len(Z_edges_hybrid)-1)]
             #ensure that the redshift grid matches SSC redshift grid values
             z_grid = []
-            z_grid.append(Z_edges_SSC[0])
-            for i in range(len(Z_edges_SSC)-1):
-                x = list(np.linspace(Z_edges_SSC[i], Z_edges_SSC[i+1], 30))
+            z_grid.append(Z_edges_hybrid[0])
+            for i in range(len(Z_edges_hybrid)-1):
+                x = list(np.linspace(Z_edges_hybrid[i], Z_edges_hybrid[i+1], 50))
                 z_grid.extend(x[1:-1])
-                z_grid.append(Z_edges_SSC[i+1])
+                z_grid.append(Z_edges_hybrid[i+1])
             z_grid = np.array(z_grid)
             
             #initialise cluster count object
@@ -259,28 +259,32 @@ class Universe_simulation:
             dNdm_zbins = []
             average_bias_zbins = []
             cumulative_zbins = []
-
             #generate deltas in redshift bins (log-normal probabilities)
-            cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
-            mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
-            ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
-            delta = (np.exp(ln1_plus_delta_SSC) - 1)
 
-            N_obs = np.zeros([len(Z_bin_SSC), len(logm_grid_center)])
-            N_th = np.zeros([len(Z_bin_SSC), len(logm_grid_center)])
+            if (self.poisson_only == False): 
+                cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
+                mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
+                ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
+                delta = (np.exp(ln1_plus_delta_SSC) - 1)
+
+            N_obs = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
+            N_th = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
             log10mass = []
             redshift = []
-            for i, redshift_range in enumerate(Z_bin_SSC):
+            for i, redshift_range in enumerate(Z_bin_hybrid):
                 mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
-                integrand = 4 * np.pi * self.f_sky * halo_bias_center * dN_dzdlogMdOmega_center
-                bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
                 dNdm  = self.f_sky * 4 * np.pi * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
                 pdf   = self.f_sky * 4 * np.pi * dN_dzdlogMdOmega_center[:,mask]
-                cumulative = np.cumsum(dz_grid * pdf, axis = 1)
-                bias = np.array(bdNdm)/np.array(dNdm)
-                delta_h = bias * delta[i]
-                delta_h = np.where(delta_h < -1, -1, delta_h)                     #we ensure that deltah = b*delta is > 1 
-                N_obs[i,:] = np.random.poisson(dNdm * dlogm_grid * (1 + delta_h))
+                cumulative = np.cumsum(dz_grid * pdf, axis = 1)               
+                corr = 1 
+                if self.poisson_only == False:
+                    integrand = 4 * np.pi * self.f_sky * halo_bias_center * dN_dzdlogMdOmega_center
+                    bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
+                    bias = np.array(bdNdm)/np.array(dNdm)
+                    delta_h = bias * delta[i]
+                    delta_h = np.where(delta_h < -1, -1, delta_h) #we ensure that deltah = b*delta is > 1
+                    corr = (1 + delta_h)
+                N_obs[i,:] = np.random.poisson(dNdm * dlogm_grid * corr)
                 N_th[i,:] = dNdm * dlogm_grid#we generate the observed count
                 N_sample_obs_zbins = N_obs[i,:]
                 
@@ -288,8 +292,11 @@ class Universe_simulation:
                     log10mass.extend(list(np.zeros(int(N_sample_obs_zbins[j]))+logm_grid_center[j])) #masses
                     cumulative_rand = (cumulative[j][-1]-cumulative[j][0])*np.random.random(int(N_sample_obs_zbins[j]))+cumulative[j][0]
                     redshift.extend(list(np.interp(cumulative_rand, cumulative[j], z_grid[mask]))) #redshifts
-
-            return np.array(redshift), np.array(log10mass)
+            if return_Nth: 
+                grid = {"N_th": N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
+                return grid, np.array(redshift), np.array(log10mass)
+            else: 
+                return np.array(redshift), np.array(log10mass)
             
 
 
