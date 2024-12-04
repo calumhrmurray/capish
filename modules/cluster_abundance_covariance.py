@@ -15,6 +15,17 @@ class Covariance_matrix():
     def __init__(self):
         self.name = 'name'
         return None
+
+    def compute_theoretical_sigmaij(self, z_grid, cosmo, fsky):
+        
+        default_cosmo_params = {'omega_b':cosmo['Omega_b']*cosmo['h']**2, 
+                                'omega_cdm':cosmo['Omega_c']*cosmo['h']**2, 
+                                'H0':cosmo['h']*100, 
+                                'n_s':cosmo['n_s'], 
+                                'sigma8': cosmo['sigma8'],
+                                'output' : 'mPk'}
+        
+        return PySSC.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)/fsky
     
     def compute_theoretical_Sij(self, Z_bin, cosmo, f_sky, S_ij_type = 'full_sky_rescaled_approx', path = None):
         
