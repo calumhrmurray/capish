@@ -22,6 +22,10 @@ def dndlog10M(logm, z, cosmo, hmd):
     hmf = hmd.__call__(cosmo, 10**np.array(logm), 1./(1. + z))
     return hmf
 
+def hmf_correction(M, Mstar, s, q):
+    
+    return s*np.log10(M/Mstar) + q
+
 def dVdzdOmega(z, cosmo):
     r"""
     Attributes:
