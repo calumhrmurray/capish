@@ -199,7 +199,7 @@ class Universe_simulation:
 
             import model_halo_abundance as cl_count
             clc = cl_count.ClusterAbundance()
-            clc.set_cosmology(cosmo = cosmo, hmd = self.hmd, massdef = self.massdef)
+            clc.set_cosmology(cosmo = cosmo, hmd = self.hmf, massdef = self.massdef)
             clc.sky_area = self.f_sky * 4 * np.pi
             z_grid = np.linspace(0.2, 1, 1000)
             dz_grid = z_grid[1] - z_grid[0]
@@ -239,7 +239,7 @@ class Universe_simulation:
                         "logm_grid_center":logm_grid_center}
                 return grid, np.array(redshift), np.array(log10mass)
             else: 
-                return np.array(redshift), np.array(log10mass)
+                return np.log( 10**np.array( log10mass ) / 1e14 ) , np.array(redshift)
         
         elif (self.use_hybrid == True):
             
@@ -257,7 +257,7 @@ class Universe_simulation:
             #initialise cluster count object
             import model_halo_abundance as cl_count
             clc = cl_count.ClusterAbundance()
-            clc.set_cosmology(cosmo = cosmo, hmd = self.hmd, massdef = self.massdef)
+            clc.set_cosmology(cosmo = cosmo, hmd = self.hmf, massdef = self.massdef)
             clc.sky_area = self.f_sky * 4 * np.pi
             dz_grid = z_grid[1] - z_grid[0]
             
@@ -308,9 +308,8 @@ class Universe_simulation:
                 grid = {"N_th": N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
                 return grid, np.array(redshift), np.array(log10mass)
             else: 
-                return np.array(redshift), np.array(log10mass)
+                return np.log( 10**np.array( log10mass ) / 1e14 ) , np.array(redshift)
             
-
 
     def hmf_correction( self , M , Mstar , s , q ):
         return s * np.log10( M / Mstar ) + q
@@ -453,8 +452,7 @@ class Universe_simulation:
 
         return counts.flatten()
     
-    
-    def stacked_counts( self , richness, log10M_wl, redshift ):
+    def stacked_counts( self , richness, log10M_wl, redshift , exp =  1):
         """
         Calculate the number of clusters in bins of cluster richness and redshift,
         and calculate the mean cluster weak-lensing mass in these bins.
@@ -482,7 +480,7 @@ class Universe_simulation:
         sum_log10M_wl, _, _ = np.histogram2d(  richness, 
                                                redshift, 
                                                bins = [ self.richness_bins, self.redshift_bins], 
-                                               weights = ( 10**log10M_wl )**(1/3)
+                                               weights = ( log10M_wl )
         )
 
         # Calculate mean log10M_wl in each bin (avoid division by zero)
@@ -492,13 +490,58 @@ class Universe_simulation:
             mean_log10M_wl = np.where( observed_cluster_abundance > 0, 
                                        sum_log10M_wl / observed_cluster_abundance, 
                                        1 )
-            mean_log10M_wl = np.log10( mean_log10M_wl**3 )
             
         # add measurement and systematic uncertainties
         if self.include_mwl_measurement_errors:
             mean_log10M_wl = mean_log10M_wl + np.random.normal( loc = 0.0 , scale = self.mwl_std )
             
         return np.vstack( [ observed_cluster_abundance, mean_log10M_wl ] ).flatten()  
+         
+    # def stacked_counts( self , richness, log10M_wl, redshift , exp =  1):
+    #     """
+    #     Calculate the number of clusters in bins of cluster richness and redshift,
+    #     and calculate the mean cluster weak-lensing mass in these bins.
+
+    #     Parameters:
+    #     richness (array-like): Array of richness values.
+    #     log10M_wl (array-like): Array of weak-lensing mass values (log10 scale).
+    #     redshift (array-like): Array of redshift values.
+    #     richness_bins (array-like): Bin edges for richness.
+    #     redshift_bins (array-like): Bin edges for redshift.
+
+    #     Returns:
+    #     observed_cluster_abundance (2D array): Number of clusters in each bin.
+    #     mean_log10M_wl (2D array): Mean log10 weak-lensing mass in each bin.
+    #     """
+    #     # Compute the 2D histogram for cluster counts
+    #     observed_cluster_abundance, _, _ = np.histogram2d(
+    #         richness, 
+    #         redshift, 
+    #         bins = [ self.richness_bins, self.redshift_bins ]
+    #     )
+
+
+    #     # Compute the 2D histogram for the sum of log10M_wl
+    #     sum_log10M_wl, _, _ = np.histogram2d(  richness, 
+    #                                            redshift, 
+    #                                            bins = [ self.richness_bins, self.redshift_bins], 
+    #                                            weights = ( 10**log10M_wl )**(1/exp)
+    #     )
+
+    #     # Calculate mean log10M_wl in each bin (avoid division by zero)
+    #     # we cannot add inverse variance weights here, since we pretend not to know the mass
+    #     # is this fully consistent?
+    #     with np.errstate(divide='ignore', invalid='ignore'):
+    #         mean_log10M_wl = np.where( observed_cluster_abundance > 0, 
+    #                                    sum_log10M_wl / observed_cluster_abundance, 
+    #                                    1 )
+    #         mean_log10M_wl = np.log10( mean_log10M_wl**(exp) )
+            
+    #     # add measurement and systematic uncertainties
+    #     if self.include_mwl_measurement_errors:
+    #         mean_log10M_wl = mean_log10M_wl + np.random.normal( loc = 0.0 , scale = self.mwl_std )
+            
+    #     return np.vstack( [ observed_cluster_abundance, mean_log10M_wl ] ).flatten()  
     
     def stacked_counts_wonky_bins( self , richness, log10M_wl, redshift ):
         """
