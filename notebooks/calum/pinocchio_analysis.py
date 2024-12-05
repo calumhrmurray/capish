@@ -46,12 +46,11 @@ def dOmega_func( z ):
 stacked_simulator_pl = simulation.Universe_simulation( 'stacked_counts' ,
                                                         variable_params=['omega_m', 
                                                                          'sigma_8', 
-                                                                         'h',
                                                                          'alpha' , 
                                                                          'c' , 
                                                                          'beta',
                                                                          'sigma' ],
-                                                        fixed_params={'w_0': -1, 'w_a': 0 } )
+                                                        fixed_params={'w_0': -1, 'w_a': 0 , 'h':0.6777} )
 
 
 stacked_simulator_pl.selection_richness = 0
@@ -101,8 +100,6 @@ def compute_sigmaij_matrix(cosmo, z_grid, f_sky = 1):
     return sigmaij_partialsky_exact_standard
 
 
-
-
 Omega_c_true = 0.30711 - 0.048254
 Omega_b_true = 0.048254
 sigma8_true = .8288
@@ -110,9 +107,6 @@ Omegam_true = 0.30711
 
 cosmo = ccl.Cosmology(Omega_c = Omegam_true - 0.048254, Omega_b = 0.048254, 
                               h = 0.6777, sigma8 = sigma8_true, n_s=0.96)
-
-
-
 
 have_PySSC = False
 if have_PySSC:
@@ -133,7 +127,7 @@ else:
 # Define individual priors with correct tensor shape
 prior_om = Uniform(torch.tensor([0.25]), torch.tensor([0.4]))
 prior_s8 = Uniform(torch.tensor([0.8]), torch.tensor([1.]))
-prior_h = Normal(torch.tensor([0.67]), torch.tensor([0.001]))  # Normal prior on h
+prior_h = Normal(torch.tensor([0.6777]), torch.tensor([0.001]))  # Normal prior on h
 prior_alpha = Uniform(torch.tensor([1.8]), torch.tensor([2.6]))
 prior_c = Uniform(torch.tensor([3.0]), torch.tensor([3.5]))
 prior_beta = Uniform(torch.tensor([-0.3]), torch.tensor([0.3]))
@@ -144,25 +138,30 @@ priors = [ prior_om, prior_s8, prior_h, prior_alpha, prior_c , prior_beta , prio
 
 # decide if you want hybrid, SSC etc.
 stacked_simulator_pl.use_hybrid = True
-stacked_simulator_pl.poisson_only = False
+stacked_simulator_pl.poisson_only = True
 
 # infer the posterior calculator
 pinocchio_posterior_calculator = infer( stacked_simulator_pl.run_simulation , 
                              priors, 
                              method = 'SNPE', 
-                             num_simulations = 10000 , 
+                             num_simulations = 30000 , 
                              num_workers = 20 )
 
 # # save the posterior calculator
 # with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_SSC.pkl', "wb") as handle:
 #     pickle.dump( pinocchio_posterior_calculator, handle)
 
-# save the posterior calculator
-with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_SSC_hybrid.pkl', "wb") as handle:
-    pickle.dump( pinocchio_posterior_calculator, handle)
-
 # # save the posterior calculator
 # with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_poisson_only.pkl', "wb") as handle:
 #     pickle.dump( pinocchio_posterior_calculator, handle)
+
+# # save the posterior calculator
+# with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_SSC_hybrid.pkl', "wb") as handle:
+#     pickle.dump( pinocchio_posterior_calculator, handle)
+
+# save the posterior calculator
+with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_poisson_hybrid.pkl', "wb") as handle:
+    pickle.dump( pinocchio_posterior_calculator, handle)
+
 
 

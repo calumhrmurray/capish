@@ -78,7 +78,8 @@ class Universe_simulation:
         self.s = 0
         self.q = 1
         self.Mstar = 10**13.8
-        self.omega_b_h2 = 0.02208
+        #self.omega_b_h2 = 0.02208
+        self.Omega_b = 0.048254
     
     def set_richness_mass_relation( self , richness_mass_relation_name ):
         if richness_mass_relation_name == 'power law':
@@ -160,7 +161,7 @@ class Universe_simulation:
         w0 = float(w0)
         wa = float(wa)
 
-        Omega_b = self.omega_b_h2 / h**2
+        Omega_b = self.Omega_b #_h2 / h**2
 
         print( Om0 , Omega_b , h , sigma8 )
         
