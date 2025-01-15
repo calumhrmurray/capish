@@ -72,7 +72,7 @@ sigma_wl_log10mass = sim_mr_rel.sigma_wl_log10mass
 theta_rm = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m]
 
 #data
-where = '/pbs/throng/lsst/users/cpayerne/capish/pinocchio_data_vector/'
+where = '/pbs/throng/lsst/users/cpayerne/capish/data/pinocchio_data_vector/'
 data = load(where+f'data_vector_pinocchio_mock_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}.pkl')
 redshift_edges = binning_scheme.redshift_edges
 richness_edges = binning_scheme.richness_edges
@@ -147,7 +147,7 @@ def prior(theta, fit_cosmo):
     
     return 0
 
-def lnL(theta, fit_cosmo):
+def lnL(theta, fit_cosmo, likelihood_used):
 
 
     if number_params_scaling_relation == 4:
@@ -200,8 +200,7 @@ def lnL(theta, fit_cosmo):
     
     lnL = 0
     if 'N' in analysis.type:
-        gaussian=True
-        if gaussian:
+        if likelihood_used=='Gaussian+SSC':
             NAverageHaloBias = Omega * cl_count.Cluster_NHaloBias_ProxyZ(bins, integrand_count = integrand_count_new,
                                                                          halo_bias = count_modelling_new['halo_bias'], 
                                                                          grids = grids, cosmo = cosmo)
@@ -211,7 +210,7 @@ def lnL(theta, fit_cosmo):
             CLCount_likelihood.lnLikelihood_Binned_Gaussian(N, N_obs, Cov_tot)
             lnLCLCount = CLCount_likelihood.lnL_Binned_Gaussian
 
-        else:
+        elif likelihood_used=='Poisson':
             CLCount_likelihood.lnLikelihood_Binned_Poissonian(N, N_obs.T)
             lnLCLCount = CLCount_likelihood.lnL_Binned_Poissonian
         lnL += lnLCLCount
@@ -231,9 +230,10 @@ labels =  [r'\ln \lambda_0', r'\mu_z', r'\mu_m', r'\sigma_{\ln \lambda, 0}']
 labels += [r'\sigma_z', r'\sigma_m'] if number_params_scaling_relation == 6 else []
 labels += [r'\Omega_m', r'\sigma_8'] if fit_cosmo else []
 
+likelihood_used = 'Poisson'
 fit_cosmo_str = 'fit_cosmo' if fit_cosmo else 'fixed_cosmo'
 where_to_save = '/pbs/throng/lsst/users/cpayerne/capish/chains/'
-name_save=where_to_save+f'pinochio_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}.pkl'
+name_save=where_to_save+f'pinochio_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}_with_{likelihood_used}_likelihood.pkl'
 logger.info('[Saving chains]: The chains will be saved in the file '+ name_save)
 ndim=len(initial)
 t = time.time()
@@ -250,7 +250,7 @@ logger.info(f'[First test]: lnL(initial) = {lnL_start:.2f} computed in {tf-t:.2f
 
 nwalker = 60
 pos = np.array(initial) + .01*np.random.randn(nwalker, ndim)
-sampler = emcee.EnsembleSampler(nwalker, ndim, lnL, args=[fit_cosmo])
+sampler = emcee.EnsembleSampler(nwalker, ndim, lnL, args=[fit_cosmo, likelihood_used])
 sampler.run_mcmc(pos, 200, progress=True);
 flat_samples = sampler.get_chain(discard=0, thin=1, flat=True)
 results={'flat_chains':flat_samples,'label_parameters':labels}

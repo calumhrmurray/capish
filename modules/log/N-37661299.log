@@ -1,0 +1,33 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Thu Dec  5 07:46:01 PM CET 2024
+* Job name:             N
+* Job id:               37661299
+* User:                 cpayerne
+* Account:              lsst
+* Submit host:          jns-cpayerne.cc.in2p3.fr
+* Partition:            htc
+* Quality of service:   normal
+* Nodelist:             ccwslurm0110
+* Operating System:     Red Hat Enterprise Linux release 9.4 (Plow)
+* Architecture:         x86_64
+**********************************************************************
+2024-12-05 19:46:08 - INFO - [load theory]: compute HMF+bias mass-redshift grids at fixed cosmology
+2024-12-05 19:46:10 - INFO - [load theory]: Compute Sij matrix (SSC) from PySSC (Lacasa et al.)
+Traceback (most recent call last):
+  File "/pbs/throng/lsst/users/cpayerne/capish/modules/pinocchio_mcmc.py", line 235, in <module>
+    name_save=where_to_save+f'pinochio_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}_with_{likelihood_used}_likelihood.pkl'
+NameError: name 'likelihood_used' is not defined
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Thu Dec  5 07:46:36 PM CET 2024
+Job informations can be found using these commands:
+Accounting:
+sacct -j 37661299
+Efficiency:
+seff 37661299
+****************************************************************
