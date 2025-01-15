@@ -1,6 +1,7 @@
 import numpy as np
 import pyccl as ccl
 import itertools
+import model_halo_abundance
 
 class Universe_simulation:
     
@@ -190,29 +191,28 @@ class Universe_simulation:
         
         return richness, log10M_wl, z_clusters, mu_clusters
         
-    def get_cluster_catalogue( self, cosmo, return_Nth = False):
+    def get_halo_catalogue( self, cosmo, return_Nth=False):
 
         logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1500)
         dlogm_grid = logm_grid[1] - logm_grid[0]
         logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
+
+        clc = model_halo_abundance.ClusterAbundance()
+        clc.set_cosmology(cosmo = cosmo, hmd = self.hmd)
+        clc.sky_area = self.dOmega
         
         if (self.use_hybrid == False):
-
-            import model_halo_abundance as cl_count
-            clc = cl_count.ClusterAbundance()
-            clc.set_cosmology(cosmo = cosmo, hmd = self.hmf, massdef = self.massdef)
-            clc.sky_area = self.f_sky * 4 * np.pi
-            z_grid = np.linspace(0.2, 1, 1000)
+            z_grid = np.linspace(self.z_bins[0], self.z_bins[-1], 1000)
             dz_grid = z_grid[1] - z_grid[0]
             z_grid_center = np.array([(z_grid[i] + z_grid[i+1])/2 for i in range(len(z_grid)-1)])
             
             #here, we compute the HMF grid
             clc.compute_multiplicity_grid_MZ(z_grid = z_grid_center, logm_grid = logm_grid_center)
             #we consider using the trapezoidal integral method here, given by int = dx(f(a) + f(b))/2
-            hmf_correction = self.hmf_correction(10**logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
+            hmf_correction = self.hmf_correction(10 ** logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
             dN_dzdlogMdOmega_center = clc.dN_dzdlogMdOmega * np.tile(hmf_correction, (len(z_grid_center), 1)).T
             
-            if (self.poisson_only == False): 
+            if (self.add_SSC == True): 
                 clc.compute_halo_bias_grid_MZ(z_grid = z_grid_center, 
                                               logm_grid = logm_grid_center, 
                                               halobiais = self.halobias_fct)
@@ -226,7 +226,7 @@ class Universe_simulation:
                 corr = 1 + delta_h
             else: corr = 1
                 
-            Nobs = np.random.poisson(self.f_sky * 4 * np.pi * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid * corr)
+            Nobs = np.random.poisson(self.dOmega * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid * corr)
             Nobs_flatten = Nobs.flatten()
             Z_grid_center, Logm_grid_center = np.meshgrid(z_grid_center, logm_grid_center)
             Z_grid_center_flatten, Logm_grid_center_flatten = Z_grid_center.flatten(), Logm_grid_center.flatten()
@@ -234,13 +234,9 @@ class Universe_simulation:
             log10mass = [logm_grid_i for logm_grid_i, count in zip(Logm_grid_center_flatten, Nobs_flatten) for _ in range(count)]
             redshift = [z_grid_i for z_grid_i, count in zip(Z_grid_center_flatten, Nobs_flatten) for _ in range(count)]
 
-            if return_Nth: 
-                grid = {"N_th": self.f_sky * 4 * np.pi * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid, 
-                        "z_grid_center":z_grid_center, 
-                        "logm_grid_center":logm_grid_center}
-                return grid, np.array(redshift), np.array(log10mass)
-            else: 
-                return np.log( 10**np.array( log10mass ) / 1e14 ) , np.array(redshift)
+            grid = {"N_th": self.dOmega * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid, 
+                    "z_grid_center":z_grid_center, 
+                    "logm_grid_center":logm_grid_center}
         
         elif (self.use_hybrid == True):
             
@@ -254,12 +250,6 @@ class Universe_simulation:
                 z_grid.extend(x[1:-1])
                 z_grid.append(Z_edges_hybrid[i+1])
             z_grid = np.array(z_grid)
-            
-            #initialise cluster count object
-            import model_halo_abundance as cl_count
-            clc = cl_count.ClusterAbundance()
-            clc.set_cosmology(cosmo = cosmo, hmd = self.hmf, massdef = self.massdef)
-            clc.sky_area = self.f_sky * 4 * np.pi
             dz_grid = z_grid[1] - z_grid[0]
             
             #here, we compute the HMF grid
@@ -270,8 +260,7 @@ class Universe_simulation:
             hmf_correction = self.hmf_correction(10**logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
             dN_dzdlogMdOmega_center *= np.tile(hmf_correction, (len(z_grid), 1)).T
 
-
-            if (self.poisson_only == False): 
+            if (self.add_SSC == True): 
                 clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = self.halobias_fct)
                 halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
                 #generate deltas in redshift bins (log-normal probabilities)
@@ -285,12 +274,14 @@ class Universe_simulation:
             log10mass, redshift = [], []
             
             for i, redshift_range in enumerate(Z_bin_hybrid):
+                
                 mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
-                dNdm  = self.f_sky * 4 * np.pi * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
-                pdf   = self.f_sky * 4 * np.pi * dN_dzdlogMdOmega_center[:,mask]
-                cumulative = np.cumsum(dz_grid * pdf, axis = 1)                
-                if self.poisson_only == False:
-                    integrand = 4 * np.pi * self.f_sky * halo_bias_center * dN_dzdlogMdOmega_center
+                dNdm  = self.dOmega * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
+                pdf   = self.dOmega * dN_dzdlogMdOmega_center[:,mask]
+                cumulative = np.cumsum(dz_grid * pdf, axis = 1)  
+                
+                if self.add_SSC == True:
+                    integrand = self.dOmega * halo_bias_center * dN_dzdlogMdOmega_center
                     bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
                     bias = np.array(bdNdm)/np.array(dNdm)
                     delta_h = bias * delta[i]
@@ -298,18 +289,20 @@ class Universe_simulation:
                     corr = (1 + delta_h)
                 else: corr = 1
                 N_obs[i,:] = np.random.poisson(dNdm * dlogm_grid * corr)
-                N_th[i,:] = dNdm * dlogm_grid#we generate the observed count
+                N_th[i,:] = dNdm * dlogm_grid #we generate the observed count
                 N_sample_obs_zbins = N_obs[i,:]
                 
                 for j in range(len(logm_grid_center)):
                     log10mass.extend(list(np.zeros(int(N_sample_obs_zbins[j]))+logm_grid_center[j])) #masses
                     cumulative_rand = (cumulative[j][-1]-cumulative[j][0])*np.random.random(int(N_sample_obs_zbins[j]))+cumulative[j][0]
                     redshift.extend(list(np.interp(cumulative_rand, cumulative[j], z_grid[mask]))) #redshifts
-            if return_Nth: 
-                grid = {"N_th": N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
-                return grid, np.array(redshift), np.array(log10mass)
-            else: 
-                return np.log( 10**np.array( log10mass ) / 1e14 ) , np.array(redshift)
+                    
+            grid = {"N_th":N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
+
+        if return_Nth:
+            return grid, log10mass, np.array(redshift)
+        else:
+            return log10mass, np.array(redshift)
             
 
     def hmf_correction( self , M , Mstar , s , q ):

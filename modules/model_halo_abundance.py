@@ -21,7 +21,7 @@ class ClusterAbundance():
     def ___init___(self):
         self.name = 'Cosmological prediction for cluster abundance cosmology'
         
-    def set_cosmology(self, cosmo = 1, massdef = None, hmd = None):
+    def set_cosmology(self, cosmo = 1, hmd = None):
         r"""
         Attributes:
         ----------
@@ -32,7 +32,6 @@ class ClusterAbundance():
             halo mass distribution object from CCL
         """
         self.cosmo = cosmo
-        self.massdef = massdef
         self.hmd = hmd
         
     def dndlog10M(self, log10M, z):
