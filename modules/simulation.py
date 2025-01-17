@@ -225,8 +225,10 @@ class Universe_simulation:
                 delta_h = np.where(delta_h < -1, -1, delta_h)
                 corr = 1 + delta_h
             else: corr = 1
+
+            Omega_z = np.tile(self.dOmega(z_grid_center), (len(z_grid_center), 1)).T
                 
-            Nobs = np.random.poisson(self.dOmega * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid * corr)
+            Nobs = np.random.poisson(Omega_z * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid * corr)
             Nobs_flatten = Nobs.flatten()
             Z_grid_center, Logm_grid_center = np.meshgrid(z_grid_center, logm_grid_center)
             Z_grid_center_flatten, Logm_grid_center_flatten = Z_grid_center.flatten(), Logm_grid_center.flatten()
@@ -234,7 +236,7 @@ class Universe_simulation:
             log10mass = [logm_grid_i for logm_grid_i, count in zip(Logm_grid_center_flatten, Nobs_flatten) for _ in range(count)]
             redshift = [z_grid_i for z_grid_i, count in zip(Z_grid_center_flatten, Nobs_flatten) for _ in range(count)]
 
-            grid = {"N_th": self.dOmega * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid, 
+            grid = {"N_th": Omega_z * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid, 
                     "z_grid_center":z_grid_center, 
                     "logm_grid_center":logm_grid_center}
         
@@ -242,6 +244,7 @@ class Universe_simulation:
             
             Z_edges_hybrid = self.Z_edges_hybrid
             Z_bin_hybrid = [[Z_edges_hybrid[i], Z_edges_hybrid[i+1]] for i in range(len(Z_edges_hybrid)-1)]
+            
             #ensure that the redshift grid matches SSC redshift grid values
             z_grid = []
             z_grid.append(Z_edges_hybrid[0])
@@ -276,12 +279,12 @@ class Universe_simulation:
             for i, redshift_range in enumerate(Z_bin_hybrid):
                 
                 mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
-                dNdm  = self.dOmega * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
-                pdf   = self.dOmega * dN_dzdlogMdOmega_center[:,mask]
+                dNdm  = self.dOmega(z_grid[mask]) * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
+                pdf   = self.dOmega(z_grid[mask]) * dN_dzdlogMdOmega_center[:,mask]
                 cumulative = np.cumsum(dz_grid * pdf, axis = 1)  
                 
                 if self.add_SSC == True:
-                    integrand = self.dOmega * halo_bias_center * dN_dzdlogMdOmega_center
+                    integrand = self.dOmega(z_grid[mask]) * halo_bias_center * dN_dzdlogMdOmega_center
                     bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
                     bias = np.array(bdNdm)/np.array(dNdm)
                     delta_h = bias * delta[i]
