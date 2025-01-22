@@ -46,12 +46,11 @@ def dOmega_func( z ):
 stacked_simulator_pl = simulation.Universe_simulation( 'stacked_counts' ,
                                                         variable_params=['omega_m', 
                                                                          'sigma_8', 
-                                                                         'h',
                                                                          'alpha' , 
                                                                          'c' , 
                                                                          'beta',
                                                                          'sigma' ],
-                                                        fixed_params={'w_0': -1, 'w_a': 0 } )
+                                                        fixed_params={'w_0': -1, 'w_a': 0 , 'h':0.6777} )
 
 
 stacked_simulator_pl.selection_richness = 0
@@ -128,14 +127,15 @@ else:
 # Define individual priors with correct tensor shape
 prior_om = Uniform(torch.tensor([0.25]), torch.tensor([0.4]))
 prior_s8 = Uniform(torch.tensor([0.8]), torch.tensor([1.]))
-prior_h = Normal(torch.tensor([0.67]), torch.tensor([0.001]))  # Normal prior on h
+#prior_h = Normal(torch.tensor([0.6777]), torch.tensor([0.001]))  # Normal prior on h
 prior_alpha = Uniform(torch.tensor([1.8]), torch.tensor([2.6]))
 prior_c = Uniform(torch.tensor([3.0]), torch.tensor([3.5]))
 prior_beta = Uniform(torch.tensor([-0.3]), torch.tensor([0.3]))
 prior_sigma = Uniform(torch.tensor([0.3]), torch.tensor([0.6]))
 
 # Combine the priors into a list for processing
-priors = [ prior_om, prior_s8, prior_h, prior_alpha, prior_c , prior_beta , prior_sigma ]
+#priors = [ prior_om, prior_s8, prior_h, prior_alpha, prior_c , prior_beta , prior_sigma ]
+priors = [ prior_om, prior_s8, prior_alpha, prior_c , prior_beta , prior_sigma ]
 
 # decide if you want hybrid, SSC etc.
 stacked_simulator_pl.use_hybrid = True
@@ -145,8 +145,8 @@ stacked_simulator_pl.poisson_only = True
 pinocchio_posterior_calculator = infer( stacked_simulator_pl.run_simulation , 
                              priors, 
                              method = 'SNPE', 
-                             num_simulations = 30000 , 
-                             num_workers = 20 )
+                             num_simulations = 60000 , 
+                             num_workers = 40 )
 
 # # save the posterior calculator
 # with open('/sps/euclid/Users/cmurray/clusters_likelihood/pinocchio_posterior_calculator_SSC.pkl', "wb") as handle:
