@@ -1,7 +1,10 @@
 import numpy as np
 import pyccl as ccl
 import itertools
+import sys
+sys.path.append('../')
 import model_halo_abundance
+import class_richness_mass_relation
 
 class Universe_simulation:
     
@@ -406,8 +409,12 @@ class Universe_simulation:
     def constantin_power_law( self ,  mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
         log10m0 = 14.3
         log10m = np.log10( np.exp( mu ) * 1e14 )
-        print( c_l , beta_l , alpha_l )
-        mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
+        #print( c_l , beta_l , alpha_l )
+        #mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
+        RM = class_richness_mass_relation.Richness_mass_relation()
+        RM.select(which='log_normal_poisson_log_scatter')
+        theta_rm = log10m0, self.z_p, c_l, beta_l, alpha_l, 0, 0, 0
+        mean_ln_l = RM.proxy_mu_f(log10m, z, theta_rm)
         # poisson realisation of this values
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l )  ) )
         return ln_l
