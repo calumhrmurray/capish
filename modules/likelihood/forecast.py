@@ -57,7 +57,7 @@ def second_derivative(theta, model, shape_model, delta = 1e-5):
                 sec[j,i] = sec[i,j]
     return sec
     
-def Fisher_Matrix_Gaussian(self, theta, model, inv_cov, delta = 1e-5):
+def Fisher_Matrix(theta, model, inv_cov, delta = 1e-5):
     r"""
     Attributes:
     -----------
@@ -75,7 +75,6 @@ def Fisher_Matrix_Gaussian(self, theta, model, inv_cov, delta = 1e-5):
     Fisher_matrix = np.zeros([len(theta), len(theta)])
     shape_model = inv_cov.diagonal().shape
     fd = first_derivative(theta, model, shape_model, delta = 1e-5)
-    self.fd = fd
     for i in range(len(theta)):
         for j in range(len(theta)):
             Fisher_matrix[i,j] = np.sum(fd[i]*inv_cov.dot(fd[j]))
