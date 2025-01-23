@@ -5,6 +5,7 @@ import sys
 sys.path.append('../')
 import model_halo_abundance
 import class_richness_mass_relation
+import cosmology
 
 class Universe_simulation:
     
@@ -201,9 +202,9 @@ class Universe_simulation:
         logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1500)
         dlogm_grid = logm_grid[1] - logm_grid[0]
         logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
-
-        clc = model_halo_abundance.ClusterAbundance()
-        clc.set_cosmology(cosmo = cosmo, hmd = self.hmd)
+        CosmologyObject = cosmology.Cosmology(hmf=self.hmd, bias_model = self.halobias_fct)
+        clc = model_halo_abundance.HaloAbundance(CosmologyObject = CosmologyObject)
+        clc.set_cosmology(cosmo = cosmo)
         clc.sky_area = self.dOmega
         
         if (self.use_hybrid == False):
@@ -219,8 +220,7 @@ class Universe_simulation:
             
             if (self.add_SSC == True): 
                 clc.compute_halo_bias_grid_MZ(z_grid = z_grid_center, 
-                                              logm_grid = logm_grid_center, 
-                                              halobiais = self.halobias_fct)
+                                              logm_grid = logm_grid_center)
                 #generate deltas (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.sigmaij_SSC)
                 mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
@@ -269,7 +269,7 @@ class Universe_simulation:
             dN_dzdlogMdOmega_center *= np.tile(hmf_correction, (len(z_grid), 1)).T
 
             if (self.add_SSC == True): 
-                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = self.halobias_fct)
+                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
                 halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
                 #generate deltas in redshift bins (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
