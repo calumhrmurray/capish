@@ -17,16 +17,11 @@ def save_pickle(dat, filename, **kwargs):
     pickle.dump(dat, file)
     file.close()
 
-sys.path.append('/pbs/throng/lsst/users/cpayerne/capish/modules/')
-import model_completeness as comp
-import model_purity as pur
-import model_halo_mass_function as hmf
+sys.path.append('../modules/')
 import class_richness_mass_relation as rm_relation
-import model_cluster_abundance as cl_count
-import model_stacked_cluster_mass as cl_mass
+sys.path.append('../pinocchio/')
 import pinocchio_mass_richness_relation as sim_mr_rel
 import pinocchio_binning_scheme as binning_scheme
-
 
 where_cat = '/sps/lsst/users/cpayerne/1000xsimulations/1000_simulations/afumagalli/catalogs/plc_14/*'
 
@@ -39,7 +34,6 @@ sigma_wl_log10mass = sim_mr_rel.sigma_wl_log10mass
 RM = rm_relation.Richness_mass_relation()
 RM.select(which = which_model)
 
-where_cat = '/sps/lsst/users/cpayerne/1000xsimulations/1000_simulations/afumagalli/catalogs/plc_14/*'
 file=glob.glob(where_cat)
 
 def pinocchio_sim(index_simu=1):
@@ -69,9 +63,7 @@ data['count_richness_redshift_per_sim'] = []
 
 n_simu = 1000
 for index_simu in range(len(file[:n_simu])):
-    
     redshift, Mvir_true, Mvir, richness = pinocchio_sim(index_simu=index_simu)
-    
     #summary_statistics
     N_richness_redshift, a, b = np.histogram2d(richness, redshift, bins = [richness_edges, redshift_edges, ])
     Mean_log10mass_richness_redshift = stats.binned_statistic_2d(richness, redshift, np.log10(Mvir), 'mean', bins=[richness_edges, redshift_edges]).statistic
@@ -110,4 +102,4 @@ data.pop('count_richness_redshift_per_sim', None)
 
 sigma_wl_logmass = np.log(10) * sigma_wl_log10mass
 
-save_pickle(data, f'/pbs/throng/lsst/users/cpayerne/capish/pinocchio_data_vector/data_vector_pinocchio_mock_{which_model}_sigma_lnMwl={sigma_wl_logmass:.2f}.pkl', )
+save_pickle(data, f'./data/pinocchio_data_vector/data_vector_pinocchio_mock_{which_model}_sigma_lnMwl={sigma_wl_logmass:.2f}.pkl', )

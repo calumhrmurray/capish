@@ -17,7 +17,7 @@ def save_pickle(dat, filename, **kwargs):
     pickle.dump(dat, file)
     file.close()
 
-sys.path.append('/pbs/throng/lsst/users/cpayerne/capish/modules/')
+sys.path.append('../modules/')
 import model_completeness as comp
 import model_purity as pur
 import model_halo_mass_function as hmf
@@ -25,7 +25,7 @@ import model_cluster_abundance as cl_count
 import model_stacked_cluster_mass as cl_mass
 import pinocchio_binning_scheme as binning_scheme
 
-
+#location@CC-IN2P3
 where_cat = '/sps/lsst/users/cpayerne/1000xsimulations/1000_simulations/afumagalli/catalogs/plc_14/*'
 file=glob.glob(where_cat)
 
@@ -89,4 +89,4 @@ data['Cov_count_mass_redshift'] = Covariance_count_estimation
 data.pop('mean_log10mass_mass_redshift_per_sim', None)
 data.pop('count_mass_redshift_per_sim', None)
 
-save_pickle(data, f'/pbs/throng/lsst/users/cpayerne/capish/data/pinocchio_data_vector/data_vector_pinocchio_mock_mass-redshift_bins.pkl', )
+save_pickle(data, f'./data/pinocchio_data_vector/data_vector_pinocchio_mock_mass-redshift_bins.pkl', )

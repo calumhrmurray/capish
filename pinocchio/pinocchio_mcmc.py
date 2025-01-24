@@ -9,17 +9,19 @@ import pickle
 import logging
 import argparse
 
-sys.path.append('/pbs/throng/lsst/users/cpayerne/capish/modules/')
-import model_completeness as comp
-import model_purity as pur
-import model_halo_mass_function as hmf
+sys.path.append('../modules/')
+import cosmology
 import class_richness_mass_relation as rm_relation
-import model_cluster_abundance as cl_count
-import model_stacked_cluster_mass as cl_mass
-import pinocchio_mass_richness_relation as sim_mr_rel
-import class_likelihood as likelihood
-import pinocchio_binning_scheme as binning_scheme
 import cluster_abundance_covariance as cl_covar
+
+sys.path.append('../pinocchio/')
+import pinocchio_mass_richness_relation as sim_mr_rel
+import pinocchio_binning_scheme as binning_scheme
+
+sys.path.append('../modules/likelihood/')
+import class_likelihood as likelihood
+import model_stacked_cluster_mass as cl_mass
+import model_cluster_abundance as cl_count
 
 def collect_argparser():
     parser = argparse.ArgumentParser(description="")
@@ -243,7 +245,7 @@ for i in range(len(initial)):
     logger.info('[MCMC]: Initial position: ' + initial_str )
 
 t = time.time()
-lnL_start = lnL(initial, fit_cosmo)
+lnL_start = lnL(initial, fit_cosmo, likelihood_used)
 tf = time.time()
 
 logger.info(f'[First test]: lnL(initial) = {lnL_start:.2f} computed in {tf-t:.2f} seconds')
