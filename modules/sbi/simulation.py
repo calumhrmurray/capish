@@ -2,7 +2,9 @@ import numpy as np
 import pyccl as ccl
 import itertools
 import sys
-sys.path.append('../')
+import os 
+dir_path=os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path+'/../')
 import model_halo_abundance
 import class_richness_mass_relation
 import cosmology
@@ -74,7 +76,7 @@ class Universe_simulation:
         self.c_mwl = np.log(1e14)
         self.transfer_function = 'boltzmann_camb'
         self.include_mwl_measurement_errors = False
-        self.z_p = 0.3
+        self.z_p = 0.5
         self.use_selection_function = False
         self.z_bins_sel = None
         self.l_bins_sel = None
@@ -190,7 +192,7 @@ class Universe_simulation:
         cosmo = ccl.Cosmology( **cosmo_params )
         
         # Get the latent cluster properties (mu_clusters, z_clusters)
-        mu_clusters, z_clusters = self.get_cluster_catalogue( cosmo )
+        mu_clusters, z_clusters = self.get_halo_catalogue( cosmo )
 
         # Get the observed cluster properties (richness, weak-lensing mass)
         richness, log10M_wl , z_clusters = self.mass_observable_relation( mu_clusters, z_clusters, full_parameter_set , cosmo )
@@ -307,10 +309,11 @@ class Universe_simulation:
                     
             grid = {"N_th":N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
 
+        log10mass_return = np.log(10**np.array(log10mass)/(10**14))
         if return_Nth:
-            return grid, log10mass, np.array(redshift)
+            return grid, log10mass_return, np.array(redshift)
         else:
-            return log10mass, np.array(redshift)
+            return log10mass_return, np.array(redshift)
             
 
     def hmf_correction( self , M , Mstar , s , q ):
@@ -415,7 +418,7 @@ class Universe_simulation:
         RM.select(which='log_normal_poisson_log_scatter')
         theta_rm = log10m0, self.z_p, c_l, beta_l, alpha_l, 0, 0, 0
         mean_ln_l = RM.proxy_mu_f(log10m, z, theta_rm)
-        # poisson realisation of this values
+        #poisson realisation of this values
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l )  ) )
         return ln_l
     
