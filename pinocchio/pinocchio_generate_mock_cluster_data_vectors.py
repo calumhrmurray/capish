@@ -31,6 +31,8 @@ proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m =  sim_mr_rel.proxy_sigma0, sim_mr
 theta_rm = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m]
 which_model = sim_mr_rel.which_model
 sigma_wl_log10mass = sim_mr_rel.sigma_wl_log10mass
+sigma_wl_obs_log10mass = sim_mr_rel.sigma_wl_obs_log10mass
+sigma_wl_tot_log10mass = (sigma_wl_log10mass**2 + sigma_wl_obs_log10mass**2)**(1/2)
 RM = rm_relation.Richness_mass_relation()
 RM.select(which = which_model)
 
@@ -43,7 +45,7 @@ def pinocchio_sim(index_simu=1):
     ra, dec, redshift, Mvir_true = dat['ra'], dat['dec'], dat['z'], dat['M']/0.6777
     mask = np.log10(Mvir_true) > 14.2
     ra, dec, redshift, Mvir_true = ra[mask], dec[mask], redshift[mask], Mvir_true[mask]
-    log10Mvir_obs = np.log10(Mvir_true) + sigma_wl_log10mass * np.random.randn(len(np.log10(Mvir_true)))
+    log10Mvir_obs = np.log10(Mvir_true) + sigma_wl_tot_log10mass * np.random.randn(len(np.log10(Mvir_true)))
     Mvir = 10**log10Mvir_obs
     richness = np.exp(RM.lnLambda_random(np.log10(Mvir_true), redshift, theta_rm))
     return redshift, Mvir_true, Mvir, richness
