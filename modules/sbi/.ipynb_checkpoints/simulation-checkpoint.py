@@ -203,7 +203,7 @@ class Universe_simulation:
         logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
 
         clc = model_halo_abundance.ClusterAbundance()
-        clc.set_cosmology(cosmo = cosmo, hmd = self.hmd)
+        clc.set_cosmology(cosmo = cosmo, hmd = self.hmf )
         clc.sky_area = self.dOmega
         
         if (self.use_hybrid == False):
