@@ -3,7 +3,7 @@ import pyccl as ccl
 import itertools
 import sys
 sys.path.append('/pbs/home/c/cmurray/cluster_likelihood/modules/')
-from modules import model_halo_abundance
+import model_halo_abundance
 
 
 class Universe_simulation:
