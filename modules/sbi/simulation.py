@@ -1,7 +1,9 @@
 import numpy as np
 import pyccl as ccl
 import itertools
-import model_halo_abundance
+sys.path.append('/pbs/home/c/cmurray/cluster_likelihood/modules/')
+from modules import model_halo_abundance
+
 
 class Universe_simulation:
     
@@ -186,7 +188,7 @@ class Universe_simulation:
         cosmo = ccl.Cosmology( **cosmo_params )
         
         # Get the latent cluster properties (mu_clusters, z_clusters)
-        mu_clusters, z_clusters = self.get_cluster_catalogue( cosmo )
+        mu_clusters, z_clusters = self.get_halo_catalogue( cosmo )
 
         # Get the observed cluster properties (richness, weak-lensing mass)
         richness, log10M_wl , z_clusters = self.mass_observable_relation( mu_clusters, z_clusters, full_parameter_set , cosmo )
