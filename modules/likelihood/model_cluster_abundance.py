@@ -3,12 +3,13 @@ import pyccl as ccl
 import scipy
 from scipy.integrate import quad,simps, dblquad
 from scipy import interpolate
-
+import os
 import model_completeness as comp
 import model_purity as pur
 import model_halo_mass_function as hmf
 import sys
-sys.path.append('../')
+dir_path=os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path+'/../')
 import class_richness_mass_relation as rm_relation
 
 def binning(edges): return [[edges[i],edges[i+1]] for i in range(len(edges)-1)]

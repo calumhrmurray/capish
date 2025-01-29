@@ -62,7 +62,7 @@ data['richness_bins'] = Richness_bin
 data['redshift_bins'] =  Z_bin
 data['log10Mass_bin'] = LogMass_bin
 data['mean_mass_richness_redshift_per_sim'] = []
-data['mean_mass_power_1_3_richness_redshift_per_sim'] = []
+data['mean_mass_power_richness_redshift_per_sim'] = []
 data['count_richness_redshift_per_sim'] = []
 
 n_simu = 1000
@@ -75,13 +75,13 @@ for index_simu in range(len(file[:n_simu])):
     #mean mass
     Mean_mass_richness_redshift = stats.binned_statistic_2d(richness, redshift, Mvir, 'mean', 
                                                                  bins=[richness_edges, redshift_edges]).statistic
-    #mean mass **(1/3)
-    Mean_mass_power_1_3_richness_redshift = stats.binned_statistic_2d(richness, redshift, Mvir**(1/3), 'mean', 
-                                                                 bins=[richness_edges, redshift_edges]).statistic
+    #mean mass **(1/3) M_ij = (<mass**(1/3)>_{ij})**3
+    Mean_mass_power_richness_redshift = stats.binned_statistic_2d(richness, redshift, Mvir**(1/3), 'mean', 
+                                                                 bins=[richness_edges, redshift_edges]).statistic**3
 
     #store summary statistics
     data['mean_mass_richness_redshift_per_sim'].append(Mean_mass_richness_redshift)
-    data['mean_mass_power_1_3_richness_redshift_per_sim'].append(Mean_mass_power_1_3_richness_redshift)
+    data['mean_mass_power_richness_redshift_per_sim'].append(Mean_mass_power_richness_redshift)
     data['count_richness_redshift_per_sim'].append(N_richness_redshift)
     
     if index_simu >= n_simu: break
@@ -90,9 +90,9 @@ for index_simu in range(len(file[:n_simu])):
 data['mean_mass_richness_redshift'] = np.mean(data['mean_mass_richness_redshift_per_sim'], axis=0)
 data['err_mean_mass_richness_redshift'] = np.std(data['mean_mass_richness_redshift_per_sim'], axis=0)
 
-#mean over sims M_ij = (<mass**(1/3)>_{ij})**3
-data['mean_mass_power_richness_redshift'] = np.mean(np.array(data['mean_mass_power_1_3_richness_redshift_per_sim'])**3, axis=0)
-data['err_mean_mass_power_richness_redshift'] = np.std(np.array(data['mean_mass_power_1_3_richness_redshift_per_sim'])**3, axis=0)
+#mean over sims 
+data['mean_mass_power_richness_redshift'] = np.mean(np.array(data['mean_mass_power_richness_redshift_per_sim']), axis=0)
+data['err_mean_mass_power_richness_redshift'] = np.std(np.array(data['mean_mass_power_richness_redshift_per_sim']), axis=0)
 
 #mean count
 data['mean_count_richness_redshift'] = np.mean(data['count_richness_redshift_per_sim'], axis=0)
@@ -110,9 +110,9 @@ data['err_mean_count_richness_redshift'] = np.std(data['count_richness_redshift_
 # Covariance_mass_estimation = np.cov(mass_ordered.T, bias=True)
 # Covariance_mass_power_estimation = np.cov(mass_ordered_power.T, bias=True)
 
-data.pop('mean_mass_richness_redshift_per_sim', None)
-data.pop('mean_mass_power_1_3_richness_redshift_per_sim', None)
-data.pop('count_richness_redshift_per_sim', None)
+#data.pop('mean_mass_richness_redshift_per_sim', None)
+#data.pop('mean_mass_power_1_3_richness_redshift_per_sim', None)
+#data.pop('count_richness_redshift_per_sim', None)
 
 sigma_wl_logmass = np.log(10) * sigma_wl_log10mass
 

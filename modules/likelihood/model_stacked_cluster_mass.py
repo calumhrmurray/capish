@@ -15,7 +15,7 @@ class ClusterStackedMass():
         self.mass_richness_relation = MoRObject
         return None
         
-    def Cluster_dNd0mega_Mass_ProxyZ(self, bins, integrand_count = None, grids = None, Nlog10m = False): 
+    def Cluster_dNd0mega_Mass_ProxyZ(self, bins, integrand_count = None, grids = None, integrand = 'm'): 
         r"""
         """  
         
@@ -34,12 +34,12 @@ class ClusterStackedMass():
                 
                 integrand_cut = cl_count.reshape_integrand(integrand_count, index_richness_grid_cut, index_z_grid_cut)
                 
-                if Nlog10m: m_grid_mat_int = np.log10(m_grid_mat)
-                else: m_grid_mat_int = m_grid_mat
+                if integrand == 'log10(m)': m_grid_mat_int = np.log10(m_grid_mat)
+                if integrand == 'm': m_grid_mat_int = m_grid_mat
+                if integrand == 'm**(1/3)': m_grid_mat_int = m_grid_mat**(1.0/3.0)
+                    
                 Nstacked_masses[i,j] = simps(simps(simps(integrand_cut, 
                                              richness_grid_cut, axis=0) * m_grid_mat_int,
                                              logm_grid, axis=0), 
                                              z_grid_cut, axis=0)
-                    
-        
         return Nstacked_masses

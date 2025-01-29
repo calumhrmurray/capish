@@ -1,6 +1,4 @@
 import numpy as np
-import utils
-import pyccl as ccl
 from scipy.integrate import simps
 
 def first_derivative(theta, model, shape_model, delta = 1e-5):
