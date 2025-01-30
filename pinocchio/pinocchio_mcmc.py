@@ -20,14 +20,15 @@ import pinocchio_binning_scheme as binning_scheme
 
 sys.path.append('../modules/likelihood/')
 import class_likelihood as likelihood
-import model_stacked_cluster_mass as cl_mass
-import model_cluster_abundance as cl_count
+import model_stacked_cluster_mass 
+import model_cluster_abundance
 
 def collect_argparser():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--type", type=str, required=False, default='NxMwl')
     parser.add_argument("--fit_cosmo", type=str, required=False, default='False')
     parser.add_argument("--number_params_scaling_relation", type=int, required=False, default=4)
+    parser.add_argument("--count_likelihood_used", type=str, required=False, default='Poisson')
     #parser.add_argument("--index_sim", type=int, required=False, default=0)
     return parser.parse_args()
 
@@ -49,7 +50,7 @@ def load(filename, **kwargs):
         return pickle.load(fin, **kwargs)
 
 CLCount_likelihood = likelihood.Likelihood()
-
+count_likelihood_used = analysis.count_likelihood_used
 number_params_scaling_relation = analysis.number_params_scaling_relation
 fit_cosmo = True if analysis.fit_cosmo == 'True' else False
 
@@ -65,6 +66,8 @@ cosmo = ccl.Cosmology(Omega_c = Omegam_true - 0.048254, Omega_b = 0.048254,
 #halo model
 massdef = ccl.halos.massdef.MassDef('vir', 'critical',)
 hmd = ccl.halos.hmfunc.MassFuncDespali16(mass_def=massdef)
+halobias_fct = ccl.halos.hbias.tinker10.HaloBiasTinker10(mass_def=massdef, mass_def_strict=True)
+CosmologyObject = cosmology.Cosmology(hmf=hmd, bias_model=halobias_fct)
 
 log10m0, z0 = sim_mr_rel.log10m0, sim_mr_rel.z0
 proxy_mu0, proxy_muz, proxy_mulog10m =  sim_mr_rel.proxy_mu0, sim_mr_rel.proxy_muz, sim_mr_rel.proxy_mulog10m
@@ -73,17 +76,23 @@ which_model = sim_mr_rel.which_model
 sigma_wl_log10mass = sim_mr_rel.sigma_wl_log10mass
 theta_rm = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m]
 
+RM = rm_relation.Richness_mass_relation()
+RM.select(which = 'log_normal_poisson_scatter')
+
 #data
-where = '/pbs/throng/lsst/users/cpayerne/capish/data/pinocchio_data_vector/'
-data = load(where+f'data_vector_pinocchio_mock_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}.pkl')
+where = '/pbs/throng/lsst/users/cpayerne/capish/pinocchio/data/pinocchio_data_vector/'
+data = load(where+f'data_vector_pinocchio_v2_mock_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}.pkl')
 redshift_edges = binning_scheme.redshift_edges
 richness_edges = binning_scheme.richness_edges
 Z_bin = binning_scheme.Z_bin
 Richness_bin = binning_scheme.Richness_bin
 
 N_obs = data['mean_count_richness_redshift']
-log10Mwl_obs = data['mean_log10mass_richness_redshift']
-err_log10Mwl_obs = data['err_mean_log10mass_richness_redshift']
+Mwl_obs = data['mean_mass_power_richness_redshift']
+err_Mwl_obs = data['err_mean_mass_power_richness_redshift']
+
+clc = model_cluster_abundance.ClusterAbundance(CosmologyObject = CosmologyObject, MoRObject = RM)
+clm = model_stacked_cluster_mass.ClusterStackedMass(CosmologyObject = CosmologyObject, MoRObject = RM)
 
 richness_grid = np.logspace(np.log10(np.min(Richness_bin)), np.log10(np.max(Richness_bin)), 310)
 logm_grid = np.linspace(14.2, 16, 100)
@@ -109,13 +118,15 @@ compute = {'compute_dNdzdlogMdOmega':True,
 
 logger.info('[load theory]: compute HMF+bias mass-redshift grids at fixed cosmology')
 
-count_modelling_new = cl_count.recompute_count_modelling(count_modelling, grids = grids, compute = compute, params = params)
+
+count_modelling_new = clc.recompute_count_modelling(count_modelling, grids = grids, compute = compute, params = params)
 
 logger.info('[load theory]: Compute Sij matrix (SSC) from PySSC (Lacasa et al.)')
 
 f_sky = 0.25
-CLCovar = cl_covar.Covariance_matrix()
-Sij_partialsky = CLCovar.compute_theoretical_Sij(Z_bin, cosmo, f_sky)
+if count_likelihood_used=='Gaussian+SSC':
+    CLCovar = cl_covar.Covariance_matrix()
+    Sij_partialsky = CLCovar.compute_theoretical_Sij(Z_bin, cosmo, f_sky)
 
 def prior(theta, fit_cosmo):
     
@@ -149,7 +160,7 @@ def prior(theta, fit_cosmo):
     
     return 0
 
-def lnL(theta, fit_cosmo, likelihood_used):
+def lnL(theta, fit_cosmo, count_likelihood_used, return_prediction):
 
 
     if number_params_scaling_relation == 4:
@@ -192,18 +203,18 @@ def lnL(theta, fit_cosmo, likelihood_used):
     adds_N = {'add_purity':False, 
               'add_completeness':False}
 
-    count_modelling_new = cl_count.recompute_count_modelling(count_modelling, grids = grids, compute = compute_new, params = params_new)
+    count_modelling_new = clc.recompute_count_modelling(count_modelling, grids = grids, compute = compute_new, params = params_new)
     test_sign = count_modelling_new['richness_mass_relation - sigma'].flatten() < 0
     if len(test_sign[test_sign==True]) != 0: return -np.inf
-    integrand_count_new = cl_count.define_count_integrand(count_modelling_new, adds_N)
+    integrand_count_new = clc.define_count_integrand(count_modelling_new, adds_N)
     Omega = 4*np.pi*f_sky
 
-    N = Omega * cl_count.Cluster_SurfaceDensity_ProxyZ(bins, integrand_count = integrand_count_new, grids = grids)
+    N = Omega * clc.Cluster_SurfaceDensity_ProxyZ(bins, integrand_count = integrand_count_new, grids = grids)
     
     lnL = 0
     if 'N' in analysis.type:
-        if likelihood_used=='Gaussian+SSC':
-            NAverageHaloBias = Omega * cl_count.Cluster_NHaloBias_ProxyZ(bins, integrand_count = integrand_count_new,
+        if count_likelihood_used=='Gaussian+SSC':
+            NAverageHaloBias = Omega * clc.Cluster_NHaloBias_ProxyZ(bins, integrand_count = integrand_count_new,
                                                                          halo_bias = count_modelling_new['halo_bias'], 
                                                                          grids = grids, cosmo = cosmo)
             CLCovar = cl_covar.Covariance_matrix()
@@ -212,17 +223,19 @@ def lnL(theta, fit_cosmo, likelihood_used):
             CLCount_likelihood.lnLikelihood_Binned_Gaussian(N, N_obs, Cov_tot)
             lnLCLCount = CLCount_likelihood.lnL_Binned_Gaussian
 
-        elif likelihood_used=='Poisson':
+        elif count_likelihood_used=='Poisson':
             CLCount_likelihood.lnLikelihood_Binned_Poissonian(N, N_obs.T)
             lnLCLCount = CLCount_likelihood.lnL_Binned_Poissonian
         lnL += lnLCLCount
         
     if 'Mwl' in analysis.type:
-        Nlog10Mth = Omega * cl_mass.Cluster_dNd0mega_Mass_ProxyZ(bins, integrand_count = integrand_count_new, grids = grids, Nlog10m = True)
-        log10Mth = Nlog10Mth/N
-        lnLCLM = -.5*np.sum(((log10Mth - log10Mwl_obs)/err_log10Mwl_obs)**2)
+        NMth = Omega * clm.Cluster_dNd0mega_Mass_ProxyZ(bins, integrand_count = integrand_count_new, grids = grids, integrand= 'm**(1/3)')
+        Mth = (NMth/N)**3
+        lnLCLM = -.5*np.sum(((Mth - Mwl_obs)/err_Mwl_obs)**2)
         lnL += lnLCLM
-    return lnL
+    if return_prediction:
+        return lnL, N, Mth
+    else: return lnL
 
 initial =  [proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0]
 initial += [proxy_sigmaz, proxy_sigmalog10m] if number_params_scaling_relation == 6 else []
@@ -232,10 +245,9 @@ labels =  [r'\ln \lambda_0', r'\mu_z', r'\mu_m', r'\sigma_{\ln \lambda, 0}']
 labels += [r'\sigma_z', r'\sigma_m'] if number_params_scaling_relation == 6 else []
 labels += [r'\Omega_m', r'\sigma_8'] if fit_cosmo else []
 
-likelihood_used = 'Poisson'
 fit_cosmo_str = 'fit_cosmo' if fit_cosmo else 'fixed_cosmo'
 where_to_save = '/pbs/throng/lsst/users/cpayerne/capish/chains/'
-name_save=where_to_save+f'pinochio_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}_with_{likelihood_used}_likelihood.pkl'
+name_save=where_to_save+f'pinochio_v2_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}_with_{count_likelihood_used}_count_likelihood.pkl'
 logger.info('[Saving chains]: The chains will be saved in the file '+ name_save)
 ndim=len(initial)
 t = time.time()
@@ -245,14 +257,18 @@ for i in range(len(initial)):
     logger.info('[MCMC]: Initial position: ' + initial_str )
 
 t = time.time()
-lnL_start = lnL(initial, fit_cosmo, likelihood_used)
+lnL_start, N, M = lnL(initial, fit_cosmo, count_likelihood_used, True)
 tf = time.time()
 
 logger.info(f'[First test]: lnL(initial) = {lnL_start:.2f} computed in {tf-t:.2f} seconds')
+print('Nobs=',N_obs)
+print('Nth=',N)
+print('Mwl=',Mwl_obs)
+print('Mth=',M)
 
-nwalker = 60
+nwalker = 150
 pos = np.array(initial) + .01*np.random.randn(nwalker, ndim)
-sampler = emcee.EnsembleSampler(nwalker, ndim, lnL, args=[fit_cosmo, likelihood_used])
+sampler = emcee.EnsembleSampler(nwalker, ndim, lnL, args=[fit_cosmo, count_likelihood_used, False])
 sampler.run_mcmc(pos, 200, progress=True);
 flat_samples = sampler.get_chain(discard=0, thin=1, flat=True)
 results={'flat_chains':flat_samples,'label_parameters':labels}
