@@ -7,7 +7,7 @@ from scipy.integrate import quad,simps, dblquad
 from scipy import interpolate
 import sys
 
-class ClusterAbundance():
+class HaloAbundance():
     r"""
         1. computation of the cosmological prediction for cluster abundance cosmology, for 
             a. cluster count in mass and redhsift intervals (binned approach)
@@ -18,10 +18,12 @@ class ClusterAbundance():
         1. comoving differential volume
         2. halo mass function
     """
-    def ___init___(self):
+    def __init__(self, CosmologyObject = None):
         self.name = 'Cosmological prediction for cluster abundance cosmology'
+        self.cosmo_prediction = CosmologyObject
+        return None
         
-    def set_cosmology(self, cosmo = 1, hmd = None):
+    def set_cosmology(self, cosmo = None):
         r"""
         Attributes:
         ----------
@@ -32,41 +34,6 @@ class ClusterAbundance():
             halo mass distribution object from CCL
         """
         self.cosmo = cosmo
-        self.hmd = hmd
-        
-    def dndlog10M(self, log10M, z):
-        r"""
-        Attributes:
-        -----------
-        log10M : array
-            \log_{10}(M), M dark matter halo mass
-        z : float
-            halo redshift
-        Returns:
-        --------
-        hmf : array
-            halo mass function for the corresponding masses and redshift
-        """
-        hmf = self.hmd.__call__(self.cosmo, 10**np.array(log10M), 1./(1. + z))
-        return hmf
-
-    def dVdzdOmega(self,z):
-        r"""
-        Attributes:
-        ----------
-        z : float
-            redshift
-        Returns:
-        -------
-        dVdzdOmega_value : float
-            differential comoving volume 
-        """
-        a = 1./(1. + z)
-        da = ccl.background.angular_diameter_distance(self.cosmo, a)
-        ez = ccl.background.h_over_h0(self.cosmo, a) 
-        dh = ccl.physical_constants.CLIGHT_HMPC / self.cosmo['h']
-        dVdzdOmega_value = dh * da * da/( ez * a ** 2)
-        return dVdzdOmega_value
 
     def compute_multiplicity_grid_MZ(self, z_grid = 1, logm_grid = 1):
         r"""
@@ -87,14 +54,10 @@ class ClusterAbundance():
         self.logm_grid = logm_grid
         grid = np.zeros([len(self.logm_grid), len(self.z_grid)])
         for i, z in enumerate(self.z_grid):
-            grid[:,i] = self.dndlog10M(self.logm_grid ,z) * self.dVdzdOmega(z)
+            grid[:,i] = self.cosmo_prediction.dndlog10M(self.logm_grid ,z, self.cosmo) * self.cosmo_prediction.dVdzdOmega(z, self.cosmo)
         self.dN_dzdlogMdOmega = grid
-        #self.dNdzdlogMdOmega_interpolation = interpolate.interp2d(self.z_grid, 
-        #                                                        self.logm_grid, 
-        ##                                                        self.dN_dzdlogMdOmega, 
-        #                                                        kind='cubic')
         
-    def compute_halo_bias_grid_MZ(self, z_grid = 1, logm_grid = 1, halobiais = 1):
+    def compute_halo_bias_grid_MZ(self, z_grid = 1, logm_grid = 1):
         r"""
         Attributes:
         -----------
@@ -110,15 +73,10 @@ class ClusterAbundance():
             interpolated function over the tabulated multiplicity grid
         """
         grid = np.zeros([len(self.logm_grid), len(self.z_grid)])
-        self.halo_bias_model = halobiais
         for i, z in enumerate(self.z_grid):
-            hb = self.halo_bias_model.__call__(self.cosmo, 10**self.logm_grid, 1./(1. + z), )#mdef_other = self.massdef)
+            hb = self.cosmo_prediction.bias_model.__call__(self.cosmo, 10**self.logm_grid, 1./(1. + z))
             grid[:,i] = hb
         self.halo_biais = grid
-        #self.halo_biais_interpolation = interpolate.interp2d(self.z_grid, 
-                   #                                             self.logm_grid, 
-                   #                                             self.halo_biais, 
-                   #                                             kind='cubic')
         
     def Nhalo_bias_MZ(self, Redshift_bin = [], Proxy_bin = [], method = 'simps'): 
         r"""
@@ -156,22 +114,7 @@ class ClusterAbundance():
                     integrand = self.sky_area * np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] * self.halo_biais[:,k][mask_proxy] for k in index_z_cut])
                     halo_biais_matrix[j,i] = simps(simps(integrand, proxy_cut), z_cut)
             return halo_biais_matrix
-        
-        if method == 'exact_CCL':
-            def __integrand__(logm, z):
-                a = self.sky_area * self.dVdzdOmega(z) * self.dndlog10M(logm, z)  
-                b = self.halo_bias_model.get_halo_bias(self.cosmo, 10**logm, 1./(1. + z), mdef_other = self.massdef)
-                return a*b
-            for i, proxy_bin in enumerate(Proxy_bin):
-                for j, z_bin in enumerate(Redshift_bin):
-                    halo_biais_matrix[j,i] = scipy.integrate.dblquad(__integrand__, 
-                                                               z_bin[0], z_bin[1], 
-                                                               lambda x: proxy_bin[0], 
-                                                               lambda x: proxy_bin[1])[0]
-            return halo_biais_matrix
-            
-            
-        
+
     def Cluster_Abundance_MZ(self, Redshift_bin = [], Proxy_bin = [], method = 'dblquad_interp'): 
         r"""
         returns the predicted number count in mass-redshift bins
@@ -221,16 +164,6 @@ class ClusterAbundance():
         if method == 'bin_format':
             
             return 0
-                    
-        if method == 'exact_CCL':
-            def dN_dzdlogMdOmega(logm, z):
-                return self.sky_area * self.dVdzdOmega(z) * self.dndlog10M(logm, z)
-            for i, proxy_bin in enumerate(Proxy_bin):
-                for j, z_bin in enumerate(Redshift_bin):
-                    N_th_matrix[j,i] = scipy.integrate.dblquad(dN_dzdlogMdOmega, 
-                                                               z_bin[0], z_bin[1], 
-                                                               lambda x: proxy_bin[0], 
-                                                               lambda x: proxy_bin[1])[0]
 
         return N_th_matrix
     
@@ -261,3 +194,37 @@ class ClusterAbundance():
                 dN_dzdlogMdOmega[i] = self.dndlog10M(logm_ind, z_ind) * self.dVdzdOmega(z_ind)
         return dN_dzdlogMdOmega
 
+
+    # def dndlog10M(self, log10M, z):
+    #     r"""
+    #     Attributes:
+    #     -----------
+    #     log10M : array
+    #         \log_{10}(M), M dark matter halo mass
+    #     z : float
+    #         halo redshift
+    #     Returns:
+    #     --------
+    #     hmf : array
+    #         halo mass function for the corresponding masses and redshift
+    #     """
+    #     hmf = self.hmd.__call__(self.cosmo, 10**np.array(log10M), 1./(1. + z))
+    #     return hmf
+
+    # def dVdzdOmega(self,z):
+    #     r"""
+    #     Attributes:
+    #     ----------
+    #     z : float
+    #         redshift
+    #     Returns:
+    #     -------
+    #     dVdzdOmega_value : float
+    #         differential comoving volume 
+    #     """
+    #     a = 1./(1. + z)
+    #     da = ccl.background.angular_diameter_distance(self.cosmo, a)
+    #     ez = ccl.background.h_over_h0(self.cosmo, a) 
+    #     dh = ccl.physical_constants.CLIGHT_HMPC / self.cosmo['h']
+    #     dVdzdOmega_value = dh * da * da/( ez * a ** 2)
+    #     return dVdzdOmega_value

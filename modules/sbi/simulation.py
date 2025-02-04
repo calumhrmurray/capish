@@ -2,8 +2,12 @@ import numpy as np
 import pyccl as ccl
 import itertools
 import sys
-sys.path.append('/pbs/home/c/cmurray/cluster_likelihood/modules/')
+import os 
+dir_path=os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path+'/../')
 import model_halo_abundance
+import class_richness_mass_relation
+import cosmology
 
 
 class Universe_simulation:
@@ -73,7 +77,7 @@ class Universe_simulation:
         self.c_mwl = np.log(1e14)
         self.transfer_function = 'boltzmann_camb'
         self.include_mwl_measurement_errors = False
-        self.z_p = 0.3
+        self.z_p = 0.5
         self.use_selection_function = False
         self.z_bins_sel = None
         self.l_bins_sel = None
@@ -202,8 +206,9 @@ class Universe_simulation:
         dlogm_grid = logm_grid[1] - logm_grid[0]
         logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
 
-        clc = model_halo_abundance.ClusterAbundance()
-        clc.set_cosmology(cosmo = cosmo, hmd = self.hmf )
+        CosmologyObject = cosmology.Cosmology(hmf=self.hmd, bias_model = self.halobias_fct)
+        clc = model_halo_abundance.HaloAbundance(CosmologyObject = CosmologyObject)
+        clc.set_cosmology(cosmo = cosmo)
         clc.sky_area = self.dOmega
         
         if (self.use_hybrid == False):
@@ -219,8 +224,7 @@ class Universe_simulation:
             
             if (self.add_SSC == True): 
                 clc.compute_halo_bias_grid_MZ(z_grid = z_grid_center, 
-                                              logm_grid = logm_grid_center, 
-                                              halobiais = self.halobias_fct)
+                                              logm_grid = logm_grid_center)
                 #generate deltas (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.sigmaij_SSC)
                 mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
@@ -269,7 +273,7 @@ class Universe_simulation:
             dN_dzdlogMdOmega_center *= np.tile(hmf_correction, (len(z_grid), 1)).T
 
             if (self.add_SSC == True): 
-                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid, halobiais = self.halobias_fct)
+                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
                 halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
                 #generate deltas in redshift bins (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
@@ -307,10 +311,11 @@ class Universe_simulation:
                     
             grid = {"N_th":N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
 
+        log10mass_return = np.log(10**np.array(log10mass)/(10**14))
         if return_Nth:
-            return grid, log10mass, np.array(redshift)
+            return grid, log10mass_return, np.array(redshift)
         else:
-            return log10mass, np.array(redshift)
+            return log10mass_return, np.array(redshift)
             
 
     def hmf_correction( self , M , Mstar , s , q ):
@@ -409,9 +414,13 @@ class Universe_simulation:
     def constantin_power_law( self ,  mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
         log10m0 = 14.3
         log10m = np.log10( np.exp( mu ) * 1e14 )
-        print( c_l , beta_l , alpha_l )
-        mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
-        # poisson realisation of this values
+        #print( c_l , beta_l , alpha_l )
+        #mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
+        RM = class_richness_mass_relation.Richness_mass_relation()
+        RM.select(which='log_normal_poisson_log_scatter')
+        theta_rm = log10m0, self.z_p, c_l, beta_l, alpha_l, 0, 0, 0
+        mean_ln_l = RM.proxy_mu_f(log10m, z, theta_rm)
+        #poisson realisation of this values
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l )  ) )
         return ln_l
     
