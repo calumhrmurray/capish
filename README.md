@@ -1,3 +1,3 @@
-## To-do list
+## Overview
 
-Why are some of the simulations nan? This should clearly be an issue 
+Capish and the posteriors are done
