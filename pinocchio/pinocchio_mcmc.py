@@ -129,8 +129,12 @@ if count_likelihood_used=='Gaussian+SSC':
     Sij_partialsky = CLCovar.compute_theoretical_Sij(Z_bin, cosmo, f_sky)
 
 def prior(theta, fit_cosmo):
-    
-    if number_params_scaling_relation == 4:
+
+    if number_params_scaling_relation == 0:
+        if fit_cosmo:
+            Omegam, Sigma8 = theta
+        
+    elif number_params_scaling_relation == 4:
         if fit_cosmo:
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, Omegam, Sigma8 = theta
         else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0 = theta
@@ -140,52 +144,58 @@ def prior(theta, fit_cosmo):
             proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m, Omegam, Sigma8 = theta
         else: proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta
     
-    if proxy_mu0 < 0: return 1
-    if proxy_muz < -2: return 1
-    if proxy_muz > 2: return 1
-    if proxy_mulog10m < 0: return 1
+    if number_params_scaling_relation != 0:
+        if proxy_mu0 < 0: return 1
+        if proxy_muz < -2: return 1
+        if proxy_muz > 2: return 1
+        if proxy_mulog10m < 0: return 1
+            
+    if number_params_scaling_relation == 6:
+        if proxy_sigmaz < -2: return 1
+        if proxy_sigmaz > 2: return 1
+        if proxy_sigmalog10m < -2: return 1
+        if proxy_sigmalog10m > 2: return 1
 
     if fit_cosmo:
         if Omegam < 0: return 1
         if Omegam > 0.6: return 1
         if Sigma8 < 0.4: return 1
         if Sigma8 > 1: return 1
-    #mean parameter priors
-    
-    if number_params_scaling_relation == 6:
-        if proxy_sigmaz < -2: return 1
-        if proxy_sigmaz > 2: return 1
-        if proxy_sigmalog10m < -2: return 1
-        if proxy_sigmalog10m > 2: return 1
-    
+
     return 0
 
 def lnL(theta, fit_cosmo, count_likelihood_used, return_prediction):
 
-
+    if number_params_scaling_relation == 0:
+            Omegam_, Sigma8_ = theta
+        
     if number_params_scaling_relation == 4:
         if fit_cosmo==True:
-            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, Omegam, Sigma8 = theta
+            proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_, Omegam_, Sigma8_ = theta
         else: 
-            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0 = theta
+            proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_ = theta
         
     if number_params_scaling_relation == 6:
         if fit_cosmo==True:
-            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m, Omegam, Sigma8 = theta
+            proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_, proxy_sigmaz_, proxy_sigmalog10m_, Omegam_, Sigma8_ = theta
         else: 
-            proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta
+            proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_, proxy_sigmaz_, proxy_sigmalog10m_ = theta
 
     prior_value = prior(theta, fit_cosmo)
     if prior_value == 1: return -np.inf
 
+    if (number_params_scaling_relation == 6):
+        theta_rm_new = [log10m0, z0, proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_, proxy_sigmaz_, proxy_sigmalog10m_]
+        
     if number_params_scaling_relation == 4:
-        theta_rm_new = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, 0, 0]
-    if number_params_scaling_relation == 6:
+        theta_rm_new = [log10m0, z0, proxy_mu0_, proxy_muz_, proxy_mulog10m_, proxy_sigma0_, 0, 0]
+
+    if number_params_scaling_relation == 0:
         theta_rm_new = [log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m]
 
     if fit_cosmo:
-        cosmo_new = ccl.Cosmology(Omega_c = Omegam - 0.048254, Omega_b = 0.048254, 
-                              h = 0.6777, sigma8 = Sigma8, n_s=0.96)
+        cosmo_new = ccl.Cosmology(Omega_c = Omegam_ - 0.048254, Omega_b = 0.048254, 
+                              h = 0.6777, sigma8 = Sigma8_, n_s=0.96)
     else: cosmo_new = cosmo
 
     params_new = {'params_richness_mass_relation': theta_rm_new,
@@ -237,25 +247,26 @@ def lnL(theta, fit_cosmo, count_likelihood_used, return_prediction):
         return lnL, N, Mth
     else: return lnL
 
-initial =  [proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0]
-initial += [proxy_sigmaz, proxy_sigmalog10m] if number_params_scaling_relation == 6 else []
+initial =  [proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0] if number_params_scaling_relation == 4 else []
+initial = [proxy_sigmaz, proxy_sigmalog10m, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0] if number_params_scaling_relation == 6 else []
 initial += [Omegam_true, sigma8_true] if fit_cosmo else []
 
-labels =  [r'\ln \lambda_0', r'\mu_z', r'\mu_m', r'\sigma_{\ln \lambda, 0}']
-labels += [r'\sigma_z', r'\sigma_m'] if number_params_scaling_relation == 6 else []
+labels = []
+labels += [r'\ln \lambda_0', r'\mu_z', r'\mu_m', r'\sigma_{\ln \lambda, 0}'] if number_params_scaling_relation == 4 else []
+labels += [r'\ln \lambda_0', r'\mu_z', r'\mu_m', r'\sigma_{\ln \lambda, 0}', r'\sigma_z', r'\sigma_m'] if number_params_scaling_relation == 6 else []
 labels += [r'\Omega_m', r'\sigma_8'] if fit_cosmo else []
 
 fit_cosmo_str = 'fit_cosmo' if fit_cosmo else 'fixed_cosmo'
 where_to_save = '/pbs/throng/lsst/users/cpayerne/capish/chains/'
 name_save=where_to_save+f'pinochio_v2_chain_{type_analysis}_{fit_cosmo_str}_num_params_rm_rel_{number_params_scaling_relation}_{which_model}_sigma_lnMwl={sigma_wl_log10mass*np.log(10):.2f}_with_{count_likelihood_used}_count_likelihood.pkl'
 logger.info('[Saving chains]: The chains will be saved in the file '+ name_save)
+
 ndim=len(initial)
 t = time.time()
 initial_str = ''
 for i in range(len(initial)):
     initial_str = labels[i] + ' = '+str(initial[i])
     logger.info('[MCMC]: Initial position: ' + initial_str )
-
 t = time.time()
 lnL_start, N, M = lnL(initial, fit_cosmo, count_likelihood_used, True)
 tf = time.time()
