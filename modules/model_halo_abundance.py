@@ -160,39 +160,75 @@ class HaloAbundance():
                     integrand = np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] for k in index_z_cut])
                     N_th = self.sky_area * simps(simps(integrand, proxy_cut), z_cut)
                     N_th_matrix[j,i] = N_th
+
+        return N_th_matrix
+
+    def Cluster_NMass_MZ(self, Redshift_bin = [], Proxy_bin = [], method = 'dblquad_interp', power = 1): 
+        r"""
+        returns the predicted number count in mass-redshift bins
+        Attributes:
+        -----------
+        Redshift_bin : list of lists
+            list of redshift bins
+        Proxy_bin : list of lists
+            list of mass bins
+        method : str
+            method to be used for the cluster abundance prediction
+            "simps": use simpson integral of the tabulated multiplicity
+            "dblquad_interp": integer interpolated multiplicity function
+            "exact_CCL": use scipy.dblquad to integer CCL multiplicity function
+        Returns:
+        --------
+        N_th_matrix: ndarray
+            matrix for the cluster abundance prediction in redshift and mass bins
+        """
+        N_th_matrix = np.zeros([len(Redshift_bin), len(Proxy_bin)])
                     
-        if method == 'bin_format':
-            
-            return 0
+        index_proxy = np.arange(len(self.logm_grid))
+        index_z = np.arange(len(self.z_grid))
+        for i, proxy_bin in enumerate(Proxy_bin):
+            mask_proxy = (self.logm_grid >= proxy_bin[0])*(self.logm_grid <= proxy_bin[1])
+            proxy_cut = self.logm_grid[mask_proxy]
+            index_proxy_cut = index_proxy[mask_proxy]
+            proxy_cut[0], proxy_cut[-1] = proxy_bin[0], proxy_bin[1]
+            for j, z_bin in enumerate(Redshift_bin):
+                z_down, z_up = z_bin[0], z_bin[1]
+                mask_z = (self.z_grid >= z_bin[0])*(self.z_grid <= z_bin[1])
+                z_cut = self.z_grid[mask_z]
+                index_z_cut = index_z[mask_z]
+                z_cut[0], z_cut[-1] = z_down, z_up
+                integrand = np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] for k in index_z_cut])
+                N_th = self.sky_area * simps(simps(integrand * 10 ** (proxy_cut * power), proxy_cut), z_cut)
+                N_th_matrix[j,i] = N_th
 
         return N_th_matrix
     
-    def multiplicity_function_individual_MZ(self, z = .1, logm = 14, method = 'interp'):
-        r"""
-        Attributes:
-        -----------
-        z: array
-            list of redshifs
-        logm: array
-            list of dark matter halo masses
-        method: str
-            method to use to compute multiplicity function
-            "interp": use interpolated multiplicity function
-            "exact_CCL": idividual CCL prediction
-        Returns:
-        --------
-        dN_dzdlogMdOmega : array
-            multiplicity function for the corresponding redshifts and masses
-        """
-        if method == 'interp':
-            dN_dzdlogMdOmega_fct = interpolate.RectBivariateSpline(self.logm_grid, self.z_grid, 
-                                                                   self.dN_dzdlogMdOmega)
-            dN_dzdlogMdOmega = dN_dzdlogMdOmega_fct(logm, z, grid = False)    
-        if method == 'exact_CCL':
-            dN_dzdlogMdOmega = np.zeros(len(z))
-            for i, z_ind, logm_ind in zip(np.arange(len(z)), z, logm):
-                dN_dzdlogMdOmega[i] = self.dndlog10M(logm_ind, z_ind) * self.dVdzdOmega(z_ind)
-        return dN_dzdlogMdOmega
+    # def multiplicity_function_individual_MZ(self, z = .1, logm = 14, method = 'interp'):
+    #     r"""
+    #     Attributes:
+    #     -----------
+    #     z: array
+    #         list of redshifs
+    #     logm: array
+    #         list of dark matter halo masses
+    #     method: str
+    #         method to use to compute multiplicity function
+    #         "interp": use interpolated multiplicity function
+    #         "exact_CCL": idividual CCL prediction
+    #     Returns:
+    #     --------
+    #     dN_dzdlogMdOmega : array
+    #         multiplicity function for the corresponding redshifts and masses
+    #     """
+    #     if method == 'interp':
+    #         dN_dzdlogMdOmega_fct = interpolate.RectBivariateSpline(self.logm_grid, self.z_grid, 
+    #                                                                self.dN_dzdlogMdOmega)
+    #         dN_dzdlogMdOmega = dN_dzdlogMdOmega_fct(logm, z, grid = False)    
+    #     if method == 'exact_CCL':
+    #         dN_dzdlogMdOmega = np.zeros(len(z))
+    #         for i, z_ind, logm_ind in zip(np.arange(len(z)), z, logm):
+    #             dN_dzdlogMdOmega[i] = self.dndlog10M(logm_ind, z_ind) * self.dVdzdOmega(z_ind)
+    #     return dN_dzdlogMdOmega
 
 
     # def dndlog10M(self, log10M, z):
