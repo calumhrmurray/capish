@@ -9,6 +9,8 @@ import model_halo_abundance
 import class_richness_mass_relation
 import cosmology
 
+RM = class_richness_mass_relation.Richness_mass_relation()
+
 
 class Universe_simulation:
     
@@ -311,12 +313,12 @@ class Universe_simulation:
                     
             grid = {"N_th":N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
 
-        log10mass_return = np.log(10**np.array(log10mass)/(10**14))
+        #log10mass_return = np.log(10**np.array(log10mass)/(10**14))
+        log10mass_return = log10mass
         if return_Nth:
             return grid, log10mass_return, np.array(redshift)
         else:
             return log10mass_return, np.array(redshift)
-            
 
     def hmf_correction( self , M , Mstar , s , q ):
         return s * np.log10( M / Mstar ) + q
@@ -416,7 +418,6 @@ class Universe_simulation:
         log10m = np.log10( np.exp( mu ) * 1e14 )
         #print( c_l , beta_l , alpha_l )
         #mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
-        RM = class_richness_mass_relation.Richness_mass_relation()
         RM.select(which='log_normal_poisson_log_scatter')
         theta_rm = log10m0, self.z_p, c_l, beta_l, alpha_l, 0, 0, 0
         mean_ln_l = RM.proxy_mu_f(log10m, z, theta_rm)
