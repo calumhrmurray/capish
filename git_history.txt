@@ -1,0 +1,124 @@
+*   4656693 (HEAD -> main, origin/main, origin/issue#14_pinocchio_mocks, issue#14_pinocchio_mocks) Merge remote-tracking branch 'origin/issue#14_pinocchio_mocks' into issue#14_pinocchio_mocks
+|\  
+| * b8749f1 organization
+| * cf7f25f implement dOmega(z) function
+| * 96d6d80 changes due to do-do list
+| * fad720a address item in capish to-do list
+| * 2d6c129 last push
+* | 3dd5daa trying to catch up
+|/  
+* 137f85b almost there with the posteriors
+* a4739f9 posteriors running with and with SSC for pinocchio
+* dcc0f2c removed old count model
+* e33a481 minor changes
+* 35fd1f3 recomputation
+* b38c663 add generation of sigmaij cov
+* 2dae8e2 small changes
+* a7a28e9 add full unbinned + SSC option
+* 80df766 add hmf correction + global bias fct
+* b52a975 notebook to test the accuracy of the hybrid count prediction
+* a0ac833 minor changes
+* 5ba8697 a few options for hybrid (either Poisson or Poisson+SSC)
+* 573f27d merge main
+* baf982e minor changes
+| * 1094910 (refs/stash) WIP on issue#14_pinocchio_mocks: 811b2e7 minor changes
+|/| 
+| * 5b380ef index on issue#14_pinocchio_mocks: 811b2e7 minor changes
+|/  
+* 811b2e7 minor changes
+* 9576100 small changes
+* fb6718f add SSC for the mass-redshift catalogue generation
+* 893b730 data for pinocchio analysis
+*   6d0cf35 merge main
+|\  
+| * e7f8b0c Commented out the torch code in simulation.py
+| * e97f687 Trying to fix DES-Y1 analysis
+* | 702fd31 small changes
+* | 811c9b4 small changes
+* | 4b76a68 small changes
+* | a3f78a7 cleaning
+* | 24f579b new masks, better resolution
+* | 9c8d957 notebook to test hierachical binning for SSC/SBI
+* | 330b407 small changes
+* | 944b05e sky maps for pinocchio mocks
+* | b7fbf70 add exact SSC calculation from PySSC
+* | ff4d27a updates with mask-based SSC
+* | 99706dd module to generate pinocchio sky map
+* | df4dd5d add n(1+b\delta) randomization instead of n+dn
+* | ce9522c minor changes, precision of PySSC code
+* | e4f298d notebook to compare standard prediction with SBI outputs
+* | 2cb54bb data vector in mass-redshift bins for PINOCCHIO
+* | 8f81dfa notebook to validate SBI with PINOCCHIO
+* | 682438b module to generate mass-redshift data vectors for PINOCCHIO validation of SSC implementation
+* | 620b61b minor changes
+* | a78b783 module for mass-redshift halo count, taken from our last Testing Likelohood paper
+* | dc1db53 small changes, esthetics
+* | 1030a5e add notebook to test SBI
+|\| 
+| * a0b34a6 Added Omega(z) redshift dependence of the survey area, created data folder
+| * 5c12b2f still bug searching for pinocchio comparison
+* | 2ce45fc merge main
+|\| 
+| *   ec0ee23 Merge remote-tracking branch 'origin/issue#14_pinocchio_mocks' Updated pinocchio mocks, with working traditional likelihood
+| |\  
+| * | 406e747 trying to fix little h
+| * |   fefb78d Merge remote-tracking branch 'origin/issue#14_pinocchio_mocks' Merging in the corrected pinocchio mocks
+| |\ \  
+| * | | edcd9b9 small notebook changes
+| * | | eadc933 changes?
+| * | | e0ba03f import pycc;
+| * | | 021eed9 added a pinocchio notebook and infer scripts
+| * | |   b28632e Merge remote-tracking branch 'origin/issue#14_pinocchio_mocks' Merging back into main
+| |\ \ \  
+| * | | | fabcd0f Anything?
+* | | | | f914c8c minor changes, prior
+* | | | | 29f901e correct prior stuffs
+* | | | | 5b982b3 add study on poisson scatter
+* | | | | 0db6ab3 add last chains using Mwl only
+| |_|_|/  
+|/| | |   
+* | | | 21a5146 see chains
+* | | | 9798ad9 small changes
+* | | | fdba234 independent file with fiducial rm relation
+* | | | 09d8a58 file to generate mock data vectors over 1000 mocks
+* | | | c5929f9 independent file for PINOCCHIO binning scheme
+* | | | b9bf30d add logm mean option
+* | | | f0f362a add new way to create mock richnesses
+* | | | 6bff056 notebook for just one pinocchio sim
+* | | | 479364b new figures
+* | | | 89f7e62 new chains
+* | | | 0ad837a minor changes, about bugs with CCL and too large cosmo priors
+* | | | 8872165 new data vectors, based on the average over 1000 mocks
+| |_|/  
+|/| |   
+* | | 263c377 small changes
+* | | ef7b18f correct poisson scatter model
+* | | 3e8ee53 add data vectors
+* | | 57affc8 correct data vectors
+* | | 5277627 notebook to see chains
+* | | 2373b7a job pinocchio
+* | | 2a31678 small changes, due to the new class format
+* | | d75df53 mcmc pinocchio
+* | | 7d88d75 update data vector
+* | | 454b99b add pinochio chains
+* | | 5cffcee create class, add spoisson scatter
+| |/  
+|/|   
+* | 69b8832 remove completeness
+* | cd7ac09 small changes in data vectors
+* | bc1efc0 delete
+* | 766443b notebook to generate mocks with mass-richness relation
+* | 7677ea6 minor changes
+* | 3949159 add data vectors for PINOCCHIO mocks
+* | 5aad477 first push
+|/  
+* dcc6bce (origin/tests_by_constantin) Added the Aemulus correction to the halo mass function
+* 620e760 New mass-richness model implemented
+* 28aed2e changed the call of the mass_richness relation, out of an if statement. In an attempt to spped up the code
+* 00daeef allows custom bins for mass and redshift in the catalogue generation
+* 74d0bf2 fixing small error
+* 1959c99 correcting z_bins reference error
+* 5c8505c adding figures dir
+* b56c5cf reorganisation for constantin
+* 994acda Autumn cleaning, but will break paths to simulation.py
+* bfd413c Initial commit

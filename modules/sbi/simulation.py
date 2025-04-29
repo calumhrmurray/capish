@@ -11,6 +11,7 @@ import cosmology
 
 RM = class_richness_mass_relation.Richness_mass_relation()
 
+
 class Universe_simulation:
     
     def __init__(self, summary_statistic, variable_params, fixed_params=None, for_simulate_for_sbi=False):
@@ -206,6 +207,7 @@ class Universe_simulation:
         logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1500)
         dlogm_grid = logm_grid[1] - logm_grid[0]
         logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
+
         CosmologyObject = cosmology.Cosmology(hmf=self.hmd, bias_model = self.halobias_fct)
         clc = model_halo_abundance.HaloAbundance(CosmologyObject = CosmologyObject)
         clc.set_cosmology(cosmo = cosmo)
