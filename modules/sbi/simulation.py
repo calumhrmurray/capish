@@ -22,6 +22,7 @@ class Universe_simulation:
         # Define available parameters and their default values
         self.available_params = {
             'omega_m': 0.3,
+            'omega_b': 0.048254,
             'sigma_8': 0.8,
             'ln_1010_As': 4.21,
             'h': 0.7,
@@ -131,18 +132,18 @@ class Universe_simulation:
         # Overwrite with any fixed parameters
         parameter_set.update( self.fixed_params)
 
-        # Return the ordered list of parameters
-        return [ parameter_set[p] for p in self.available_params ]
+        # Return a dictionary of the parameters
+        return parameter_set
 
     def run_simulation(self, param_values):
         """
         Run the simulation using the variable parameters provided.
         """
         # Get the full parameter set (both variable and fixed parameters)
-        full_parameter_set = self._get_parameter_set( param_values )
+        parameter_set = self._get_parameter_set( param_values )
 
         # Run the core simulation
-        richness, log10M_wl, z_clusters, _  = self._run_simulation( full_parameter_set )
+        richness, log10M_wl, z_clusters, _  = self._run_simulation( parameter_set )
 
         # Return result in a format compatible with SBI
         if self.for_simulate_for_sbi:
@@ -151,35 +152,24 @@ class Universe_simulation:
         else:
             return self.summary_statistic(richness, log10M_wl, z_clusters)
 
-    def _run_simulation(self, full_parameter_set ):
+    def _run_simulation(self, parameter_set ):
         """
         Core function to simulate cluster catalogs and selection function.
         """
-        # make cosmo
-        Om0, sigma8 , ln_1010_As , h, w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
 
-        # Ensure that parameters are native Python floats (not PyTorch tensors)
-        Om0 = float(Om0)
-        sigma8 = float(sigma8)
-        h = float(h)
-        w0 = float(w0)
-        wa = float(wa)
-
-        Omega_b = self.Omega_b #_h2 / h**2
-
-        print( Om0 , Omega_b , h , sigma8 )
+        print( parameter_set['omega_m'] , parameter_set['omega_b'] , parameter_set['h'] , parameter_set['sigma_8'] )
         
         cosmo_params = {
-                        'Omega_c': Om0 - Omega_b, 
-                        'Omega_b': Omega_b,
-                        'h': h,    
+                        'Omega_c': parameter_set['omega_m'] - parameter_set['omega_b'], 
+                        'Omega_b': parameter_set['omega_b'],
+                        'h': parameter_set['h'],    
                         'n_s': 0.96,
-                        'sigma8': sigma8,   
+                        'sigma8': parameter_set['sigma_8'],   
                         'Omega_k': 0.0 ,
                         'matter_power_spectrum' : 'linear',
                         'transfer_function': self.transfer_function,
-                        'w0': w0,
-                        'wa': wa,
+                        'w0': parameter_set['w0'],
+                        'wa': parameter_set['wa'],
                         'extra_parameters':{"camb": {"dark_energy_model": "ppf"}}
                     }
 
@@ -190,7 +180,7 @@ class Universe_simulation:
         mu_clusters, z_clusters = self.get_halo_catalogue( cosmo )
 
         # Get the observed cluster properties (richness, weak-lensing mass)
-        richness, log10M_wl , z_clusters = self.mass_observable_relation( mu_clusters, z_clusters, full_parameter_set , cosmo )
+        richness, log10M_wl , z_clusters = self.mass_observable_relation( mu_clusters, z_clusters, parameter_set , cosmo )
         
         return richness, log10M_wl, z_clusters, mu_clusters
         
@@ -315,17 +305,9 @@ class Universe_simulation:
     def hmf_correction( self , M , Mstar , s , q ):
         return s * np.log10( M / Mstar ) + q
 
-    def mass_observable_relation(self, mu, z, full_parameter_set, cosmo ):
-        Om0, sigma8 , ln_1010_As , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin = full_parameter_set
+    def mass_observable_relation(self, mu, z, parameter_set, cosmo ):
 
-        # Ensure that parameters are native Python floats (not PyTorch tensors)
-        # I am not sure that this is needed actually
-        alpha_l = float(alpha_l)
-        sigma_l = float(sigma_l)
-        c_l = float(c_l)
-        r = float(r)
-
-        mean_l = self.richness_mass_relation( mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo )
+        mean_l = self.richness_mass_relation( mu , z , parameter_set , cosmo )
         mean_mwl = self.c_mwl + self.alpha_mwl * mu
 
         sampled_l = []
@@ -399,13 +381,13 @@ class Universe_simulation:
 
         return np.exp( ln_richness ), np.log10( np.exp( lnM_wl ) ), z
     
-    def power_law( self ,  mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
+    def power_law( self ,  mu , z , parameter_set  , cosmo ):
         mean_ln_l = c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
         # poisson realisation of this values
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l ) ) )
         return ln_l
 
-    def constantin_power_law( self ,  mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin  , cosmo ):
+    def constantin_power_law( self ,  mu , z , parameter_set , cosmo ):
         log10m0 = 14.3
         log10m = np.log10( np.exp( mu ) * 1e14 )
         #print( c_l , beta_l , alpha_l )
@@ -417,7 +399,7 @@ class Universe_simulation:
         ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l )  ) )
         return ln_l
     
-    def halo_model( self , mu , z , Om0, sigma8 , h , w0, wa, alpha_l, c_l, sigma_l, r, beta_l, c_rho, B , log10Mmin , cosmo ):
+    def halo_model( self , mu , z , parameter_set , cosmo ):
         Mmin = 10**log10Mmin
         M1 = 10**( B ) * Mmin
         M = ( np.exp( mu ) * 1e14 )
