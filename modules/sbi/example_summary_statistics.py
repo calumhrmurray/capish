@@ -151,7 +151,6 @@ def stacked_counts_wonky_bins( self , richness, log10M_wl, redshift ):
     observed_cluster_abundance = observed_cluster_abundance.flatten()
     
     mean_log10M_wl = []
-    
     # mass measurements...
     for idx_bin in np.arange( 0 , len( self.wl_redshift_bins[:-1] ) ):
         

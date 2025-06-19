@@ -3,21 +3,32 @@ import pyccl as ccl
 import itertools
 import sys
 import os 
-dir_path=os.path.dirname(os.path.realpath(__file__))
-sys.path.append(dir_path+'/../')
-import model_halo_abundance
-import class_richness_mass_relation
-import cosmology
+import configparser
 
-RM = class_richness_mass_relation.Richness_mass_relation()
+#RM = class_richness_mass_relation.Richness_mass_relation()
 
-
-class Universe_simulation:
+class Universe_simulator:
     
-    def __init__(self, summary_statistic, variable_params, fixed_params=None, for_simulate_for_sbi=False):
+    def __init__( self , config_path = None ):
         """
         Initialize the Universe_simulation class.
         """
+
+        self.get_halo_catalogue = halo_catalogue_method
+        self.get_cluster_catalogue = cluster_catalogue_method
+        self.get_summary_statistic = summary_statistic
+
+        if config_path:
+            config = configparser.ConfigParser()
+            config.read(config_path)
+
+            # here we setup the parameters which will be used for the simulation
+            # also set the fixed parameters which will not be varied
+            self.variable_params = list(config['variable_parameters'].keys())
+            self.fixed_params = {k: float(v) for k, v in config['fixed_parameters'].items()}
+        else:
+            self.variable_params = []
+            self.fixed_params = {}
 
         # Define available parameters and their default values
         self.available_params = {
@@ -60,6 +71,8 @@ class Universe_simulation:
         self.redshift_grid = None
         self.mass_values = None
         self.redshift_values = None 
+
+
         # Bin settings for stacked and unbinned counts
         self.richness_bins = None
         self.redshift_bins = None 
@@ -85,6 +98,19 @@ class Universe_simulation:
         self.Mstar = 10**13.8
         #self.omega_b_h2 = 0.02208
         self.Omega_b = 0.048254
+
+    def run_simulation( self , param_values ):
+        """
+        Run the simulation using the variable parameters provided.
+        """
+        
+        halo_catalogue = self.get_halo_catalogue( param_values )
+
+        cluster_catalogue = self.get_halo_catalogue( halo_catalogue , param_values )
+
+        summary_statistic = self.get_summary_statistic( cluster_catalogue )
+
+        return summary_statistic
     
     def set_richness_mass_relation( self , richness_mass_relation_name ):
         if richness_mass_relation_name == 'power law':
