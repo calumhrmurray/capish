@@ -14,10 +14,6 @@ class Universe_simulator:
         Initialize the Universe_simulation class.
         """
 
-        self.get_halo_catalogue = halo_catalogue_method
-        self.get_cluster_catalogue = cluster_catalogue_method
-        self.get_summary_statistic = summary_statistic
-
         if config_path:
             config = configparser.ConfigParser()
             config.read(config_path)
