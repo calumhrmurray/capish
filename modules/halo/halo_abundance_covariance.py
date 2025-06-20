@@ -1,9 +1,10 @@
 import numpy as np
 from itertools import combinations, chain
 import healpy
-import PySSC
+import pyssc
 
-def binning(corner): return [[corner[i],corner[i+1]] for i in range(len(corner)-1)]
+def binning(corner): 
+    return [[corner[i],corner[i+1]] for i in range(len(corner)-1)]
 
 class Covariance_matrix():
     r"""
@@ -25,7 +26,7 @@ class Covariance_matrix():
                                 'sigma8': cosmo['sigma8'],
                                 'output' : 'mPk'}
         
-        return PySSC.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)/fsky
+        return pyssc.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)/fsky
     
     def compute_theoretical_Sij(self, Z_bin, cosmo, f_sky, S_ij_type = 'full_sky_rescaled_approx', path = None):
         
@@ -36,6 +37,7 @@ class Covariance_matrix():
                                 'sigma8': cosmo['sigma8'],
                                 'output' : 'mPk'}
         
+        # this should be in a settings file somewhere
         z_arr = np.linspace(0.1,1.2,1000)
         nbins_T   = len(Z_bin)
         windows_T = np.zeros((nbins_T,len(z_arr)))
@@ -48,11 +50,11 @@ class Covariance_matrix():
                         windows_T[i,k] = 1
         
         if S_ij_type == 'full_sky_rescaled_approx':  
-            Sij_fullsky = PySSC.Sij_alt_fullsky(z_arr, windows_T, order=1, cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0)
+            Sij_fullsky = pyssc.Sij_fullsky(z_arr, windows_T, order=1, cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0)
             Sij_partialsky = Sij_fullsky/f_sky
             
         elif S_ij_type == 'full_sky_rescaled': 
-            Sij_fullsky = PySSC.Sij(z_arr, windows_T, order=1, sky='full', method='classic', 
+            Sij_fullsky = pyssc.Sij(z_arr, windows_T, order=1, sky='full', method='classic', 
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
                                     precision=10, clmask=None, mask=None, mask2=None, 
                                     var_tol=0.05, machinefile=None, Nn=None, Np='default', 
@@ -60,7 +62,7 @@ class Covariance_matrix():
             Sij_partialsky = Sij_fullsky/f_sky
         
         elif S_ij_type == 'exact':
-            Sij_partialsky = PySSC.Sij(z_arr, windows_T, order=1, sky='psky', method='classic', 
+            Sij_partialsky = pyssc.Sij(z_arr, windows_T, order=1, sky='psky', method='classic', 
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
                                     precision=10, clmask=None, mask=path, mask2=None, 
                                     var_tol=0.05, machinefile=None, Nn=None, Np='default', 

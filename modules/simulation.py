@@ -4,14 +4,14 @@ import itertools
 import sys
 import os 
 import configparser
+from modules.halo.halo_catalogue import HaloCatalogue
+#from modules.cluster.cluster_catalogue import ClusterCatalogue
 
-#RM = class_richness_mass_relation.Richness_mass_relation()
-
-class Universe_simulator:
+class UniverseSimulator:
     
-    def __init__( self , config_path = None ):
+    def __init__( self , summary_statistic , config_path = None ):
         """
-        Initialize the Universe_simulation class.
+        Initialize the UniverseSimulator class.
         """
 
         if config_path:
@@ -22,123 +22,35 @@ class Universe_simulator:
             # also set the fixed parameters which will not be varied
             self.variable_params = list(config['variable_parameters'].keys())
             self.fixed_params = {k: float(v) for k, v in config['fixed_parameters'].items()}
+
+            # set the halo catalogue settings
+            # self.halo_catalogue_settings = {k: float(v) for k, v in config['halo_catalogue'].items()}
+            self.halo_catalogue_class = HaloCatalogue( config )
+
+            # set the cluster catalogue settings
+            #self.cluster_catalogue_settings = {k: float(v) for k, v in config['cluster_catalogue'].items()}
+            #self.cluster_catalogue_class = ClusterCatalogue( self.cluster_catalogue_settings )
+
+            # set the summary statistic function
+            # this should function on a cluster catalogue object
+            #self.summary_statistic = summary_statistic
+
         else:
-            self.variable_params = []
-            self.fixed_params = {}
+            print("No config file provided, you must provide a config.")
 
-        # Define available parameters and their default values
-        self.available_params = {
-            'omega_m': 0.3,
-            'omega_b': 0.048254,
-            'sigma_8': 0.8,
-            'ln_1010_As': 4.21,
-            'h': 0.7,
-            'w_0': -1,
-            'w_a': 0,
-            'alpha': 0.8,
-            'c': 3,
-            'sigma': 0.3,
-            'r': 0.0,
-            'beta': 0,
-            'c_rho': 0.0,
-            'B':0,
-            'log10Mmin':0,
-        }
-
-        # Initialize the summary statistic function
-        self.summary_statistic = summary_statistic
-
-        # Specify the variable and fixed parameters
-        self.variable_params = variable_params
-        self.fixed_params = fixed_params if fixed_params else {}
-
-        # Other simulation setup
-        self.selection_richness = 0
-        self.for_simulate_for_sbi = for_simulate_for_sbi
-        # HMF properties
-        self.dlog10m = 0.01
-        self.log10ms = np.arange( 13., 16, self.dlog10m )
-        self.Ms = 10**self.log10ms
-        self.hmf = ccl.halos.MassFuncTinker10(mass_def='200m')
-        # Create mass and redshift grids
-        self.z_bins = None
-        self.zs = None
-        self.mass_grid = None
-        self.redshift_grid = None
-        self.mass_values = None
-        self.redshift_values = None 
-
-
-        # Bin settings for stacked and unbinned counts
-        self.richness_bins = None
-        self.redshift_bins = None 
-        self.small_log10Mwl_bins = np.arange(12.5, 16, 0.1)
-        self.small_richness_bins = np.logspace(np.log10(20), np.log10(300), 15)
-        self.small_redshift_bins = np.linspace(0.025, 1.125, 6)
-        self.dOmega = None
-        self.alpha_mwl = 1
-        self.sigma_mwl = 0.25
-        self.c_mwl = np.log(1e14)
-        self.transfer_function = 'boltzmann_camb'
-        self.include_mwl_measurement_errors = False
-        self.z_p = 0.5
-        self.use_selection_function = False
-        self.z_bins_sel = None
-        self.l_bins_sel = None
-        self.correlation_mass_evolution = False
-        self.cme_mu_bins = None
-        self.richness_mass_relation = None
-        # for the hmf correction, default is set to no correction values
-        self.s = 0
-        self.q = 1
-        self.Mstar = 10**13.8
-        #self.omega_b_h2 = 0.02208
-        self.Omega_b = 0.048254
 
     def run_simulation( self , param_values ):
         """
         Run the simulation using the variable parameters provided.
         """
         
-        halo_catalogue = self.get_halo_catalogue( param_values )
+        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( param_values )
 
-        cluster_catalogue = self.get_halo_catalogue( halo_catalogue , param_values )
+        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , param_values )
 
         summary_statistic = self.get_summary_statistic( cluster_catalogue )
 
         return summary_statistic
-    
-    def set_richness_mass_relation( self , richness_mass_relation_name ):
-        if richness_mass_relation_name == 'power law':
-            self.richness_mass_relation = self.power_law
-        elif richness_mass_relation_name == 'halo model':
-            self.richness_mass_relation = self.halo_model
-        elif richness_mass_relation_name == 'constantins model':
-            self.richness_mass_relation = self.constantin_power_law
-        else:
-            print('That mass richness relation is not implemented.')
-    
-    def set_bins( self, z_bins=None, log10m_bins=None ):
-        """
-        Set new redshift and mass bins and reinitialize dependent properties.
-
-        Parameters:
-            z_bins (np.ndarray): Array of redshift bin edges.
-            m_bins (np.ndarray): Array of log10 mass bin edges.
-        """
-        self.z_bins = z_bins
-        self.zs = (self.z_bins[1:] + self.z_bins[:-1]) / 2.
-
-        self.log10ms = log10m_bins
-        self.Ms = 10**self.log10ms
-
-        # Reinitialize any dependent properties
-        mass_grid, redshift_grid = np.meshgrid(self.log10ms, self.zs)
-        self.mass_grid = mass_grid
-        self.redshift_grid = redshift_grid
-        self.mass_values = self.mass_grid.flatten()
-        self.redshift_values = self.redshift_grid.flatten()
-        self.dlog10m = log10m_bins[1] - log10m_bins[0]
 
     def _get_parameter_set(self, param_values):
         """
@@ -174,259 +86,4 @@ class Universe_simulator:
         else:
             return self.summary_statistic(richness, log10M_wl, z_clusters)
 
-    def _run_simulation(self, parameter_set ):
-        """
-        Core function to simulate cluster catalogs and selection function.
-        """
-
-        print( parameter_set['omega_m'] , parameter_set['omega_b'] , parameter_set['h'] , parameter_set['sigma_8'] )
-        
-        cosmo_params = {
-                        'Omega_c': parameter_set['omega_m'] - parameter_set['omega_b'], 
-                        'Omega_b': parameter_set['omega_b'],
-                        'h': parameter_set['h'],    
-                        'n_s': 0.96,
-                        'sigma8': parameter_set['sigma_8'],   
-                        'Omega_k': 0.0 ,
-                        'matter_power_spectrum' : 'linear',
-                        'transfer_function': self.transfer_function,
-                        'w0': parameter_set['w0'],
-                        'wa': parameter_set['wa'],
-                        'extra_parameters':{"camb": {"dark_energy_model": "ppf"}}
-                    }
-
-        # Create the CCL Cosmology object once
-        cosmo = ccl.Cosmology( **cosmo_params )
-        
-        # Get the latent cluster properties (mu_clusters, z_clusters)
-        mu_clusters, z_clusters = self.get_halo_catalogue( cosmo )
-
-        # Get the observed cluster properties (richness, weak-lensing mass)
-        richness, log10M_wl , z_clusters = self.mass_observable_relation( mu_clusters, z_clusters, parameter_set , cosmo )
-        
-        return richness, log10M_wl, z_clusters, mu_clusters
-        
-    def get_halo_catalogue( self, cosmo, return_Nth=False):
-
-        logm_grid = np.linspace(self.log10ms[0], self.log10ms[-1], 1500)
-        dlogm_grid = logm_grid[1] - logm_grid[0]
-        logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
-
-        CosmologyObject = cosmology.Cosmology(hmf=self.hmd, bias_model = self.halobias_fct)
-        clc = model_halo_abundance.HaloAbundance(CosmologyObject = CosmologyObject)
-        clc.set_cosmology(cosmo = cosmo)
-        clc.sky_area = self.dOmega
-        
-        if (self.use_hybrid == False):
-            z_grid = np.linspace(self.z_bins[0], self.z_bins[-1], 1000)
-            dz_grid = z_grid[1] - z_grid[0]
-            z_grid_center = np.array([(z_grid[i] + z_grid[i+1])/2 for i in range(len(z_grid)-1)])
-            
-            #here, we compute the HMF grid
-            clc.compute_multiplicity_grid_MZ(z_grid = z_grid_center, logm_grid = logm_grid_center)
-            #we consider using the trapezoidal integral method here, given by int = dx(f(a) + f(b))/2
-            hmf_correction = self.hmf_correction(10 ** logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
-            dN_dzdlogMdOmega_center = clc.dN_dzdlogMdOmega * np.tile(hmf_correction, (len(z_grid_center), 1)).T
-            
-            if (self.add_SSC == True): 
-                clc.compute_halo_bias_grid_MZ(z_grid = z_grid_center, 
-                                              logm_grid = logm_grid_center)
-                #generate deltas (log-normal probabilities)
-                cov_ln1_plus_delta_SSC = np.log(1 + self.sigmaij_SSC)
-                mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
-                ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
-                delta = (np.exp(ln1_plus_delta_SSC) - 1)
-                delta_h = clc.halo_biais * delta
-                delta_h = np.where(delta_h < -1, -1, delta_h)
-                corr = 1 + delta_h
-            else: corr = 1
-
-            Omega_z = np.tile(self.dOmega(z_grid_center), (len(z_grid_center), 1)).T
-                
-            Nobs = np.random.poisson(Omega_z * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid * corr)
-            Nobs_flatten = Nobs.flatten()
-            Z_grid_center, Logm_grid_center = np.meshgrid(z_grid_center, logm_grid_center)
-            Z_grid_center_flatten, Logm_grid_center_flatten = Z_grid_center.flatten(), Logm_grid_center.flatten()
-
-            log10mass = [logm_grid_i for logm_grid_i, count in zip(Logm_grid_center_flatten, Nobs_flatten) for _ in range(count)]
-            redshift = [z_grid_i for z_grid_i, count in zip(Z_grid_center_flatten, Nobs_flatten) for _ in range(count)]
-
-            grid = {"N_th": Omega_z * dN_dzdlogMdOmega_center * dlogm_grid * dz_grid, 
-                    "z_grid_center":z_grid_center, 
-                    "logm_grid_center":logm_grid_center}
-        
-        elif (self.use_hybrid == True):
-            
-            Z_edges_hybrid = self.Z_edges_hybrid
-            Z_bin_hybrid = [[Z_edges_hybrid[i], Z_edges_hybrid[i+1]] for i in range(len(Z_edges_hybrid)-1)]
-            
-            #ensure that the redshift grid matches SSC redshift grid values
-            z_grid = []
-            z_grid.append(Z_edges_hybrid[0])
-            for i in range(len(Z_edges_hybrid)-1):
-                x = list(np.linspace(Z_edges_hybrid[i], Z_edges_hybrid[i+1], 50))
-                z_grid.extend(x[1:-1])
-                z_grid.append(Z_edges_hybrid[i+1])
-            z_grid = np.array(z_grid)
-            dz_grid = z_grid[1] - z_grid[0]
-            
-            #here, we compute the HMF grid
-            clc.compute_multiplicity_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
-            #we consider using the trapezoidal integral method here, given by int = dx(f(a) + f(b))/2
-            dN_dzdlogMdOmega_center = (clc.dN_dzdlogMdOmega[:-1] + clc.dN_dzdlogMdOmega[1:]) / 2
-            logm_grid_center = np.array([(logm_grid[i] + logm_grid[i+1])/2 for i in range(len(logm_grid)-1)])
-            hmf_correction = self.hmf_correction(10**logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
-            dN_dzdlogMdOmega_center *= np.tile(hmf_correction, (len(z_grid), 1)).T
-
-            if (self.add_SSC == True): 
-                clc.compute_halo_bias_grid_MZ(z_grid = z_grid, logm_grid = logm_grid)
-                halo_bias_center = (clc.halo_biais[:-1] + clc.halo_biais[1:]) / 2
-                #generate deltas in redshift bins (log-normal probabilities)
-                cov_ln1_plus_delta_SSC = np.log(1 + self.Sij_SSC)
-                mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
-                ln1_plus_delta_SSC = np.random.multivariate_normal(mean=mean , cov=cov_ln1_plus_delta_SSC)
-                delta = (np.exp(ln1_plus_delta_SSC) - 1)
-
-            N_obs = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
-            N_th = np.zeros([len(Z_bin_hybrid), len(logm_grid_center)])
-            log10mass, redshift = [], []
-            
-            for i, redshift_range in enumerate(Z_bin_hybrid):
-                
-                mask = (z_grid >= redshift_range[0])*(z_grid <= redshift_range[1])
-                dNdm  = self.dOmega(z_grid[mask]) * np.trapz(dN_dzdlogMdOmega_center[:,mask], z_grid[mask], axis=1)
-                pdf   = self.dOmega(z_grid[mask]) * dN_dzdlogMdOmega_center[:,mask]
-                cumulative = np.cumsum(dz_grid * pdf, axis = 1)  
-                
-                if self.add_SSC == True:
-                    integrand = self.dOmega(z_grid[mask]) * halo_bias_center * dN_dzdlogMdOmega_center
-                    bdNdm = np.trapz(integrand[:,mask], z_grid[mask])
-                    bias = np.array(bdNdm)/np.array(dNdm)
-                    delta_h = bias * delta[i]
-                    delta_h = np.where(delta_h < -1, -1, delta_h) #we ensure that deltah = b*delta is > 1
-                    corr = (1 + delta_h)
-                else: corr = 1
-                N_obs[i,:] = np.random.poisson(dNdm * dlogm_grid * corr)
-                N_th[i,:] = dNdm * dlogm_grid #we generate the observed count
-                N_sample_obs_zbins = N_obs[i,:]
-                
-                for j in range(len(logm_grid_center)):
-                    log10mass.extend(list(np.zeros(int(N_sample_obs_zbins[j]))+logm_grid_center[j])) #masses
-                    cumulative_rand = (cumulative[j][-1]-cumulative[j][0])*np.random.random(int(N_sample_obs_zbins[j]))+cumulative[j][0]
-                    redshift.extend(list(np.interp(cumulative_rand, cumulative[j], z_grid[mask]))) #redshifts
-                    
-            grid = {"N_th":N_th, "z_grid":z_grid, "logm_grid":logm_grid, "logm_grid_center": logm_grid_center}
-
-        #log10mass_return = np.log(10**np.array(log10mass)/(10**14))
-        log10mass_return = log10mass
-        if return_Nth:
-            return grid, log10mass_return, np.array(redshift)
-        else:
-            return log10mass_return, np.array(redshift)
-
-    def hmf_correction( self , M , Mstar , s , q ):
-        return s * np.log10( M / Mstar ) + q
-
-    def mass_observable_relation(self, mu, z, parameter_set, cosmo ):
-
-        mean_l = self.richness_mass_relation( mu , z , parameter_set , cosmo )
-        mean_mwl = self.c_mwl + self.alpha_mwl * mu
-
-        sampled_l = []
-        sampled_mwl = []
-        sampled_z = []
-        sampled_mu = []
-
-        # Selection function
-        if self.use_selection_function:
-            for i in np.arange(0, len(self.z_bins_sel[1:])):
-                for j in np.arange(0, len(self.l_bins_sel[1:])):
-                    bin_indices = np.where((z > self.z_bins_sel[i]) &
-                                           (z < self.z_bins_sel[i+1]) &
-                                           (mean_l > self.l_bins_sel[j]) &
-                                           (mean_l < self.l_bins_sel[j+1]))[0]
-                    # Randomly sample indices
-                    sampled_indices = np.random.choice(bin_indices, 
-                                                       int(self.selection_function[i][j] * len(mu[bin_indices])), 
-                                                       replace=False)
-                    sampled_l.append( mean_l[sampled_indices] )
-                    sampled_mwl.append( mean_mwl[sampled_indices] )
-                    sampled_z.append( z[sampled_indices] )
-                    sampled_mu.append( mu[sampled_indices] )
-
-            mean_l = np.concatenate( sampled_l )
-            mean_mwl = np.concatenate( sampled_mwl )
-            z = np.concatenate( sampled_z )
-            mu = np.concatenate( sampled_mu )
-
-
-        # Initialize noise array
-        total_noise = np.zeros( (len( mu ) , 2 ) )
-
-        # Mass-evolution correlation
-        if self.correlation_mass_evolution:
-
-            for i in np.arange( 0 , len( self.cme_mu_bins[:-1] ) ):
-                
-                bin_indices = np.where( ( mu > self.cme_mu_bins[i] ) & ( mu < self.cme_mu_bins[i+1] ))[0]
-
-                # Calculate mass-evolution-dependent covariance for each bin
-                r_mu = r #* np.mean( mus[bin_indices] ) + c_rho
-                
-                cov = [[ sigma_l**2, r_mu * sigma_l * self.sigma_mwl ], 
-                       [ r_mu * sigma_l * self.sigma_mwl, self.sigma_mwl**2 ]]
-                
-                noise = np.random.multivariate_normal( [0, 0], 
-                                                       cov = cov, 
-                                                       size=len( mu[bin_indices] ) )
-
-                # Add noise to corresponding indices
-                total_noise[bin_indices] = noise
-
-        else:
-            # Default covariance without mass evolution
-            cov = [[sigma_l**2 , r * sigma_l * self.sigma_mwl], 
-                   [r * sigma_l * self.sigma_mwl, self.sigma_mwl**2]]
-
-            total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
-
-        # Apply intrinsic noise to mean values
-        ln_richness = mean_l + total_noise.T[0]
-        lnM_wl = mean_mwl + total_noise.T[1]
-
-        # # Apply observational noise to the richness
-        # if self.add_richness_observational_scatter == True:
-        #     # background-subtraction noise
-        #     delta_bkg = np.random
-        #     # projection noise
-        #     delta_prj = ( 1 - f_prj ) 
-
-        return np.exp( ln_richness ), np.log10( np.exp( lnM_wl ) ), z
-    
-    def power_law( self ,  mu , z , parameter_set  , cosmo ):
-        mean_ln_l = c_l + alpha_l * mu + beta_l * np.log( cosmo.h_over_h0(1/(1+z)) / cosmo.h_over_h0(1/(1 + self.z_p) ) )
-        # poisson realisation of this values
-        ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l ) ) )
-        return ln_l
-
-    def constantin_power_law( self ,  mu , z , parameter_set , cosmo ):
-        log10m0 = 14.3
-        log10m = np.log10( np.exp( mu ) * 1e14 )
-        #print( c_l , beta_l , alpha_l )
-        #mean_ln_l = c_l + beta_l * np.log( ( 1+z ) / (1 + self.z_p ) ) + alpha_l * ( log10m - log10m0 )
-        RM.select(which='log_normal_poisson_log_scatter')
-        theta_rm = log10m0, self.z_p, c_l, beta_l, alpha_l, 0, 0, 0
-        mean_ln_l = RM.proxy_mu_f(log10m, z, theta_rm)
-        #poisson realisation of this values
-        ln_l = np.log( np.random.poisson( lam = np.exp( mean_ln_l )  ) )
-        return ln_l
-    
-    def halo_model( self , mu , z , parameter_set , cosmo ):
-        Mmin = 10**log10Mmin
-        M1 = 10**( B ) * Mmin
-        M = ( np.exp( mu ) * 1e14 )
-        mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + self.z_p ) )**beta_l
-        mean_l[ np.logical_or( mean_l < 0, np.isnan(mean_l) ) ] = 0
-
-        return np.log( np.random.poisson( lam = mean_l ) + 1 )
     
