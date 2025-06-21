@@ -86,6 +86,7 @@ class HaloCatalogue:
 
         self.SSC = bool(settings['halo_catalogue']['SSC'])
         self.recompute_SSC_fiducial = bool(settings['halo_catalogue']['recompute_SSC_ficucial'])
+        self.save_new_SSC_fiducial = bool(settings['halo_catalogue']['save_new_SSC_fiducial'])
         
         # setup the SSC stuff
         if self.SSC:
@@ -106,19 +107,22 @@ class HaloCatalogue:
                     HaloAbundanceObject = halo_abundance.HaloAbundance()
                     sigma2ij_SSC_fullsky = HaloAbundanceObject.compute_theoretical_sigma2ij_fullsky(cosmo_ccl_fid, 
                                                                                 self.z_grid_center)
-                    sigma2ij_SSC_tosave = {'z_grid_center': self.z_grid_center,
-                                          'sigma2ij_SSC_fullsky': sigma2ij_SSC_fullsky}
-                    
-                    save_pickle(sigma2ij_SSC_tosave, filename)
                     self.sigmaij_SSC = sigma2ij_SSC_fullsky/self.fsky
                 except:
                     raise ValueError("should install PySSC!")
                 
+                if self.save_new_SSC_fiducial:
+                    sigma2ij_SSC_tosave = {'z_grid_center': self.z_grid_center,
+                                      'sigma2ij_SSC_fullsky': sigma2ij_SSC_fullsky}
+                    save_pickle(sigma2ij_SSC_tosave, filename)
+                
             else: 
                 sigmaij_SSC_file = np.load(filename)
                 self.sigmaij_SSC = sigmaij_SSC_file['sigma2ij_SSC_fullsky']/self.fsky 
+                check_z_grid = 0
                 for x, y in zip(sigmaij_SSC_file['z_grid_center'], self.z_grid_center):
-                    if x != y: raise ValueError("Mismatch - should install PySSC!")
+                    if x != y: check_z_grid += 1
+                if check_z_grid!=0: raise ValueError("Mismatch - should install PySSC!")
             
         # hmf correction parameters
         self.Mstar = float( settings['halo_catalogue']['Mstar'] ) # in
