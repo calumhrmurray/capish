@@ -48,6 +48,9 @@ def get_bias_from_config(settings):
     massdef = get_massdef_from_config(settings)
     return bias_cls(mass_def=massdef, mass_def_strict=True)
 
+def str2bool(v):
+    return str(v).lower() in ("yes", "true", "t", "1")
+
 class HaloCatalogue:
      
     def __init__( self , settings ):
@@ -84,12 +87,13 @@ class HaloCatalogue:
         self.mass_definition = get_massdef_from_config(settings['halo_catalogue'])
         self.hmf = get_massfunc_from_config(settings['halo_catalogue'])
 
-        self.SSC = bool(settings['halo_catalogue']['SSC'])
-        self.recompute_SSC_fiducial = bool(settings['halo_catalogue']['recompute_SSC_ficucial'])
-        self.save_new_SSC_fiducial = bool(settings['halo_catalogue']['save_new_SSC_fiducial'])
+        self.SSC = str2bool(settings['halo_catalogue']['SSC'])
+        self.recompute_SSC_fiducial = str2bool(settings['halo_catalogue']['recompute_SSC_ficucial'])
+        self.save_new_SSC_fiducial = str2bool(settings['halo_catalogue']['save_new_SSC_fiducial'])
         
         # setup the SSC stuff
         if self.SSC:
+            print('we are not here')
             zmin = float( settings['halo_catalogue']['z_min'])
             zmax = float( settings['halo_catalogue']['z_max'])  
             nzbins =  int( settings['halo_catalogue']['n_redshift_bins'] )
