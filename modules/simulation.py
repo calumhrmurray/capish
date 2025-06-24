@@ -5,7 +5,7 @@ import sys
 import os 
 import configparser
 from modules.halo.halo_catalogue import HaloCatalogue
-#from modules.cluster.cluster_catalogue import ClusterCatalogue
+from modules.cluster.cluster_catalogue import ClusterCatalogue
 
 class UniverseSimulator:
     
