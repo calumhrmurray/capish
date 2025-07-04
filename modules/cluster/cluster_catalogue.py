@@ -45,7 +45,7 @@ class ClusterCatalogue:
         sigma_mwl = parameter_set['sigma_mwl']  
 
         mean_l = self.richness_mass_relation( mu , z , parameter_set )
-        mean_mwl = mu
+        mean_mu_mwl = mu
 
         cov = [ [ sigma_l**2 , r * sigma_l * sigma_mwl], 
                 [r * sigma_l * sigma_mwl, sigma_mwl**2] ]
@@ -54,10 +54,10 @@ class ClusterCatalogue:
 
         # Apply intrinsic noise to mean values
         ln_richness = mean_l + total_noise.T[0]
-        lnM_wl = mean_mwl + total_noise.T[1]
+        mu_mwl = mean_mu_mwl + total_noise.T[1]
 
         return {
             'richness': np.exp(ln_richness),
-            'log10_mwl': np.log10(np.exp(lnM_wl)),
+            'log10_mwl': np.log10( np.exp( mu_mwl ) * 1e14 ),
             'redshift': z
         }

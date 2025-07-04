@@ -9,7 +9,7 @@ from modules.cluster.cluster_catalogue import ClusterCatalogue
 
 class UniverseSimulator:
     
-    def __init__( self , summary_statistic , config_path = None ):
+    def __init__( self , calculate_summary_statistic , config_path = None ):
         """
         Initialize the UniverseSimulator class.
         """
@@ -32,7 +32,7 @@ class UniverseSimulator:
 
             # set the summary statistic function
             # this should function on a cluster catalogue object
-            #self.summary_statistic = summary_statistic
+            self.calculate_summary_statistic = calculate_summary_statistic
 
         else:
             print("No config file provided, you must provide a config.")
@@ -59,7 +59,30 @@ class UniverseSimulator:
         
         cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , params )
 
-        #summary_statistic = self.get_summary_statistic( cluster_catalogue )
+        summary_statistic = self.calculate_summary_statistic( cluster_catalogue )
+
+        return summary_statistic
+    
+    def get_cluster_catalogue( self , param_values ):
+        """
+        Run the simulation using the variable parameters provided.
+        """
+
+        # Combine fixed and variable parameters into a single dictionary
+        params = self._get_parameter_set( param_values )
+
+        # set cosmo
+        cosmo = ccl.Cosmology(
+            Omega_c=params['omega_m'] - params['omega_b'],
+            Omega_b=params['omega_b'],
+            h=params['h'],
+            sigma8=params['sigma_8'],
+            n_s=params['n_s']
+        )
+
+        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( cosmo )
+        
+        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , params )
 
         return cluster_catalogue
 
