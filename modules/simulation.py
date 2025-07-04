@@ -22,14 +22,13 @@ class UniverseSimulator:
             # also set the fixed parameters which will not be varied
             self.variable_params = list(config['variable_parameters'].keys())
             self.fixed_params = {k: float(v) for k, v in config['fixed_parameters'].items()}
+            self.available_params = {**self.fixed_params, **{k: 0.0 for k in self.variable_params}}
 
             # set the halo catalogue settings
-            # self.halo_catalogue_settings = {k: float(v) for k, v in config['halo_catalogue'].items()}
             self.halo_catalogue_class = HaloCatalogue( config )
 
             # set the cluster catalogue settings
-            #self.cluster_catalogue_settings = {k: float(v) for k, v in config['cluster_catalogue'].items()}
-            #self.cluster_catalogue_class = ClusterCatalogue( self.cluster_catalogue_settings )
+            self.cluster_catalogue_class = ClusterCatalogue( config )
 
             # set the summary statistic function
             # this should function on a cluster catalogue object
@@ -49,8 +48,8 @@ class UniverseSimulator:
 
         # set cosmo
         cosmo = ccl.Cosmology(
-            Omega_c=params['Omega_c'],
-            Omega_b=params['Omega_b'],
+            Omega_c=params['omega_m'] - params['omega_b'],
+            Omega_b=params['omega_b'],
             h=params['h'],
             sigma8=params['sigma_8'],
             n_s=params['n_s']
@@ -81,21 +80,21 @@ class UniverseSimulator:
         # Return a dictionary of the parameters
         return parameter_set
 
-    def run_simulation(self, param_values):
-        """
-        Run the simulation using the variable parameters provided.
-        """
-        # Get the full parameter set (both variable and fixed parameters)
-        parameter_set = self._get_parameter_set( param_values )
+    # def run_simulation(self, param_values):
+    #     """
+    #     Run the simulation using the variable parameters provided.
+    #     """
+    #     # Get the full parameter set (both variable and fixed parameters)
+    #     parameter_set = self._get_parameter_set( param_values )
 
-        # Run the core simulation
-        richness, log10M_wl, z_clusters, _  = self._run_simulation( parameter_set )
+    #     # Run the core simulation
+    #     richness, log10M_wl, z_clusters, _  = self._run_simulation( parameter_set )
 
-        # Return result in a format compatible with SBI
-        if self.for_simulate_for_sbi:
-            return self.summary_statistic(richness, log10M_wl, z_clusters)
-        #     return torch.tensor( self.summary_statistic(richness, log10M_wl, z_clusters))
-        else:
-            return self.summary_statistic(richness, log10M_wl, z_clusters)
+    #     # Return result in a format compatible with SBI
+    #     if self.for_simulate_for_sbi:
+    #         return self.summary_statistic(richness, log10M_wl, z_clusters)
+    #     #     return torch.tensor( self.summary_statistic(richness, log10M_wl, z_clusters))
+    #     else:
+    #         return self.summary_statistic(richness, log10M_wl, z_clusters)
 
     

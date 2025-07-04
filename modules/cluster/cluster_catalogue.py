@@ -6,25 +6,25 @@ class ClusterCatalogue:
         """
         Initialize the ClusterCatalogue class with the given settings.
         """
-        self.mass_observable_relation = settings["mass_observable_relation"]
+        #self.mass_observable_relation = settings["mass_observable_relation"]
 
     def get_cluster_catalogue( self , halo_catalogue , parameter_set ):
         """
         Generate a cluster catalogue based on the halo catalogue and parameter set.
         """
         # Extract necessary parameters from the parameter set
-        mu = parameter_set['mu']
-        z = parameter_set['z']
+        mu = halo_catalogue['mu']
+        z = halo_catalogue['redshift']
 
         # Call the mass observable relation function
         return self.mass_observable_relation( mu, z, parameter_set )
 
-    def richness_mass_relation( mu , z , parameter_set  ):
+    def richness_mass_relation( self,  mu , z , parameter_set  ):
         """
         Returns whatever you want as a cluster catalogue.
         """
-        log10Mmin = parameter_set['log10Mmin']
-        B = parameter_set['B']
+        log10Mmin = parameter_set['log10mmin']
+        B = parameter_set['b']
         alpha_l = parameter_set['alpha_l']
         beta_l = parameter_set['beta_l']
         z_p = parameter_set['z_p']
@@ -38,13 +38,13 @@ class ClusterCatalogue:
 
         return np.log( np.random.poisson( lam = mean_l ) + 1 )
 
-    def mass_observable_relation(  mu, z, parameter_set ):
-        
+    def mass_observable_relation( self,  mu, z, parameter_set ):
+
         sigma_l = parameter_set['sigma_l']
         r = parameter_set['r']
         sigma_mwl = parameter_set['sigma_mwl']  
 
-        mean_l = richness_mass_relation( mu , z , parameter_set )
+        mean_l = self.richness_mass_relation( mu , z , parameter_set )
         mean_mwl = mu
 
         cov = [ [ sigma_l**2 , r * sigma_l * sigma_mwl], 
@@ -56,4 +56,8 @@ class ClusterCatalogue:
         ln_richness = mean_l + total_noise.T[0]
         lnM_wl = mean_mwl + total_noise.T[1]
 
-        return np.exp( ln_richness ), np.log10( np.exp( lnM_wl ) ), z
+        return {
+            'richness': np.exp(ln_richness),
+            'log10_mwl': np.log10(np.exp(lnM_wl)),
+            'redshift': z
+        }
