@@ -20,4 +20,4 @@ source activate
 conda activate sbi
 
 # Run the Python script with the provided settings file name
-python run_sbi.py
+python run_sbi.py 
