@@ -176,7 +176,11 @@ class HaloCatalogue:
             if return_Nth:
                 return grid, log10mass, np.array(redshift)
             else:
-                return log10mass, np.array(redshift)
+                return {
+                    'mu': np.log( 10**log10mass / 1e14 ) ,
+                    'redshift': np.array(redshift)
+                        }
+            
 
     def hmf_correction( self , M , Mstar , s   , q ):
         return s * np.log10( M / Mstar ) + q

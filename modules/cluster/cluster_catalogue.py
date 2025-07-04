@@ -19,19 +19,36 @@ class ClusterCatalogue:
         # Call the mass observable relation function
         return self.mass_observable_relation( mu, z, parameter_set )
 
+    def richness_mass_relation( mu , z , parameter_set  ):
+        """
+        Returns whatever you want as a cluster catalogue.
+        """
+        log10Mmin = parameter_set['log10Mmin']
+        B = parameter_set['B']
+        alpha_l = parameter_set['alpha_l']
+        beta_l = parameter_set['beta_l']
+        z_p = parameter_set['z_p']
 
-    def mass_observable_relation(self, mu, z, parameter_set, cosmo ):
+        Mmin = 10**log10Mmin
+        M1 = 10**( B ) * Mmin
+        M = ( np.exp( mu ) * 1e14 )
+        mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + z_p ) )**beta_l
 
-        mean_l = self.richness_mass_relation( mu , z , parameter_set )
-        mean_mwl = self.c_mwl + self.alpha_mwl * mu
+        mean_l[ np.logical_or( mean_l < 0, np.isnan(mean_l) ) ] = 0
 
-        sampled_l = []
-        sampled_mwl = []
-        sampled_z = []
-        sampled_mu = []
+        return np.log( np.random.poisson( lam = mean_l ) + 1 )
 
-        cov = [[ sigma_l**2 , r * sigma_l * self.sigma_mwl], 
-                [r * sigma_l * self.sigma_mwl, self.sigma_mwl**2]]
+    def mass_observable_relation(  mu, z, parameter_set ):
+        
+        sigma_l = parameter_set['sigma_l']
+        r = parameter_set['r']
+        sigma_mwl = parameter_set['sigma_mwl']  
+
+        mean_l = richness_mass_relation( mu , z , parameter_set )
+        mean_mwl = mu
+
+        cov = [ [ sigma_l**2 , r * sigma_l * sigma_mwl], 
+                [r * sigma_l * sigma_mwl, sigma_mwl**2] ]
 
         total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
 

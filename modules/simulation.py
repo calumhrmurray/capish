@@ -43,14 +43,26 @@ class UniverseSimulator:
         """
         Run the simulation using the variable parameters provided.
         """
+
+        # Combine fixed and variable parameters into a single dictionary
+        params = self._get_parameter_set( param_values )
+
+        # set cosmo
+        cosmo = ccl.Cosmology(
+            Omega_c=params['Omega_c'],
+            Omega_b=params['Omega_b'],
+            h=params['h'],
+            sigma8=params['sigma_8'],
+            n_s=params['n_s']
+        )
+
+        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( cosmo )
         
-        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( param_values )
+        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , params )
 
-        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , param_values )
+        #summary_statistic = self.get_summary_statistic( cluster_catalogue )
 
-        summary_statistic = self.get_summary_statistic( cluster_catalogue )
-
-        return summary_statistic
+        return cluster_catalogue
 
     def _get_parameter_set(self, param_values):
         """
