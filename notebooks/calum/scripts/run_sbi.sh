@@ -5,9 +5,9 @@
 #SBATCH --output=/sps/euclid/Users/cmurray/sel_function_logs/logdir/%A_%a.out
 #SBATCH --error=/sps/euclid/Users/cmurray/sel_function_logs/logdir/%A_%a.err
 #SBATCH --partition=hpc               # Partition choice (htc by default)
-#SBATCH --ntasks=20                    # Run a single task
-#SBATCH --mem=8000                   # Memory in MB per default
-#SBATCH --time=0-00:30:00             # Max time limit = 7 days
+#SBATCH --ntasks=5                    # Run a single task
+#SBATCH --mem=32000                   # Memory in MB per default
+#SBATCH --time=0-02:30:00             # Max time limit = 7 days
 #SBATCH --mail-user=calum.murray@apc.in2p3.fr   # Where to send mail
 #SBATCH --mail-type=END,FAIL          # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --account=euclid
