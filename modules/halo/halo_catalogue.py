@@ -93,7 +93,6 @@ class HaloCatalogue:
         
         # setup the SSC stuff
         if self.SSC:
-            print('we are not here')
             zmin = float( settings['halo_catalogue']['z_min'])
             zmax = float( settings['halo_catalogue']['z_max'])  
             nzbins =  int( settings['halo_catalogue']['n_redshift_bins'] )
@@ -121,7 +120,7 @@ class HaloCatalogue:
                     save_pickle(sigma2ij_SSC_tosave, filename)
                 
             else: 
-                sigmaij_SSC_file = np.load(filename)
+                sigmaij_SSC_file = np.load(filename, allow_pickle=True)
                 self.sigmaij_SSC = sigmaij_SSC_file['sigma2ij_SSC_fullsky']/self.fsky 
                 check_z_grid = 0
                 for x, y in zip(sigmaij_SSC_file['z_grid_center'], self.z_grid_center):

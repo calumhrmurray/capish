@@ -9,7 +9,7 @@ from modules.cluster.cluster_catalogue import ClusterCatalogue
 
 class UniverseSimulator:
     
-    def __init__( self , summary_statistic , config_path = None ):
+    def __init__(self, config_path = None ):
         """
         Initialize the UniverseSimulator class.
         """
@@ -24,12 +24,10 @@ class UniverseSimulator:
             self.fixed_params = {k: float(v) for k, v in config['fixed_parameters'].items()}
 
             # set the halo catalogue settings
-            # self.halo_catalogue_settings = {k: float(v) for k, v in config['halo_catalogue'].items()}
             self.halo_catalogue_class = HaloCatalogue( config )
 
             # set the cluster catalogue settings
-            #self.cluster_catalogue_settings = {k: float(v) for k, v in config['cluster_catalogue'].items()}
-            #self.cluster_catalogue_class = ClusterCatalogue( self.cluster_catalogue_settings )
+            self.cluster_catalogue_class = ClusterCatalogue( config )
 
             # set the summary statistic function
             # this should function on a cluster catalogue object
