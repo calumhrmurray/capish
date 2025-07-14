@@ -3,31 +3,29 @@ import pyccl as ccl
 import itertools
 import sys
 import os 
+import copy
 import configparser
 from modules.halo.halo_catalogue import HaloCatalogue
 from modules.cluster.cluster_catalogue import ClusterCatalogue
 
 class UniverseSimulator:
     
-    def __init__(self, config_path = None ):
+    def __init__(self, default_config_path = None , variable_params_names = None):
         """
         Initialize the UniverseSimulator class.
         """
 
-        if config_path:
-            config = configparser.ConfigParser()
-            config.read(config_path)
+        if default_config_path:
+            default_config = configparser.ConfigParser()
+            default_config.read(default_config_path)
 
-            # here we setup the parameters which will be used for the simulation
-            # also set the fixed parameters which will not be varied
-            self.variable_params = list(config['variable_parameters'].keys())
-            self.fixed_params = {k: float(v) for k, v in config['fixed_parameters'].items()}
-
-            # set the halo catalogue settings
-            self.halo_catalogue_class = HaloCatalogue( config )
-
-            # set the cluster catalogue settings
-            self.cluster_catalogue_class = ClusterCatalogue( config )
+            self.params_names = list(default_config['parameters'].keys())
+            self.params_values = {k: float(v) for k, v in default_config['parameters'].items()}
+            self.variable_params_names = variable_params_names
+            self.default_config = default_config
+            
+            self.halo_catalogue_class = HaloCatalogue( default_config )
+            self.cluster_catalogue_class = ClusterCatalogue( default_config )
 
             # set the summary statistic function
             # this should function on a cluster catalogue object
@@ -36,16 +34,22 @@ class UniverseSimulator:
         else:
             print("No config file provided, you must provide a config.")
 
+    def new_config_files(self, variable_params_values):
 
-    def run_simulation( self , param_values ):
+        config_new = copy.deepcopy(self.default_config)
+        for i, name in enumerate(self.variable_params_names):
+            config_new['parameters'][str(name)] = str(variable_params_values[i])
+        return config_new
+
+
+    def run_simulation( self , variable_param_values):
         """
         Run the simulation using the variable parameters provided.
         """
-        
-        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( param_values )
 
-        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , param_values )
-
+        config_new = new_config_files(variable_params_values)
+        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( config_new )
+        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , config_new )
         summary_statistic = self.get_summary_statistic( cluster_catalogue )
 
         return summary_statistic

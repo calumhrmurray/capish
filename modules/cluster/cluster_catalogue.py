@@ -13,24 +13,24 @@ class ClusterCatalogue:
         self.settings = settings
         return None
     
-    def get_cluster_catalogue(self, log10m_true, z_true):
-
+    def get_cluster_catalogue(self, log10m_true, z_true, config_new):
         
         if self.settings['cluster_catalogue']['add_completeness']=='True':
             a=1
             u = np.random.random(len(log10m_true))
             mask = u < _completeness.completeness(log10m_true, z_true)
             log10m_true, z_true = log10m_true[mask], z_true[mask]
-            
-        pivot_obs_z0 = float(self.settings['cluster_catalogue.mass_observable_relation']['pivot_obs_z0'])
-        pivot_obs_log10m0 = float(self.settings['cluster_catalogue.mass_observable_relation']['pivot_obs_log10m0'])
-        params_observable_mean = [float(k) for k in self.settings['cluster_catalogue.mass_observable_relation']['params_mean_obs'].split(', ')]
+
+        parameters = config_new['parameters']
+        pivot_obs_z0 = float(parameters['pivot_obs_z0'])
+        pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
+        params_observable_mean = [float(parameters['params_mean_obs_mu0']), float(parameters['params_mean_obs_muz']), float(parameters['params_mean_obs_mulog10m'])]
+        params_observable_stdd = [float(parameters['params_stdd_obs_mu0']), float(parameters['params_stdd_obs_muz']), float(parameters['params_stdd_obs_mulog10m'])]
         params_observable_mean = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean
-        params_observable_stdd = [float(k) for k in self.settings['cluster_catalogue.mass_observable_relation']['params_stdd_obs'].split(', ')]
         params_observable_stdd = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_stdd
-        params_mWL_mean = [float(k) for k in self.settings['cluster_catalogue.mass_observable_relation']['params_mean_log10mWL'].split(', ')]
-        params_mWL_stdd = [float(k) for k in self.settings['cluster_catalogue.mass_observable_relation']['params_stdd_log10mWL'].split(', ')]
-        rho = float(self.settings['cluster_catalogue.mass_observable_relation']['rho_obs_mWL'])
+        params_mWL_mean = [float(parameters['params_mean_log10mWL_aWL']), float(parameters['params_mean_log10mWL_bWL'])]
+        params_mWL_stdd = [float(parameters['params_stdd_log10mWLgal']), float(parameters['params_stdd_log10mWLint'])]
+        rho = float(parameters['rho_obs_mWL'])
         which = self.settings['cluster_catalogue.mass_observable_relation']['which_relation']
 
         MoR = _mass_observable_relation.Mass_observable_relation(params_observable_mean, params_observable_stdd, 

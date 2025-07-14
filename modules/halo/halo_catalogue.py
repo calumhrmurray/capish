@@ -53,30 +53,30 @@ def str2bool(v):
 
 class HaloCatalogue:
      
-    def __init__( self , settings ):
+    def __init__( self , default_config ):
         """
-        Initialize the HaloCatalogue class with the given settings.
+        Initialize the HaloCatalogue class with the givendefault config.
         """
 
         # choose the hmf, cosmology, and bias model
-        self.hmf = get_massfunc_from_config(settings['halo_catalogue'])
-        self.bias = get_bias_from_config(settings['halo_catalogue'])
-        self.sky_area = float( settings['halo_catalogue']['sky_area'] )
+        self.hmf = get_massfunc_from_config(default_config['halo_catalogue'])
+        self.bias = get_bias_from_config(default_config['halo_catalogue'])
+        self.sky_area = float( default_config['halo_catalogue']['sky_area'] )
         def dOmega_fct(z): return self.sky_area #steradians
         self.dOmega = dOmega_fct
         self.fsky = self.sky_area/(4*np.pi) #%
 
         # set up the different grids
         ## mass grid
-        self.logm_grid = np.linspace( float( settings['halo_catalogue']['log10m_min']),
-                                      float( settings['halo_catalogue']['log10m_max']),
-                                      int( settings['halo_catalogue']['n_mass_bins'] ) )
+        self.logm_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
+                                      float( default_config['halo_catalogue']['log10m_max']),
+                                      int( default_config['halo_catalogue']['n_mass_bins'] ) )
         self.dlogm_grid = self.logm_grid[1] - self.logm_grid[0]
         self.logm_grid_center = (self.logm_grid[:-1] + self.logm_grid[1:]) / 2
         #redshift grid
-        self.z_grid = np.linspace( float( settings['halo_catalogue']['z_min'] ),
-                                    float( settings['halo_catalogue']['z_max'] ),
-                                    int( settings['halo_catalogue']['n_redshift_bins'] ) )
+        self.z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
+                                    float( default_config['halo_catalogue']['z_max'] ),
+                                    int( default_config['halo_catalogue']['n_redshift_bins'] ) )
         self.dz_grid = self.z_grid[1] - self.z_grid[0]
         self.z_grid_center = (self.z_grid[:-1] + self.z_grid[1:]) / 2
         #very important for later !
@@ -84,27 +84,27 @@ class HaloCatalogue:
         self.Z_grid_center_flatten = Z.ravel()
         self.Logm_grid_center_flatten = L.ravel()
 
-        self.mass_definition = get_massdef_from_config(settings['halo_catalogue'])
-        self.hmf = get_massfunc_from_config(settings['halo_catalogue'])
+        self.mass_definition = get_massdef_from_config(default_config['halo_catalogue'])
+        self.hmf = get_massfunc_from_config(default_config['halo_catalogue'])
 
-        self.SSC = str2bool(settings['halo_catalogue']['SSC'])
-        self.recompute_SSC_fiducial = str2bool(settings['halo_catalogue']['recompute_SSC_ficucial'])
-        self.save_new_SSC_fiducial = str2bool(settings['halo_catalogue']['save_new_SSC_fiducial'])
+        self.SSC = str2bool(default_config['halo_catalogue']['SSC'])
+        self.recompute_SSC_fiducial = str2bool(default_config['halo_catalogue']['recompute_SSC_ficucial'])
+        self.save_new_SSC_fiducial = str2bool(default_config['halo_catalogue']['save_new_SSC_fiducial'])
         
         # setup the SSC stuff
         if self.SSC:
-            zmin = float( settings['halo_catalogue']['z_min'])
-            zmax = float( settings['halo_catalogue']['z_max'])  
-            nzbins =  int( settings['halo_catalogue']['n_redshift_bins'] )
-            filename = str(settings['halo_catalogue']['name_sigma2ij_fullsky_file']).format(zmin, zmax, nzbins)
+            zmin = float( default_config['halo_catalogue']['z_min'])
+            zmax = float( default_config['halo_catalogue']['z_max'])  
+            nzbins =  int( default_config['halo_catalogue']['n_redshift_bins'] )
+            filename = str(default_config['halo_catalogue']['name_sigma2ij_fullsky_file']).format(zmin, zmax, nzbins)
             filename = current_file_path + filename
             if self.recompute_SSC_fiducial:
                 # fiducial cosmology for the SSC computation, will not be run at every step of CAPISH
-                cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( settings['halo_catalogue']['Omega_c_fiducial'] ), 
-                                               Omega_b = float( settings['halo_catalogue']['Omega_b_fiducial'] ), 
-                                               h = float( settings['halo_catalogue']['h_fiducial'] ), 
-                                               sigma8 = float( settings['halo_catalogue']['sigma_8_fiducial'] ), 
-                                               n_s=float( settings['halo_catalogue']['n_s_fiducial'] ) )
+                cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
+                                               Omega_b = float( default_config['halo_catalogue']['Omega_b_fiducial'] ), 
+                                               h = float( default_config['halo_catalogue']['h_fiducial'] ), 
+                                               sigma8 = float( default_config['halo_catalogue']['sigma_8_fiducial'] ), 
+                                               n_s=float( default_config['halo_catalogue']['n_s_fiducial'] ) )
 
                 try: #this step will recquire PySSC, will fail otherwise
                     HaloAbundanceObject = halo_abundance.HaloAbundance()
@@ -128,12 +128,21 @@ class HaloCatalogue:
                 if check_z_grid!=0: raise ValueError("Mismatch - should install PySSC!")
             
         # hmf correction parameters
-        self.Mstar = float( settings['halo_catalogue']['Mstar'] ) # in
-        self.s = float( settings['halo_catalogue']['s'] ) # in log10
-        self.q = float( settings['halo_catalogue']['q'] ) # in log10 
+        self.Mstar = float( default_config['halo_catalogue']['Mstar'] ) # in
+        self.s = float( default_config['halo_catalogue']['s'] ) # in log10
+        self.q = float( default_config['halo_catalogue']['q'] ) # in log10 
           
-    def get_halo_catalogue(self, cosmo, return_Nth = False ):
+    def get_halo_catalogue(self, config_new, return_Nth = False ):
 
+            Omega_m = float(config_new['parameters']['Omega_m'])
+            Omega_b = float(config_new['parameters']['Omega_b'])
+            sigma8 = float(config_new['parameters']['sigma8'])
+            h = float(config_new['parameters']['h'])
+            ns = float(config_new['parameters']['ns'])
+            w0 = float(config_new['parameters']['w0'])
+            wa = float(config_new['parameters']['wa'])
+
+            cosmo = ccl.Cosmology( Omega_c = Omega_m - Omega_b, Omega_b = Omega_b, h = h , sigma8 = sigma8, n_s= ns)
             #recall that here cosmo is now a CCL object !
             HaloAbundanceObject = halo_abundance.HaloAbundance( CCLCosmologyObject = cosmo, 
                                                                      CCLHmf = self.hmf,
