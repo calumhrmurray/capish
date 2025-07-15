@@ -7,6 +7,7 @@ import copy
 import configparser
 from modules.halo.halo_catalogue import HaloCatalogue
 from modules.cluster.cluster_catalogue import ClusterCatalogue
+from modules.summary_statistics.summary_statistics import SummaryStatistics
 
 class UniverseSimulator:
     
@@ -26,10 +27,7 @@ class UniverseSimulator:
             
             self.halo_catalogue_class = HaloCatalogue( default_config )
             self.cluster_catalogue_class = ClusterCatalogue( default_config )
-
-            # set the summary statistic function
-            # this should function on a cluster catalogue object
-            #self.summary_statistic = summary_statistic
+            self.summary_statistics_class = SummaryStatistics( default_config )
 
         else:
             print("No config file provided, you must provide a config.")
@@ -48,9 +46,9 @@ class UniverseSimulator:
         """
 
         config_new = new_config_files(variable_params_values)
-        halo_catalogue = self.halo_catalogue_class.get_halo_catalogue( config_new )
-        cluster_catalogue = self.cluster_catalogue_class.get_cluster_catalogue( halo_catalogue , config_new )
-        summary_statistic = self.get_summary_statistic( cluster_catalogue )
+        log10m_true, z_true = self.halo_catalogue_class.get_halo_catalogue( config_new )
+        richness, log10mWL, z_obs = self.cluster_catalogue_class.get_cluster_catalogue( log10m_true, z_true , config_new )
+        summary_statistic = self.get_summary_statistic( richness, log10mWL, z_obs, config_new )
 
         return summary_statistic
 
