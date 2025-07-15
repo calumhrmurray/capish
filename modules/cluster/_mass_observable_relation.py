@@ -2,17 +2,25 @@ from scipy.stats import norm, poisson
 import numpy as np
 
 
+def photometric_redshift(z_true, photoz_params):
+    sigma_pz0 = photoz_params
+    z_obs = z_true + np.random.randn(len(z_true)) * sigma_pz0 * (1 + z_true)
+    return z_obs
+
 class Mass_observable_relation:
     def __init__(self, params_observable_mean, params_observable_stdd,
                        params_mWL_mean, params_mWL_stdd, 
-                       rho, which = 'Gauss-only'):
+                       rho, which_mass_richness_rel = 'Gauss-only',
+                       add_photoz=False, photoz_params=None):
     
         self.params_observable_mean = params_observable_mean
         self.params_observable_stdd = params_observable_stdd
         self.params_mWL_mean = params_mWL_mean
         self.params_mWL_stdd = params_mWL_stdd
         self.rho_obs_mWL = rho
-        self.which = which
+        self.add_photoz = add_photoz
+        self.photoz_params = photoz_params
+        self.which = which_mass_richness_rel
 
     def mean_obs_power_law_f(self, logm, z, params_observable_mean):
         log10m0, z0, observable_mu0, observable_muz, observable_mulog10m = params_observable_mean
@@ -43,6 +51,7 @@ class Mass_observable_relation:
         if self.which == 'Gauss+Poiss-corr':
             mean_lnobs = mean_lnobs - 0.5 * np.exp(-mean_lnobs+0.5*stdd_lnobs**2) - (1/12)*np.exp(-2*mean_lnobs+2*stdd_lnobs**2)
         stdd_lnobs2 = stdd_lnobs**2
+        #add poisson noise
         stdd_lnobs2 = stdd_lnobs2 + (np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
         stdd_lnobs = stdd_lnobs2**.5
         
@@ -57,6 +66,9 @@ class Mass_observable_relation:
         cond_mean_log10mWL = mean_log10mWL + rho * (stdd_log10mWL / stdd_lnobs) * (lnobs - mean_lnobs)
         cond_stdd_log10mWL = stdd_log10mWL * np.sqrt(1 - rho**2)
         log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_stdd_log10mWL)
+
+        if self.add_photoz:
+            z = photometric_redshift(z, self.photoz_params)
         
         return np.exp(lnobs), log10Mwl, z
 

@@ -3,12 +3,6 @@ import _completeness
 import _mass_observable_relation
 import _purity
 import _selection
-
-def photometric_redshift(z_true, params_photoz):
-
-    sigma_pz0 = params_photoz
-    z_obs = z_true + np.random.randn(len(z_true)) * sigma_pz0 * (1 + z_true)
-    return z_obs
     
 class ClusterCatalogue:
      
@@ -39,18 +33,15 @@ class ClusterCatalogue:
         rho = float(parameters['rho_obs_mWL'])
         which = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
 
+        add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
+        sigma_z0 = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
         MoR = _mass_observable_relation.Mass_observable_relation(params_observable_mean, params_observable_stdd, 
                                                                  params_mWL_mean, params_mWL_stdd, 
-                                                                 rho, which = which)
-
-        richness, log10mWL, z_true = MoR.generate_mWL_richness(log10m_true, z_true)
+                                                                 rho, which_mass_richness_rel = which, 
+                                                                 add_photoz=add_photoz, photoz_params=sigma_z0)
         
-        if config_new['cluster_catalogue']['add_photometric_redshift']=='True': 
-            sigma_z0 = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
-            z_obs = photometric_redshift(z_true, sigma_z0)
-            z_obs[z_obs < 0] = None
-        else: 
-            z_obs = z_true
+        richness, log10mWL, z_obs = MoR.generate_mWL_richness(log10m_true, z_true)
+        z_obs[z_obs < 0] = None
 
         if config_new['cluster_catalogue']['add_purity']=='True': 
             richness_edges = np.logspace(np.log10(20), np.log10(300), 70) 
