@@ -100,7 +100,7 @@ class SummaryStatistics:
             mass_gamma = np.array((10 ** log10mWL[mask]) ** self.Gamma,dtype=float)
             sum_w_mass_gamma_stat, _, _, _ = stats.binned_statistic_2d(richness[mask], z_obs[mask], Wz[mask] * mass_gamma, statistic='sum', bins=bins)
             sum_w_stat, _, _, _ = stats.binned_statistic_2d(richness, z_obs, Wz, statistic='sum', bins=bins)
-            return count_stat.T, np.log10((sum_w_mass_gamma_stat.T/sum_w_stat.T)**(1/self.Gamma))
+            return count_stat, np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
             
         if config_new['summary_statistics']['which'] == '3d_count':
             mask0 = log10mWL != None
