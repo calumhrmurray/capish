@@ -11,14 +11,18 @@ from modules.summary_statistics.summary_statistics import SummaryStatistics
 
 class UniverseSimulator:
     
-    def __init__(self, default_config_path = None , variable_params_names = None):
+    def __init__(self, default_config_path = None , default_config = None, variable_params_names = None):
         """
         Initialize the UniverseSimulator class.
         """
 
-        if default_config_path:
-            default_config = configparser.ConfigParser()
-            default_config.read(default_config_path)
+        if (default_config_path != None) + (default_config != None):
+            if (default_config_path != None):
+                default_config = configparser.ConfigParser()
+                default_config.read(default_config_path)
+
+            elif default_config != None:
+                default_config = default_config
 
             self.params_names = list(default_config['parameters'].keys())
             self.params_values = {k: float(v) for k, v in default_config['parameters'].items()}
@@ -29,8 +33,7 @@ class UniverseSimulator:
             self.cluster_catalogue_class = ClusterCatalogue( default_config )
             self.summary_statistics_class = SummaryStatistics( default_config )
 
-        else:
-            print("No config file provided, you must provide a config.")
+        else: print("No config file provided, you must provide a config.")
 
     def new_config_files(self, variable_params_values):
 
