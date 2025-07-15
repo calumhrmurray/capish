@@ -1,9 +1,15 @@
 import numpy as np
 import _completeness
 import _mass_observable_relation
-import _photometric_redshift
 import _purity
 import _selection
+
+def photometric_redshift(z_true, params_photoz):
+
+    sigma_pz0 = params_photoz
+    z_obs = z_true + np.random.randn(len(z_true)) * sigma_pz0 * (1 + z_true)
+    return z_obs
+    
 class ClusterCatalogue:
      
     def __init__( self , default_config):
@@ -41,7 +47,7 @@ class ClusterCatalogue:
         
         if config_new['cluster_catalogue']['add_photometric_redshift']=='True': 
             sigma_z0 = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
-            z_obs = _photometric_redshift.photometric_redshift(z_true, sigma_z0)
+            z_obs = photometric_redshift(z_true, sigma_z0)
             z_obs[z_obs < 0] = None
         else: 
             z_obs = z_true
