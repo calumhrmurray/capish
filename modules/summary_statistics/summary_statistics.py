@@ -66,6 +66,11 @@ class SummaryStatistics:
         n_bins_redshift = int(default_config['summary_statistics']['n_bins_redshift'])
         self.redshift_edges = np.linspace(redshift_low, redshift_up, n_bins_redshift+1)
 
+        log10mWL_low = float(default_config['summary_statistics']['log10mWL_lower_limit'])
+        log10mWL_up = float(default_config['summary_statistics']['log10mWL_upper_limit'])
+        n_bins_log10mWL = int(default_config['summary_statistics']['n_bins_log10mWL'])
+        self.log10mWL_edges = np.linspace(log10mWL_low, log10mWL_up, n_bins_log10mWL+1)
+
         Omega_c_fid = float(default_config['halo_catalogue']['Omega_c_fiducial'])
         Omega_b_fid = float(default_config['halo_catalogue']['Omega_b_fiducial'])
         sigma8_fid = float(default_config['halo_catalogue']['sigma_8_fiducial'])
@@ -91,11 +96,35 @@ class SummaryStatistics:
             Wz = self.W_zl_f(z_obs)
             bins = [self.richness_edges, self.redshift_edges,]
             count_stat, x_edges, y_edges, _ = stats.binned_statistic_2d(richness, z_obs, None, statistic='count',bins=bins)
-            
             mask = log10mWL != None
             mass_gamma = np.array((10 ** log10mWL[mask]) ** self.Gamma,dtype=float)
             sum_w_mass_gamma_stat, _, _, _ = stats.binned_statistic_2d(richness[mask], z_obs[mask], Wz[mask] * mass_gamma, statistic='sum', bins=bins)
             sum_w_stat, _, _, _ = stats.binned_statistic_2d(richness, z_obs, Wz, statistic='sum', bins=bins)
-            
             return count_stat.T, np.log10((sum_w_mass_gamma_stat.T/sum_w_stat.T)**(1/self.Gamma))
-        
+            
+        if config_new['summary_statistics']['which'] == '3d_count':
+            mask0 = log10mWL != None
+            threed_hist = np.zeros([len(self.richness_edges)-1, len(self.redshift_edges)-1, len(self.log10mWL_edges)-1])
+            twod_bins = [self.richness_edges, self.redshift_edges,]
+            for i in range(len(self.log10mWL_edges)-1):
+                mask_mass = (log10mWL[mask0] > self.log10mWL_edges[i]) * (log10mWL[mask0] < self.log10mWL_edges[i+1])
+                threed_hist[:,:,i] = np.histogram2d(richness[mask0][mask_mass], z_obs[mask0][mask_mass],bins=twod_bins)[0]
+            return threed_hist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
