@@ -1,6 +1,6 @@
 import numpy as np
 import _completeness
-import _mass_observable_relation
+import _halo_observable_relation
 import _purity
 import _selection
     
@@ -35,12 +35,12 @@ class ClusterCatalogue:
 
         add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
         sigma_z0 = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
-        MoR = _mass_observable_relation.Mass_observable_relation(params_observable_mean, params_observable_stdd, 
+        MoR = _halo_observable_relation.HaloToObservables(params_observable_mean, params_observable_stdd, 
                                                                  params_mWL_mean, params_mWL_stdd, 
                                                                  rho, which_mass_richness_rel = which, 
                                                                  add_photoz=add_photoz, photoz_params=sigma_z0)
         
-        richness, log10mWL, z_obs = MoR.generate_mWL_richness(log10m_true, z_true)
+        richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
         z_obs[z_obs < 0] = None
 
         if config_new['cluster_catalogue']['add_purity']=='True': 

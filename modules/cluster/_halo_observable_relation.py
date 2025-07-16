@@ -7,7 +7,7 @@ def photometric_redshift(z_true, photoz_params):
     z_obs = z_true + np.random.randn(len(z_true)) * sigma_pz0 * (1 + z_true)
     return z_obs
 
-class Mass_observable_relation:
+class HaloToObservables:
     def __init__(self, params_observable_mean, params_observable_stdd,
                        params_mWL_mean, params_mWL_stdd, 
                        rho, which_mass_richness_rel = 'Gauss-only',
@@ -43,7 +43,7 @@ class Mass_observable_relation:
         stdd2 = stdd_mWLgal**2 + stdd_mWLint**2
         return stdd2**.5*np.ones(len(logm))
 
-    def generate_mWL_richness(self, logm, z):
+    def generate_observables_from_halo(self, logm, z):
 
         mean_lnobs = self.mean_obs_power_law_f(logm, z, self.params_observable_mean)
         stdd_lnobs = self.stdd_obs_power_law_f(logm, z, self.params_observable_stdd)
