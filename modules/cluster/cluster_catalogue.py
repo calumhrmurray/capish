@@ -21,25 +21,7 @@ class ClusterCatalogue:
             mask = u < _completeness.completeness(log10m_true, z_true)
             log10m_true, z_true = log10m_true[mask], z_true[mask]
 
-        parameters = config_new['parameters']
-        pivot_obs_z0 = float(parameters['pivot_obs_z0'])
-        pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
-        params_observable_mean = [float(parameters['params_mean_obs_mu0']), float(parameters['params_mean_obs_muz']), float(parameters['params_mean_obs_mulog10m'])]
-        params_observable_stdd = [float(parameters['params_stdd_obs_mu0']), float(parameters['params_stdd_obs_muz']), float(parameters['params_stdd_obs_mulog10m'])]
-        params_observable_mean = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean
-        params_observable_stdd = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_stdd
-        params_mWL_mean = [float(parameters['params_mean_log10mWL_aWL']), float(parameters['params_mean_log10mWL_bWL'])]
-        params_mWL_stdd = [float(parameters['params_stdd_log10mWLgal']), float(parameters['params_stdd_log10mWLint'])]
-        rho = float(parameters['rho_obs_mWL'])
-        which = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
-
-        add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
-        sigma_z0 = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
-        MoR = _halo_observable_relation.HaloToObservables(params_observable_mean, params_observable_stdd, 
-                                                                 params_mWL_mean, params_mWL_stdd, 
-                                                                 rho, which_mass_richness_rel = which, 
-                                                                 add_photoz=add_photoz, photoz_params=sigma_z0)
-        
+        MoR = _halo_observable_relation.HaloToObservables(config_new)
         richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
         z_obs[z_obs < 0] = None
 

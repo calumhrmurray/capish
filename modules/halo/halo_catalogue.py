@@ -31,21 +31,21 @@ BIAS_MAP = {
     # Add more as needed
 }
 
-def get_massdef_from_config(settings):
-    mass_def_overdensity_type = settings["mass_def_overdensity_type"]
-    mass_def_overdensity_delta = settings["mass_def_overdensity_delta"]
+def get_massdef_from_config(default_settings):
+    mass_def_overdensity_type = default_settings["mass_def_overdensity_type"]
+    mass_def_overdensity_delta = default_settings["mass_def_overdensity_delta"]
     return ccl.halos.massdef.MassDef( mass_def_overdensity_delta , 
                                       mass_def_overdensity_type )
 
-def get_massfunc_from_config(settings):
-    mass_func_cls = MASSFUNC_MAP[settings["hmf_name"]]
-    massdef = get_massdef_from_config( settings )
+def get_massfunc_from_config(default_settings):
+    mass_func_cls = MASSFUNC_MAP[default_settings["hmf_name"]]
+    massdef = get_massdef_from_config( default_settings )
     return mass_func_cls( mass_def = massdef )
 
-def get_bias_from_config(settings):
-    bias_model_name = settings.get("bias_model", "Tinker10")
+def get_bias_from_config(default_settings):
+    bias_model_name = default_settings.get("bias_model", "Tinker10")
     bias_cls = BIAS_MAP[bias_model_name]
-    massdef = get_massdef_from_config(settings)
+    massdef = get_massdef_from_config(default_settings)
     return bias_cls(mass_def=massdef, mass_def_strict=True)
 
 def str2bool(v):

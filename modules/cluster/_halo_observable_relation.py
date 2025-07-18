@@ -8,19 +8,31 @@ def photometric_redshift(z_true, photoz_params):
     return z_obs
 
 class HaloToObservables:
-    def __init__(self, params_observable_mean, params_observable_stdd,
-                       params_mWL_mean, params_mWL_stdd, 
-                       rho, which_mass_richness_rel = 'Gauss-only',
-                       add_photoz=False, photoz_params=None):
+    def __init__(self, config_new):
+
+        parameters = config_new['parameters']
+        pivot_obs_z0 = float(parameters['pivot_obs_z0'])
+        pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
+        params_observable_mean = [float(parameters['params_mean_obs_mu0']), float(parameters['params_mean_obs_muz']), float(parameters['params_mean_obs_mulog10m'])]
+        params_observable_stdd = [float(parameters['params_stdd_obs_mu0']), float(parameters['params_stdd_obs_muz']), float(parameters['params_stdd_obs_mulog10m'])]
+        params_observable_mean = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean
+        params_observable_stdd = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_stdd
+        params_mWL_mean = [float(parameters['params_mean_log10mWL_aWL']), float(parameters['params_mean_log10mWL_bWL'])]
+        params_mWL_stdd = [float(parameters['params_stdd_log10mWLgal']), float(parameters['params_stdd_log10mWLint'])]
+        rho_obs_mWL = float(parameters['rho_obs_mWL'])
+        which_mass_richness_rel = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
+
+        add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
+        photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.params_observable_mean = params_observable_mean
         self.params_observable_stdd = params_observable_stdd
         self.params_mWL_mean = params_mWL_mean
         self.params_mWL_stdd = params_mWL_stdd
-        self.rho_obs_mWL = rho
+        self.rho_obs_mWL = rho_obs_mWL
         self.add_photoz = add_photoz
         self.photoz_params = photoz_params
-        self.which = which_mass_richness_rel
+        self.which_mass_richness_rel = which_mass_richness_rel
 
     def mean_obs_power_law_f(self, logm, z, params_observable_mean):
         log10m0, z0, observable_mu0, observable_muz, observable_mulog10m = params_observable_mean
@@ -48,7 +60,7 @@ class HaloToObservables:
         mean_lnobs = self.mean_obs_power_law_f(logm, z, self.params_observable_mean)
         stdd_lnobs = self.stdd_obs_power_law_f(logm, z, self.params_observable_stdd)
         
-        if self.which == 'Gauss+Poiss-corr':
+        if self.which_mass_richness_rel=='Gauss+Poiss-corr':
             mean_lnobs = mean_lnobs - 0.5 * np.exp(-mean_lnobs+0.5*stdd_lnobs**2) - (1/12)*np.exp(-2*mean_lnobs+2*stdd_lnobs**2)
         stdd_lnobs2 = stdd_lnobs**2
         #add poisson noise
