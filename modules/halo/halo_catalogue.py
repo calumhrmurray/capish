@@ -1,5 +1,5 @@
 import numpy as np
-from modules.halo import halo_abundance
+from modules.halo import _halo_abundance
 import pyccl as ccl
 import pickle
 from pathlib import Path
@@ -107,7 +107,7 @@ class HaloCatalogue:
                                                n_s=float( default_config['halo_catalogue']['n_s_fiducial'] ) )
 
                 try: #this step will recquire PySSC, will fail otherwise
-                    HaloAbundanceObject = halo_abundance.HaloAbundance()
+                    HaloAbundanceObject = _halo_abundance.HaloAbundance()
                     sigma2ij_SSC_fullsky = HaloAbundanceObject.compute_theoretical_sigma2ij_fullsky(cosmo_ccl_fid, 
                                                                                 self.z_grid_center)
                     self.sigmaij_SSC = sigma2ij_SSC_fullsky/self.fsky
@@ -144,7 +144,7 @@ class HaloCatalogue:
 
             cosmo = ccl.Cosmology( Omega_c = Omega_m - Omega_b, Omega_b = Omega_b, h = h , sigma8 = sigma8, n_s= ns)
             #recall that here cosmo is now a CCL object !
-            HaloAbundanceObject = halo_abundance.HaloAbundance( CCLCosmologyObject = cosmo, 
+            HaloAbundanceObject = _halo_abundance.HaloAbundance( CCLCosmologyObject = cosmo, 
                                                                      CCLHmf = self.hmf,
                                                                      CCLBias = self.bias,
                                                                      sky_area = self.sky_area )
