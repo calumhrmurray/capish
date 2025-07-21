@@ -96,7 +96,7 @@ class SummaryStatistics:
 
     def get_summary_statistics(self, richness, log10mWL, z_obs, config_new):
 
-        if config_new['summary_statistics']['which'] == 'binned_count_mean_mass':
+        if config_new['summary_statistics']['summary_statistic'] == 'binned_count_mean_mass':
 
             Wz = self.W_zl_f(z_obs)
             bins = [self.richness_edges, self.redshift_edges,]
@@ -107,7 +107,7 @@ class SummaryStatistics:
             sum_w_stat, _, _, _ = stats.binned_statistic_2d(richness, z_obs, Wz, statistic='sum', bins=bins)
             return count_stat, np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
             
-        if config_new['summary_statistics']['which'] == '3d_count':
+        if config_new['summary_statistics']['summary_statistic'] == '3d_count':
             mask0 = log10mWL != None
             threed_hist = np.zeros([len(self.richness_edges)-1, len(self.redshift_edges)-1, len(self.log10mWL_edges)-1])
             twod_bins = [self.richness_edges, self.redshift_edges,]
