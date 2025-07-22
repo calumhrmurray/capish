@@ -4,9 +4,6 @@ import itertools
 import sys
 import os 
 import copy
-from multiprocessing import Pool
-import multiprocessing
-from tqdm.auto import tqdm, trange
 import configparser
 from modules.halo.halo_catalogue import HaloCatalogue
 from modules.cluster.cluster_catalogue import ClusterCatalogue

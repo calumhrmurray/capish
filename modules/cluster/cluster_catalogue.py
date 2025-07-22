@@ -1,8 +1,8 @@
 import numpy as np
-import _completeness
-import _halo_observable_relation
-import _purity
-import _selection
+from . import _completeness
+from . import _halo_observable_relation
+from . import _purity
+from . import _selection
     
 class ClusterCatalogue:
      
@@ -16,7 +16,6 @@ class ClusterCatalogue:
     def get_cluster_catalogue(self, log10m_true, z_true, config_new):
         
         if config_new['cluster_catalogue']['add_completeness']=='True':
-            a=1
             u = np.random.random(len(log10m_true))
             mask = u < _completeness.completeness(log10m_true, z_true)
             log10m_true, z_true = log10m_true[mask], z_true[mask]
