@@ -2,13 +2,9 @@
 
 Capish is a modular Python pipeline designed to simulate and analyze cosmological cluster data. It builds mock catalogues of dark matter halos and galaxy clusters based on cosmological parameters, models selection and measurement processes, and computes summary statistics relevant for cosmological inference.
 
----
-
 ## Overview
 
 Capish is organized into three main stages:
-
----
 
 ### I. Halo Catalogue Generation
 
@@ -29,7 +25,6 @@ Generates a mock catalogue of dark matter halos using input cosmological paramet
 
 - `_halo_abundance.py`: Implements halo abundance models
 
----
 
 ### II. Cluster Catalogue Generation
 
