@@ -16,7 +16,7 @@ def completeness(log10m, z, params = None):
         completeness of cluster detection
     """
     if params==None:
-        a_nc, b_nc, a_mc, b_mc = 1.1321, 0.7751, 13.31, 0.2025
+        a_nc, b_nc, a_mc, b_mc = 1.13, 0.77, 13.31, 0.20
     else: a_nc, b_nc, a_mc, b_mc = params
     nc = a_nc + b_nc*(1+z)
     log10mc = a_mc + b_mc*(1+z)

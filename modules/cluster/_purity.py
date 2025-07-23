@@ -16,7 +16,7 @@ def purity(richness, z, params = None):
         purity of cluster detection
     """
     if params==None:
-        a_nc, b_nc, a_rc, b_rc = np.log(10)*0.8612, np.log(10)*0.3527, 2.2183, -0.6592
+        a_nc, b_nc, a_rc, b_rc = 1.98, 0.81, 2.21, -0.65
         theta_purity = [a_nc, b_nc, a_rc, b_rc]
     else: 
         a_nc, b_nc, a_rc, b_rc = params
