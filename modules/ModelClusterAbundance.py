@@ -89,10 +89,8 @@ class UniversePrediction:
 
         count_modelling = {'dNdzdlogMdOmega':None,'richness_mass_relation':None, 'completeness':None, 'purity':None }
 
-        a_nc, b_nc, a_rc, b_rc = np.log(10)*0.8612, np.log(10)*0.3527, 2.2183, -0.6592
-        theta_purity = [a_nc, b_nc, a_rc, b_rc]
-        a_nc, b_nc, a_mc, b_mc = 1.1321, 0.7751, 13.31, 0.2025
-        theta_completeness = [a_nc, b_nc, a_mc, b_mc]
+        theta_purity = [float(k) for k in default_config['cluster_catalogue']['params_purity'].split(', ')]
+        theta_completeness = [float(k) for k in default_config['cluster_catalogue']['params_completeness'].split(', ')]
     
         self.params_default = {'params_richness_mass_relation': theta_rm,
                              'CCL_cosmology': cosmo_fid, 

@@ -9,8 +9,8 @@ except ImportError:
     from scipy.integrate import simps
 from scipy import interpolate
 import os, sys
-import modules.cluster._completeness as comp
-import modules.cluster._purity as pur
+import cluster._completeness as comp
+import cluster._purity as pur
 
 import sys
 import ModelRichnessMassRelation as rm_relation
