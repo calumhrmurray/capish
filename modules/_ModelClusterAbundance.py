@@ -3,14 +3,12 @@ import pyccl as ccl
 import scipy
 from scipy.integrate import quad,simps, dblquad
 from scipy import interpolate
-import os
-import model_completeness as comp
-import model_purity as pur
-import model_halo_mass_function as hmf
+import os, sys
+import modules.cluster._completeness as comp
+import modules.cluster._purity as pur
+
 import sys
-dir_path=os.path.dirname(os.path.realpath(__file__))
-sys.path.append(dir_path+'/../')
-import class_richness_mass_relation as rm_relation
+import ModelRichnessMassRelation as rm_relation
 
 def binning(edges): return [[edges[i],edges[i+1]] for i in range(len(edges)-1)]
 
@@ -44,8 +42,8 @@ def reshape_integrand(integrand_count, index_richness_grid_cut, index_z_grid_cut
 
 class ClusterAbundance():
 
-    def __init__(self, CosmologyObject=None, MoRObject=None):
-        self.cosmology_prediction = CosmologyObject
+    def __init__(self, HaloAbundanceObject=None, MoRObject = None):
+        self.HaloAbundanceObject = HaloAbundanceObject
         self.mass_richness_relation = MoRObject
         return None
     
@@ -68,7 +66,7 @@ class ClusterAbundance():
         """
         dNdzdlogMdOmega_grid = np.zeros([len(logm_grid), len(z_grid)])
         for i, z in enumerate(z_grid):
-            dNdzdlogMdOmega_grid[:,i] = self.cosmology_prediction.dndlog10M(logm_grid ,z, cosmo) * self.cosmology_prediction.dVdzdOmega(z, cosmo)
+            dNdzdlogMdOmega_grid[:,i] = self.HaloAbundanceObject.dndlog10M(logm_grid ,z, cosmo) * self.HaloAbundanceObject.dVdzdOmega(z, cosmo)
         return dNdzdlogMdOmega_grid
     
     def compute_dNdzdlogMdOmega_log_slope_grid(self, logm_grid, z_grid, cosmo):
@@ -90,8 +88,8 @@ class ClusterAbundance():
         """
         dNdzdlogMdOmega_log_slope_grid = np.zeros([len(logm_grid), len(z_grid)])
         for i, z in enumerate(z_grid):
-            ln = np.log10(self.cosmology_prediction.dndlog10M(logm_grid - 0.001 ,z, cosmo) * self.cosmology_prediction.dVdzdOmega(z, cosmo))
-            ln_dm = np.log10(self.cosmology_prediction.dndlog10M(logm_grid + 0.001 ,z, cosmo) * self.cosmology_prediction.dVdzdOmega(z, cosmo))
+            ln = np.log10(self.HaloAbundanceObject.dndlog10M(logm_grid - 0.001 ,z, cosmo) * self.HaloAbundanceObject.dVdzdOmega(z, cosmo))
+            ln_dm = np.log10(self.HaloAbundanceObject.dndlog10M(logm_grid + 0.001 ,z, cosmo) * self.HaloAbundanceObject.dVdzdOmega(z, cosmo))
             dNdzdlogMdOmega_log_slope_grid[:,i] = -(ln_dm - ln)/(2*0.001)
         return dNdzdlogMdOmega_log_slope_grid
     
@@ -112,7 +110,7 @@ class ClusterAbundance():
         """
         halo_bias = np.zeros([len(logm_grid), len(z_grid)])
         for i, z in enumerate(z_grid):
-            halo_bias[:,i] = self.cosmology_prediction.bias_model(cosmo, 10**logm_grid, 1/(1+z))
+            halo_bias[:,i] = self.HaloAbundanceObject.CCLBias.__call__(cosmo, 10**logm_grid, 1/(1+z))
         return halo_bias
     
     
@@ -134,7 +132,7 @@ class ClusterAbundance():
         """
         R, Z = np.meshgrid(richness_grid, z_grid)
         R_flat, Z_flat = R.T.flatten(), Z.T.flatten()
-        purity_flat = pur.purity(R_flat, Z_flat, theta_purity)
+        purity_flat = pur.purity(R_flat, Z_flat, params=theta_purity)
         purity_grid = np.reshape(purity_flat, [len(richness_grid), len(z_grid)])
         return purity_grid
     
@@ -156,7 +154,7 @@ class ClusterAbundance():
         """
         Logm, Z = np.meshgrid(logm_grid, z_grid)
         Logm_flat, Z_flat = Logm.T.flatten(), Z.T.flatten()
-        completeness_flat = comp.completeness(Logm_flat, Z_flat, theta_completeness)
+        completeness_flat = comp.completeness(Logm_flat, Z_flat, params=theta_completeness)
         completeness_grid = np.reshape(completeness_flat, [len(logm_grid), len(z_grid)])
         return completeness_grid
     
