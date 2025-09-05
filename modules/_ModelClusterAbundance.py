@@ -1,7 +1,12 @@
 import numpy as np
 import pyccl as ccl
 import scipy
-from scipy.integrate import quad,simps, dblquad
+from scipy.integrate import quad, dblquad
+# Handle scipy version compatibility
+try:
+    from scipy.integrate import simpson as simps
+except ImportError:
+    from scipy.integrate import simps
 from scipy import interpolate
 import os, sys
 import modules.cluster._completeness as comp
