@@ -1,114 +1,63 @@
 import numpy as np
-
-def richness_mass_relation( mu , z , parameter_set  ):
-    """
-    Returns whatever you want as a cluster catalogue.
-    """
-    log10Mmin = parameter_set['log10mmin']
-    B = parameter_set['b']
-    alpha_l = parameter_set['alpha_l']
-    beta_l = parameter_set['beta_l']
-    z_p = parameter_set['z_p']
-
-    Mmin = 10**log10Mmin
-    M1 = 10**( B ) * Mmin
-    M = ( np.exp( mu ) * 1e14 )
-    mean_l = ( ( M - Mmin ) / ( M1 -  Mmin ) )**alpha_l * ( ( 1 + z ) / ( 1 + z_p ) )**beta_l
-
-    mean_l[ np.logical_or( mean_l < 0, np.isnan(mean_l) ) ] = 0
-
-    return np.log( np.random.poisson( lam = mean_l ) + 1 )
-
-def mass_observable_relation( mu, z, parameter_set ):
-
-    sigma_l = parameter_set['sigma_l']
-    r = parameter_set['r']
-    sigma_mwl = parameter_set['sigma_mwl']  
-
-    mean_l = richness_mass_relation( mu , z , parameter_set )
-    mean_mu_mwl = mu
-
-    cov = [ [ sigma_l**2 , r * sigma_l * sigma_mwl ], 
-            [ r * sigma_l * sigma_mwl, sigma_mwl**2 ] ]
-
-    total_noise = np.random.multivariate_normal([0, 0], cov=cov, size=len(mean_l))
-
-    # Apply intrinsic noise to mean values
-    ln_richness = mean_l + total_noise.T[0]
-    mu_mwl = mean_mu_mwl + total_noise.T[1]
-
-    return {
-        'richness': np.exp(ln_richness),
-        'log10_mwl': np.log10( np.exp( mu_mwl ) * 1e14 ),
-        'redshift': z
-    }
-
-def sinh_mass_observable_relation(mu, z, parameter_set):
-    sigma_l = parameter_set['sigma_l']
-    sigma_mwl = parameter_set['sigma_mwl']
-
-    def custom_sinh(mu):
-        a = np.arcsinh(3)
-        b = 14
-        return np.sinh(a * (mu - b)) / 5
-
-    mean_l = richness_mass_relation(mu, z, parameter_set)
-    mean_mu_mwl = mu
-
-    # Vectorized r calculation and clipping
-    r = custom_sinh(mu)
-    r = np.clip(r, -1, -0.8)
-
-    # Vectorized Cholesky decomposition for covariance matrices
-    cov00 = sigma_l ** 2
-    cov11 = sigma_mwl ** 2
-    cov01 = r * sigma_l * sigma_mwl
-
-    # Build lower-triangular Cholesky factors for each sample
-    L00 = np.sqrt(cov00)
-    L10 = cov01 / L00
-    L11 = np.sqrt(cov11 - L10 ** 2)
-
-    # Generate standard normal samples
-    n = len(mu)
-    z1 = np.random.randn(n)
-    z2 = np.random.randn(n)
-
-    # Apply Cholesky factors to get correlated noise
-    noise0 = L00 * z1
-    noise1 = L10 * z1 + L11 * z2
-
-    ln_richness = mean_l + noise0
-    mu_mwl = mean_mu_mwl + noise1
-
-    return {
-        'richness': np.exp(ln_richness),
-        'log10_mwl': np.log10(np.exp(mu_mwl) * 1e14),
-        'redshift': z
-    }
-
-
-MASS_OBSERVABLE_RELATIONS = {
-    "default": mass_observable_relation,
-    "sinh": sinh_mass_observable_relation,
-}
-
+from . import _completeness
+from . import _halo_observable_relation
+from . import _purity
+from . import _selection
 class ClusterCatalogue:
      
-    def __init__( self , settings ):
+    def __init__( self , default_config):
         """
         Initialize the ClusterCatalogue class with the given settings.
         """
-        relation = settings["cluster_catalogue"]["mass_observable_relation"]
-        self.mass_observable_relation = MASS_OBSERVABLE_RELATIONS[relation]
+        self.default_config = default_config
+        return None
+    
+    def get_cluster_catalogue(self, log10m_true, z_true, config_new):
 
-    def get_cluster_catalogue( self , halo_catalogue , parameter_set ):
-        """
-        Generate a cluster catalogue based on the halo catalogue and parameter set.
-        """
-        # Extract necessary parameters from the parameter set
-        mu = halo_catalogue['mu']
-        z = halo_catalogue['redshift']
+        params_completeness = [float(k) for k in config_new['cluster_catalogue']['params_completeness'].split(', ')]
+        params_purity = [float(k) for k in config_new['cluster_catalogue']['params_purity'].split(', ')]
+        
+        if config_new['cluster_catalogue']['add_completeness']=='True':
+            u = np.random.random(len(log10m_true))
+            mask = u < _completeness.completeness(log10m_true, z_true, params = params_completeness)
+            log10m_true, z_true = log10m_true[mask], z_true[mask]
 
-        # Call the mass observable relation function
-        return self.mass_observable_relation( mu, z, parameter_set )
+        MoR = _halo_observable_relation.HaloToObservables(config_new)
+        richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
+        z_obs[z_obs < 0] = None
+
+        if config_new['cluster_catalogue']['add_purity']=='True': 
+            richness_edges = np.logspace(np.log10(20), np.log10(300), 70) 
+            richness_center = 0.5 * (richness_edges[:-1] + richness_edges[1:])
+            z_obs_edges = np.linspace(0, 2, 70)
+            z_obs_center = 0.5 * (z_obs_edges[:-1] + z_obs_edges[1:])
+            hist, xedges, yedges = np.histogram2d(richness, z_obs, bins=[richness_edges, z_obs_edges])
+            Ntrue = hist 
+    
+            purity_grid = np.zeros_like(hist)
+            for i in range(len(richness_center)):
+                for j in range(len(z_obs_center)):
+                    purity_grid[i, j] = _purity.purity(richness_center[i], z_obs_center[j], params = params_purity)
+    
+            Nfake_sampled = np.random.poisson(Ntrue * (1 - purity_grid))
+            fake_richness, fake_z_obs = [], []
+            
+            for i in range(len(richness_edges) - 1):
+                for j in range(len(z_obs_edges) - 1):
+                    n_fake = Nfake_sampled[i, j]
+                    if n_fake > 0:
+                        richness_bin = np.random.uniform(richness_edges[i], richness_edges[i+1], size=n_fake)
+                        z_bin = np.random.uniform(z_obs_edges[j], z_obs_edges[j+1], size=n_fake)
+                        fake_richness.extend(richness_bin)
+                        fake_z_obs.extend(z_bin)
+
+            fake_log10mWL = [None] * len(fake_richness)
+            richness = np.array(list(richness) + fake_richness)
+            log10mWL = np.array(list(log10mWL) + fake_log10mWL)
+            z_obs = np.array(list(z_obs) + fake_z_obs)
+        
+        if config_new['cluster_catalogue']['add_selection']=='True': 
+            mask_selection = _selection.selection(richness, z_obs)
+            richness, log10mWL, z_obs = richness[mask_selection], log10mWL[mask_selection], z_obs[mask_selection]
+
+        return richness, log10mWL, z_obs
