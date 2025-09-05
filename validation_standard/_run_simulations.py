@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -27,15 +26,13 @@ def map(func, iterable, ncores=3):
     return results
 
 if __name__ == "__main__":
+    
     default_config_path = '/pbs/throng/lsst/users/cpayerne/capish/config/capish.ini'
     default_config = configparser.ConfigParser()
     default_config.read(default_config_path)
-    default_config['cluster_catalogue']['add_completeness'] = 'False'
-    default_config['cluster_catalogue']['add_purity'] = 'False'
     simulator = simulation.UniverseSimulator(
                                 default_config=default_config, 
                                 variable_params_names=['Omega_m', 'sigma_8'])
     
     results = map(f_to_map, np.arange(30), ncores=10)
-    save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/sims_no_completeness_no_purity.pkl')
-            
+    save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/{name}.pkl')
