@@ -142,7 +142,8 @@ class HaloCatalogue:
             w0 = float(config_new['parameters']['w0'])
             wa = float(config_new['parameters']['wa'])
 
-            cosmo = ccl.Cosmology( Omega_c = Omega_m - Omega_b, Omega_b = Omega_b, h = h , sigma8 = sigma8, n_s= ns)
+            cosmo = ccl.Cosmology( Omega_c = Omega_m - Omega_b, Omega_b = Omega_b, h = h , sigma8 = sigma8, n_s= ns,
+                                  transfer_function='boltzmann_class', matter_power_spectrum='linear')
             #recall that here cosmo is now a CCL object !
             HaloAbundanceObject = _halo_abundance.HaloAbundance( CCLCosmologyObject = cosmo, 
                                                                      CCLHmf = self.hmf,

@@ -15,8 +15,8 @@ class HaloToObservables:
         pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
         params_observable_mean = [float(parameters['params_mean_obs_mu0']), float(parameters['params_mean_obs_muz']), float(parameters['params_mean_obs_mulog10m'])]
         params_observable_stdd = [float(parameters['params_stdd_obs_mu0']), float(parameters['params_stdd_obs_muz']), float(parameters['params_stdd_obs_mulog10m'])]
-        params_observable_mean = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean
-        params_observable_stdd = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_stdd
+        params_observable_mean = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_mean
+        params_observable_stdd = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_stdd
         params_mWL_mean = [float(parameters['params_mean_log10mWL_aWL']), float(parameters['params_mean_log10mWL_bWL'])]
         params_mWL_stdd = [float(parameters['params_stdd_log10mWLgal']), float(parameters['params_stdd_log10mWLint'])]
         rho_obs_mWL = float(parameters['rho_obs_mWL'])
@@ -36,6 +36,17 @@ class HaloToObservables:
 
     def mean_obs_power_law_f(self, logm, z, params_observable_mean):
         log10m0, z0, observable_mu0, observable_muz, observable_mulog10m = params_observable_mean
+        # Ensure all are float
+        log10m0 = float(log10m0)
+        z0 = float(z0)
+        observable_mu0 = float(observable_mu0)
+        observable_muz = float(observable_muz)
+        observable_mulog10m = float(observable_mulog10m)
+        
+        # Ensure z and logm are numeric arrays
+        z = np.array(z, dtype=float)
+        logm = np.array(logm, dtype=float)
+        
         observable_mu = observable_mu0 + observable_muz * np.log((1+z)/(1 + z0)) + observable_mulog10m * (logm-log10m0)
         return observable_mu
 

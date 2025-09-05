@@ -49,7 +49,10 @@ class UniverseSimulator:
         """
 
         config = self.new_config_files(variable_params_values)
-        log10m_true, z_true = self.halo_catalogue_class.get_halo_catalogue( config )
+        halo_data = self.halo_catalogue_class.get_halo_catalogue( config )
+        log10m_true = halo_data['mu']  # Convert from mu = ln(M/10^14) back to log10(M)
+        log10m_true = np.log10(np.exp(log10m_true) * 1e14)  # Convert mu back to log10(M)
+        z_true = halo_data['redshift']
         richness, log10mWL, z_obs = self.cluster_catalogue_class.get_cluster_catalogue( log10m_true, z_true , config )
         summary_statistic = self.summary_statistics_class.get_summary_statistics( richness, log10mWL, z_obs, config )
 
