@@ -46,6 +46,17 @@ class SummaryStatistics:
         
         self.default_config = default_config
 
+        Omega_c_fid = float(default_config['halo_catalogue']['Omega_c_fiducial'])
+        Omega_b_fid = float(default_config['halo_catalogue']['Omega_b_fiducial'])
+        sigma8_fid = float(default_config['halo_catalogue']['sigma_8_fiducial'])
+        h_fid = float(default_config['halo_catalogue']['h_fiducial'])
+        ns_fid = float(default_config['halo_catalogue']['n_s_fiducial'])
+
+        self.Gamma = float(default_config['summary_statistics']['Gamma'])
+        
+        cosmo_fid = ccl.Cosmology( Omega_c = Omega_c_fid, Omega_b = Omega_b_fid, 
+                                  h = h_fid, sigma8 = sigma8_fid, n_s= ns_fid)
+        
         z_l_array = np.linspace(0.03, 3, 300)
         W_zl = lensing_weights(cosmo_fid, z_l_array, z_s_max=3.0, n_zs=500, sigma_e_const=0.3)
         def W_zl_f(z_l): return np.interp(z_l, z_l_array, W_zl)
