@@ -45,6 +45,11 @@ class SummaryStatistics:
     def __init__( self , default_config):
         
         self.default_config = default_config
+
+        z_l_array = np.linspace(0.03, 3, 300)
+        W_zl = lensing_weights(cosmo_fid, z_l_array, z_s_max=3.0, n_zs=500, sigma_e_const=0.3)
+        def W_zl_f(z_l): return np.interp(z_l, z_l_array, W_zl)
+        self.W_zl_f = W_zl_f
         
         return 
 
