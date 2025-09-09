@@ -46,6 +46,9 @@ class SummaryStatistics:
         
         self.default_config = default_config
 
+        self.richness_edges = np.array(list(map(float, default_config['summary_statistics']['richness_edges'].split(','))), dtype=float)
+        self.redshift_edges = np.array(list(map(float, default_config['summary_statistics']['redshift_edges'].split(','))), dtype=float)
+
         Omega_c_fid = float(default_config['halo_catalogue']['Omega_c_fiducial'])
         Omega_b_fid = float(default_config['halo_catalogue']['Omega_b_fiducial'])
         sigma8_fid = float(default_config['halo_catalogue']['sigma_8_fiducial'])
