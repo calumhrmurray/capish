@@ -25,9 +25,9 @@ class UniversePrediction:
         parameters = default_config['parameters']
         pivot_obs_z0 = float(parameters['pivot_obs_z0'])
         pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
-        params_observable_mean = [float(parameters['params_mean_obs_mu0']), float(parameters['params_mean_obs_muz']), float(parameters['params_mean_obs_mulog10m'])]
-        params_observable_stdd = [float(parameters['params_stdd_obs_mu0']), float(parameters['params_stdd_obs_muz']), float(parameters['params_stdd_obs_mulog10m'])]
-        theta_rm = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean + params_observable_stdd
+        params_observable_mean = [float(parameters['mu_0_lambda']), float(parameters['mu_z_lambda']), float(parameters['mu_m_lambda'])]
+        params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
+        theta_rm = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean + params_observable_sigma
         which = default_config['cluster_catalogue.mass_observable_relation']['which_relation']
         RM_count_and_mass = rm_relation.Richness_mass_relation()
         RM_count_and_mass.select(which = which)
