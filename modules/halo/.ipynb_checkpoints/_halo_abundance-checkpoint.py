@@ -3,7 +3,13 @@ import pyccl as ccl
 import numpy as np
 import scipy
 from scipy import stats
-from scipy.integrate import quad,simps, dblquad
+import PySSC as pyssc
+from scipy.integrate import quad, dblquad
+# Handle scipy version compatibility
+try:
+    from scipy.integrate import simpson as simps
+except ImportError:
+    from scipy.integrate import simps
 from scipy import interpolate
 import sys
 
