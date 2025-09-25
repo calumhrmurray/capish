@@ -42,6 +42,19 @@ class UniverseSimulator:
             config['parameters'][str(name)] = str(variable_params_values[i])
         return config
 
+    def run_simulation_halo_only(self, variable_params_values):
+        """
+        Run the simulation using the variable parameters provided.
+        """
+
+        config = self.new_config_files(variable_params_values)
+        halo_data = self.halo_catalogue_class.get_halo_catalogue( config )
+        log10m_true = halo_data['mu']  # Convert from mu = ln(M/10^14) back to log10(M)
+        log10m_true = np.log10(np.exp(log10m_true) * 1e14)  # Convert mu back to log10(M)
+        z_true = halo_data['redshift']
+
+        return log10m_true, z_true
+
 
     def run_simulation(self, variable_params_values):
         """
