@@ -1,10 +1,12 @@
 import numpy as np
-from modules.halo import _halo_abundance
+import sys
+from pathlib import Path
+path_module = str(Path(__file__).resolve()).split('halo_catalogue.py')[0]
+sys.path.append(path_module)
+import _halo_abundance
 import pyccl as ccl
 import pickle
-from pathlib import Path
-
-current_file_path = str(Path(__file__).resolve()).split('halo_catalogue.py')[0]+'/SSC/'
+current_file_path_SSC = path_module+'/SSC/'
 
 def save_pickle(dat, filename, **kwargs):
     file = open(filename,'wb')
@@ -97,7 +99,7 @@ class HaloCatalogue:
             zmax = float( default_config['halo_catalogue']['z_max'])  
             nzbins =  int( default_config['halo_catalogue']['n_redshift_bins'] )
             filename = str(default_config['halo_catalogue']['name_sigma2ij_fullsky_file']).format(zmin, zmax, nzbins)
-            filename = current_file_path + filename
+            filename = current_file_path_SSC + filename
             if self.recompute_SSC_fiducial:
                 # fiducial cosmology for the SSC computation, will not be run at every step of CAPISH
                 cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
