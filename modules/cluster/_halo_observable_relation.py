@@ -17,7 +17,7 @@ class HaloToObservables:
         params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
         params_observable_mean = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_mean
         params_observable_sigma = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_sigma
-        params_mWL_mean = [float(parameters['mu_m_Mwl']), float(parameters['mu_0_Mwl']), float(parameters['mu_z_Mwl'])]
+        params_mWL_mean = [float(parameters['mu_0_Mwl']), float(parameters['mu_m_Mwl']), float(parameters['mu_z_Mwl'])]
         params_mWL_sigma = [float(parameters['sigma_Mwl_gal']), float(parameters['sigma_Mwl_int'])]
         rho_obs_mWL = float(parameters['rho'])
         which_mass_richness_rel = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
@@ -57,7 +57,7 @@ class HaloToObservables:
 
     def mean_log10mWL_f(self, log10M, z, params_mWL_mean):
 
-        mu_m_Mwl, mu_0_Mwl, mu_z_Mwl = params_mWL_mean
+        mu_0_Mwl, mu_m_Mwl, mu_z_Mwl = params_mWL_mean
         # Need pivot points from observable mean parameters
         log10m0 = self.params_observable_mean[0]
         z0 = self.params_observable_mean[1]

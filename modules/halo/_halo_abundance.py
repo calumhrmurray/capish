@@ -167,6 +167,8 @@ class HaloAbundance():
             hb = self.CCLBias.__call__(self.CCLCosmologyObject, 10**self.logm_grid, 1./(1. + z))
             grid[:,i] = hb
         self.halo_biais = grid
+
+    ########### below not used in capish, will be removed at some-point ##################
         
     def Nhalo_bias_MZ(self, Redshift_bin = [], Proxy_bin = [], method = 'simps'): 
         r"""
