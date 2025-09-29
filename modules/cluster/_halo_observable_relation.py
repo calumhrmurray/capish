@@ -73,27 +73,37 @@ class HaloToObservables:
 
         mean_lnobs = self.mean_obs_power_law_f(log10M, z, self.params_observable_mean)
         sigma_lnobs = self.sigma_obs_power_law_f(log10M, z, self.params_observable_sigma)
-        
-        if self.which_mass_richness_rel=='Gauss+Poiss-corr':
-            mean_lnobs = mean_lnobs - 0.5 * np.exp(-mean_lnobs+0.5*sigma_lnobs**2) - (1/12)*np.exp(-2*mean_lnobs+2*sigma_lnobs**2)
-        sigma_lnobs2 = sigma_lnobs**2
-        #add poisson noise
-        sigma_lnobs2 = sigma_lnobs2 + (np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
-        sigma_lnobs = sigma_lnobs2**.5
-        
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
         sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
-        
         rho = self.rho_obs_mWL
 
-        lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
-        lnobs = mean_lnobs + lnobs_noise
+        if self.which_mass_richness_rel!='GPC':
+        
+            if self.which_mass_richness_rel=='Gauss+Poiss-corr':
+                mean_lnobs = mean_lnobs - 0.5 * np.exp(-mean_lnobs+0.5*sigma_lnobs**2) - (1/12)*np.exp(-2*mean_lnobs+2*sigma_lnobs**2)
+            if self.which_mass_richness_rel=='Gauss':
+                mean_lnobs = mean_lnobs
+            sigma_lnobs2 = sigma_lnobs**2
+            #add poisson noise
+            sigma_lnobs2 = sigma_lnobs2 + (np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
+            sigma_lnobs = sigma_lnobs2**.5
+    
+            lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
+            lnobs = mean_lnobs + lnobs_noise
+    
+            cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
+            cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
+            log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
 
-        cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
-        cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
-        log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
+        elif self.which_mass_richness_rel=='GPC':
+            #only if rho == 0, else not relevant
+            n_halo = len(z)
+            lnint = mean_lnobs + np.random.randn(n_halo) * sigma_lnobs
+            lnobs = np.log(np.random.poisson(lam=np.exp(lnint)))
+            log10Mwl = mean_log10mWL + np.random.randn(n_halo) * sigma_log10mWL
 
         if self.add_photoz:
+            
             z = photometric_redshift(z, self.photoz_params)
         
         return np.exp(lnobs), log10Mwl, z
