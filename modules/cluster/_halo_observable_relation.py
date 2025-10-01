@@ -11,13 +11,10 @@ class HaloToObservables:
     def __init__(self, config_new):
 
         parameters = config_new['parameters']
-        pivot_obs_z0 = float(parameters['pivot_obs_z0'])
-        pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
-        params_observable_mean = [float(parameters['mu_0_lambda']), float(parameters['mu_z_lambda']), float(parameters['mu_m_lambda'])]
+        M_min = float(parameters['M_min'])
+        params_observable_mean = [float(parameters['alpha_lambda']), float(parameters['beta_lambda']), float(parameters['gamma_lambda'])]
         params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
-        params_observable_mean = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_mean
-        params_observable_sigma = [float(pivot_obs_log10m0), float(pivot_obs_z0)] + params_observable_sigma
-        params_mWL_mean = [float(parameters['mu_0_Mwl']), float(parameters['mu_m_Mwl']), float(parameters['mu_z_Mwl'])]
+        params_mWL_mean = [float(parameters['alpha_mwl']), float(parameters['beta_mwl']), float(parameters['gamma_mwl'])]
         params_mWL_sigma = [float(parameters['sigma_Mwl_gal']), float(parameters['sigma_Mwl_int'])]
         rho_obs_mWL = float(parameters['rho'])
         which_mass_richness_rel = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
@@ -25,6 +22,7 @@ class HaloToObservables:
         add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
+        self.M_min = M_min
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
         self.params_mWL_mean = params_mWL_mean
@@ -34,34 +32,42 @@ class HaloToObservables:
         self.photoz_params = photoz_params
         self.which_mass_richness_rel = which_mass_richness_rel
 
-    def mean_obs_power_law_f(self, log10M, z, params_observable_mean):
-        log10m0, z0, observable_mu0, observable_muz, observable_mulog10m = params_observable_mean
+    def mean_obs_relation(self, log10M, z, params_observable_mean):
+        alpha_lambda, beta_lambda, gamma_lambda = params_observable_mean
         # Ensure all are float
-        log10m0 = float(log10m0)
-        z0 = float(z0)
-        observable_mu0 = float(observable_mu0)
-        observable_muz = float(observable_muz)
-        observable_mulog10m = float(observable_mulog10m)
+        alpha_lambda = float(alpha_lambda)
+        beta_lambda = float(beta_lambda)
+        gamma_lambda = float(gamma_lambda)
 
         # Ensure z and log10M are numeric arrays
         z = np.array(z, dtype=float)
         log10M = np.array(log10M, dtype=float)
 
-        observable_mu = observable_mu0 + observable_muz * np.log10((1+z)/(1 + z0)) + observable_mulog10m * (log10M-log10m0)
-        return observable_mu
+        # Convert log10M to M, subtract M_min, then back to log10
+        M = 10**log10M
+        M_term = M - self.M_min
 
-    def sigma_obs_power_law_f(self, log10M, z, params_observable_sigma):
-        log10m0, z0, observable_sigma0, observable_sigmaz, observable_sigmalog10m = params_observable_sigma
-        observable_sigma = observable_sigma0 + observable_sigmaz * np.log10((1+z)/(1 + z0)) + observable_sigmalog10m * (log10M-log10m0)
-        return observable_sigma
+        # Ensure M_term is positive to avoid log of negative numbers
+        M_term = np.maximum(M_term, 1e10)  # Set minimum value to avoid log issues
+
+        # ln(lambda) = alpha_lambda + beta_lambda * log10(M - M_min) + gamma_lambda * log10(1 + z)
+        # Note: This returns ln(lambda), which gets exponentiated later to get lambda
+        ln_lambda = np.log( 10**(alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)))
+        return ln_lambda
+
+    def sigma_obs_relation(self, log10M, z, params_observable_sigma):
+        sigma_lambda = params_observable_sigma[0]  # Only use first parameter, others are 0
+        return sigma_lambda * np.ones(len(log10M))
 
     def mean_log10mWL_f(self, log10M, z, params_mWL_mean):
 
-        mu_0_Mwl, mu_m_Mwl, mu_z_Mwl = params_mWL_mean
-        # Need pivot points from observable mean parameters
-        log10m0 = self.params_observable_mean[0]
-        z0 = self.params_observable_mean[1]
-        return mu_0_Mwl + mu_m_Mwl * (log10M - log10m0) + mu_z_Mwl * np.log10((1+z)/(1 + z0))
+        alpha_mwl, beta_mwl, gamma_mwl = params_mWL_mean
+        # Ensure z and log10M are numeric arrays
+        z = np.array(z, dtype=float)
+        log10M = np.array(log10M, dtype=float)
+
+        # mu_mWL = alpha_mwl + beta_mwl * log10(M) + gamma_mwl * log10(1 + z)
+        return alpha_mwl + beta_mwl * log10M + gamma_mwl * np.log10(1 + z)
     
     def sigma_log10mWL_f(self, log10M, z, params_mWL_sigma):
 
@@ -71,8 +77,8 @@ class HaloToObservables:
 
     def generate_observables_from_halo(self, log10M, z):
 
-        mean_lnobs = self.mean_obs_power_law_f(log10M, z, self.params_observable_mean)
-        sigma_lnobs = self.sigma_obs_power_law_f(log10M, z, self.params_observable_sigma)
+        mean_lnobs = self.mean_obs_relation(log10M, z, self.params_observable_mean)
+        sigma_lnobs = self.sigma_obs_relation(log10M, z, self.params_observable_sigma)
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
         sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
         rho = self.rho_obs_mWL

@@ -3,7 +3,12 @@ import pyccl as ccl
 import numpy as np
 import scipy
 from scipy import stats
-import PySSC as pyssc
+try:
+    import PySSC as pyssc
+    HAS_PYSSC = True
+except ImportError:
+    HAS_PYSSC = False
+    pyssc = None
 from scipy.integrate import quad, dblquad
 # Handle scipy version compatibility
 try:
@@ -92,37 +97,41 @@ class HaloAbundance():
                     if ((z>z_bin[0]) and (z<=z_bin[1])):
                         windows_T[i,k] = 1
         
-        if S_ij_type == 'full_sky_rescaled_approx':  
+        if not HAS_PYSSC:
+            raise ImportError("PySSC is required for SSC calculations but not available")
+
+        if S_ij_type == 'full_sky_rescaled_approx':
             Sij_fullsky = pyssc.Sij_fullsky(z_arr, windows_T, order=1, cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0)
             Sij_partialsky = Sij_fullsky/f_sky
-            
-        elif S_ij_type == 'full_sky_rescaled': 
-            Sij_fullsky = pyssc.Sij(z_arr, windows_T, order=1, sky='full', method='classic', 
+
+        elif S_ij_type == 'full_sky_rescaled':
+            Sij_fullsky = pyssc.Sij(z_arr, windows_T, order=1, sky='full', method='classic',
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
-                                    precision=10, clmask=None, mask=None, mask2=None, 
-                                    var_tol=0.05, machinefile=None, Nn=None, Np='default', 
+                                    precision=10, clmask=None, mask=None, mask2=None,
+                                    var_tol=0.05, machinefile=None, Nn=None, Np='default',
                                     AngPow_path=None, verbose=False, debug=False)
             Sij_partialsky = Sij_fullsky/f_sky
-        
+
         elif S_ij_type == 'exact':
-            Sij_partialsky = pyssc.Sij(z_arr, windows_T, order=1, sky='psky', method='classic', 
+            Sij_partialsky = pyssc.Sij(z_arr, windows_T, order=1, sky='psky', method='classic',
                                     cosmo_params=default_cosmo_params, cosmo_Class=None, convention=0,
-                                    precision=10, clmask=None, mask=path_to_mask, mask2=None, 
-                                    var_tol=0.05, machinefile=None, Nn=None, Np='default', 
+                                    precision=10, clmask=None, mask=path_to_mask, mask2=None,
+                                    var_tol=0.05, machinefile=None, Nn=None, Np='default',
                                     AngPow_path=None, verbose=False, debug=False)
         return Sij_partialsky 
 
     def compute_theoretical_sigma2ij_fullsky(self, cosmo_ccl, z_grid):
-        import PySSC
-        
-        default_cosmo_params = {'omega_b': cosmo_ccl['Omega_b']*cosmo_ccl['h']**2, 
-                                'omega_cdm': cosmo_ccl['Omega_c']*cosmo_ccl['h']**2, 
-                                'H0': cosmo_ccl['h']*100, 
-                                'n_s': cosmo_ccl['n_s'], 
+        if not HAS_PYSSC:
+            raise ImportError("PySSC is required for SSC calculations but not available")
+
+        default_cosmo_params = {'omega_b': cosmo_ccl['Omega_b']*cosmo_ccl['h']**2,
+                                'omega_cdm': cosmo_ccl['Omega_c']*cosmo_ccl['h']**2,
+                                'H0': cosmo_ccl['h']*100,
+                                'n_s': cosmo_ccl['n_s'],
                                 'sigma8': cosmo_ccl['sigma8'],
                                 'output' : 'mPk'}
-        
-        return PySSC.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)
+
+        return pyssc.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)
 
     
     def compute_multiplicity_grid_MZ(self, z_grid = 1, logm_grid = 1):
