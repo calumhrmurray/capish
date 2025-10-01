@@ -90,11 +90,11 @@ class HaloCatalogue:
         self.hmf = get_massfunc_from_config(default_config['halo_catalogue'])
 
         self.SSC = str2bool(default_config['halo_catalogue']['SSC'])
-        self.recompute_SSC_fiducial = str2bool(default_config['halo_catalogue']['recompute_SSC_ficucial'])
-        self.save_new_SSC_fiducial = str2bool(default_config['halo_catalogue']['save_new_SSC_fiducial'])
-        
+
         # setup the SSC stuff
         if self.SSC:
+            self.recompute_SSC_fiducial = str2bool(default_config['halo_catalogue']['recompute_SSC_fiducial'])
+            self.save_new_SSC_fiducial = str2bool(default_config['halo_catalogue']['save_new_SSC_fiducial'])
             zmin = float( default_config['halo_catalogue']['z_min'])
             zmax = float( default_config['halo_catalogue']['z_max'])  
             nzbins =  int( default_config['halo_catalogue']['n_redshift_bins'] )
