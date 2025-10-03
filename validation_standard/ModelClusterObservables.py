@@ -95,11 +95,8 @@ class UniversePrediction:
         halobias_fct = halocat_mod.get_bias_from_config(default_config['halo_catalogue'])
        
         parameters = default_config['parameters']
-        pivot_obs_z0 = float(parameters['pivot_obs_z0'])
-        pivot_obs_log10m0 = float(parameters['pivot_obs_log10m0'])
-        params_observable_mean = [float(parameters['mu_0_lambda']), float(parameters['mu_z_lambda']), float(parameters['mu_m_lambda'])]
-        params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
-        theta_rm = [pivot_obs_log10m0, pivot_obs_z0] + params_observable_mean + params_observable_sigma
+        rm_param_names = ['M_min', 'alpha_lambda', 'beta_lambda', 'gamma_lambda', 'sigma_lambda']
+        theta_rm = [float(parameters[n]) for n in rm_param_names]
         which = default_config['cluster_catalogue.mass_observable_relation']['which_relation']
         RM_count_and_mass = rm_relation.Richness_mass_relation()
         RM_count_and_mass.select(which = which)
