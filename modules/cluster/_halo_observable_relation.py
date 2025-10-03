@@ -85,8 +85,6 @@ class HaloToObservables:
 
         if self.which_mass_richness_rel!='GPC':
         
-            if self.which_mass_richness_rel=='Gauss+Poiss-corr':
-                mean_lnobs = mean_lnobs - 0.5 * np.exp(-mean_lnobs+0.5*sigma_lnobs**2) - (1/12)*np.exp(-2*mean_lnobs+2*sigma_lnobs**2)
             if self.which_mass_richness_rel=='Gauss':
                 mean_lnobs = mean_lnobs
             sigma_lnobs2 = sigma_lnobs**2
