@@ -37,7 +37,7 @@ class HaloAbundance():
         self.sky_area = sky_area
         return None
 
-    def dndlog10M(self, logm, z, cosmo):
+    def dndlog10M(self, log10m, z, cosmo):
         r"""
         Attributes:
         -----------
@@ -54,7 +54,7 @@ class HaloAbundance():
         hmf : array
             halo mass function for the corresponding masses and redshift
         """
-        return self.CCLHmf.__call__(cosmo, 10**np.array(logm), 1./(1. + z))
+        return self.CCLHmf.__call__(cosmo, 10**np.array(log10m), 1./(1. + z))
     
     def dVdzdOmega(self, z, cosmo):
         r"""
@@ -134,46 +134,46 @@ class HaloAbundance():
         return pyssc.sigma2_fullsky(z_grid, cosmo_params=default_cosmo_params, cosmo_Class=None)
 
     
-    def compute_multiplicity_grid_MZ(self, z_grid = 1, logm_grid = 1):
+    def compute_multiplicity_grid_MZ(self, z_grid = 1, log10m_grid = 1):
         r"""
         Attributes:
         -----------
         z_grid : array
             redshift grid
-        logm_grid : array
-            logm grid
+        log10m_grid : array
+            log10m grid
         Returns:
         --------
-        dN_dzdlogMdOmega : array
-            tabulated multiplicity function over the redshift and logmass grid
-        dzdlogMdOmega_interpolation : function
+        dN_dzdlog10MdOmega : array
+            tabulated multiplicity function over the redshift and log10mass grid
+        dzdlog10MdOmega_interpolation : function
             interpolated function over the tabulated multiplicity grid
         """
         self.z_grid = z_grid
-        self.logm_grid = logm_grid
-        grid = np.zeros([len(self.logm_grid), len(self.z_grid)])
+        self.log10m_grid = log10m_grid
+        grid = np.zeros([len(self.log10m_grid), len(self.z_grid)])
         for i, z in enumerate(self.z_grid):
-            grid[:,i] = self.dndlog10M(self.logm_grid ,z, self.CCLCosmologyObject) * self.dVdzdOmega(z, self.CCLCosmologyObject)
-        self.dN_dzdlogMdOmega = grid
-        
-    def compute_halo_bias_grid_MZ(self, z_grid = 1, logm_grid = 1):
+            grid[:,i] = self.dndlog10M(self.log10m_grid ,z, self.CCLCosmologyObject) * self.dVdzdOmega(z, self.CCLCosmologyObject)
+        self.dN_dzdlog10MdOmega = grid
+
+    def compute_halo_bias_grid_MZ(self, z_grid = 1, log10m_grid = 1):
         r"""
         Attributes:
         -----------
         z_grid : array
             redshift grid
-        logm_grid : array
+        log10m_grid : array
             logm grid
         Returns:
         --------
-        dN_dzdlogMdOmega : array
-            tabulated multiplicity function over the redshift and logmass grid
-        dzdlogMdOmega_interpolation : function
+        dN_dzdlog10MdOmega : array
+            tabulated multiplicity function over the redshift and log10mass grid
+        dzdlog10MdOmega_interpolation : function
             interpolated function over the tabulated multiplicity grid
         """
-        grid = np.zeros([len(self.logm_grid), len(self.z_grid)])
+        grid = np.zeros([len(self.log10m_grid), len(self.z_grid)])
         for i, z in enumerate(self.z_grid):
-            hb = self.CCLBias.__call__(self.CCLCosmologyObject, 10**self.logm_grid, 1./(1. + z))
+            hb = self.CCLBias.__call__(self.CCLCosmologyObject, 10**self.log10m_grid, 1./(1. + z))
             grid[:,i] = hb
         self.halo_biais = grid
 
@@ -199,11 +199,11 @@ class HaloAbundance():
         """
         halo_biais_matrix = np.zeros([len(Redshift_bin), len(Proxy_bin)]) 
         if method == 'simps':               
-            index_proxy = np.arange(len(self.logm_grid))
+            index_proxy = np.arange(len(self.log10m_grid))
             index_z = np.arange(len(self.z_grid))
             for i, proxy_bin in enumerate(Proxy_bin):
-                mask_proxy = (self.logm_grid >= proxy_bin[0])*(self.logm_grid <= proxy_bin[1])
-                proxy_cut = self.logm_grid[mask_proxy]
+                mask_proxy = (self.log10m_grid >= proxy_bin[0])*(self.log10m_grid <= proxy_bin[1])
+                proxy_cut = self.log10m_grid[mask_proxy]
                 index_proxy_cut = index_proxy[mask_proxy]
                 proxy_cut[0], proxy_cut[-1] = proxy_bin[0], proxy_bin[1]
                 for j, z_bin in enumerate(Redshift_bin):
@@ -212,7 +212,7 @@ class HaloAbundance():
                     z_cut = self.z_grid[mask_z]
                     index_z_cut = index_z[mask_z]
                     z_cut[0], z_cut[-1] = z_down, z_up
-                    integrand = self.sky_area * np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] * self.halo_biais[:,k][mask_proxy] for k in index_z_cut])
+                    integrand = self.sky_area * np.array([self.dN_dzdlog10MdOmega[:,k][mask_proxy] * self.halo_biais[:,k][mask_proxy] for k in index_z_cut])
                     halo_biais_matrix[j,i] = simps(simps(integrand, proxy_cut), z_cut)
             return halo_biais_matrix
 
@@ -239,17 +239,17 @@ class HaloAbundance():
         if method == 'dblquad_interp':
             for i, proxy_bin in enumerate(Proxy_bin):
                 for j, z_bin in enumerate(Redshift_bin):
-                    N_th_matrix[j,i] = self.sky_area * dblquad(self.dNdzdlogMdOmega_interpolation, 
+                    N_th_matrix[j,i] = self.sky_area * dblquad(self.dNdzdlog10MdOmega_interpolation, 
                                                    proxy_bin[0], proxy_bin[1], 
                                                    lambda x: z_bin[0], 
                                                    lambda x: z_bin[1])[0]
                     
         if method == 'simps':
-            index_proxy = np.arange(len(self.logm_grid))
+            index_proxy = np.arange(len(self.log10m_grid))
             index_z = np.arange(len(self.z_grid))
             for i, proxy_bin in enumerate(Proxy_bin):
-                mask_proxy = (self.logm_grid >= proxy_bin[0])*(self.logm_grid <= proxy_bin[1])
-                proxy_cut = self.logm_grid[mask_proxy]
+                mask_proxy = (self.log10m_grid >= proxy_bin[0])*(self.log10m_grid <= proxy_bin[1])
+                proxy_cut = self.log10m_grid[mask_proxy]
                 index_proxy_cut = index_proxy[mask_proxy]
                 proxy_cut[0], proxy_cut[-1] = proxy_bin[0], proxy_bin[1]
                 for j, z_bin in enumerate(Redshift_bin):
@@ -258,7 +258,7 @@ class HaloAbundance():
                     z_cut = self.z_grid[mask_z]
                     index_z_cut = index_z[mask_z]
                     z_cut[0], z_cut[-1] = z_down, z_up
-                    integrand = np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] for k in index_z_cut])
+                    integrand = np.array([self.dN_dzdlog10MdOmega[:,k][mask_proxy] for k in index_z_cut])
                     N_th = self.sky_area * simps(simps(integrand, proxy_cut), z_cut)
                     N_th_matrix[j,i] = N_th
 
@@ -285,11 +285,11 @@ class HaloAbundance():
         """
         N_th_matrix = np.zeros([len(Redshift_bin), len(Proxy_bin)])
                     
-        index_proxy = np.arange(len(self.logm_grid))
+        index_proxy = np.arange(len(self.log10m_grid))
         index_z = np.arange(len(self.z_grid))
         for i, proxy_bin in enumerate(Proxy_bin):
-            mask_proxy = (self.logm_grid >= proxy_bin[0])*(self.logm_grid <= proxy_bin[1])
-            proxy_cut = self.logm_grid[mask_proxy]
+            mask_proxy = (self.log10m_grid >= proxy_bin[0])*(self.log10m_grid <= proxy_bin[1])
+            proxy_cut = self.log10m_grid[mask_proxy]
             index_proxy_cut = index_proxy[mask_proxy]
             proxy_cut[0], proxy_cut[-1] = proxy_bin[0], proxy_bin[1]
             for j, z_bin in enumerate(Redshift_bin):
@@ -298,7 +298,7 @@ class HaloAbundance():
                 z_cut = self.z_grid[mask_z]
                 index_z_cut = index_z[mask_z]
                 z_cut[0], z_cut[-1] = z_down, z_up
-                integrand = np.array([self.dN_dzdlogMdOmega[:,k][mask_proxy] for k in index_z_cut])
+                integrand = np.array([self.dN_dzdlog10MdOmega[:,k][mask_proxy] for k in index_z_cut])
                 N_th = self.sky_area * simps(simps(integrand * 10 ** (proxy_cut * power), proxy_cut), z_cut)
                 N_th_matrix[j,i] = N_th
 

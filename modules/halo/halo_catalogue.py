@@ -70,11 +70,11 @@ class HaloCatalogue:
 
         # set up the different grids
         ## mass grid
-        self.logm_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
+        self.log10m_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
                                       float( default_config['halo_catalogue']['log10m_max']),
                                       int( default_config['halo_catalogue']['n_mass_bins'] ) )
-        self.dlogm_grid = self.logm_grid[1] - self.logm_grid[0]
-        self.logm_grid_center = (self.logm_grid[:-1] + self.logm_grid[1:]) / 2
+        self.dlog10m_grid = self.log10m_grid[1] - self.log10m_grid[0]
+        self.log10m_grid_center = (self.log10m_grid[:-1] + self.log10m_grid[1:]) / 2
         #redshift grid
         self.z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
                                     float( default_config['halo_catalogue']['z_max'] ),
@@ -82,9 +82,9 @@ class HaloCatalogue:
         self.dz_grid = self.z_grid[1] - self.z_grid[0]
         self.z_grid_center = (self.z_grid[:-1] + self.z_grid[1:]) / 2
         #very important for later !
-        Z, L = np.meshgrid(self.z_grid_center, self.logm_grid_center)
+        Z, L = np.meshgrid(self.z_grid_center, self.log10m_grid_center)
         self.Z_grid_center_flatten = Z.ravel()
-        self.Logm_grid_center_flatten = L.ravel()
+        self.Log10m_grid_center_flatten = L.ravel()
 
         self.mass_definition = get_massdef_from_config(default_config['halo_catalogue'])
         self.hmf = get_massfunc_from_config(default_config['halo_catalogue'])
@@ -153,16 +153,16 @@ class HaloCatalogue:
                                                                      sky_area = self.sky_area )
 
             #here, we compute the HMF grid
-            HaloAbundanceObject.compute_multiplicity_grid_MZ(z_grid = self.z_grid_center, logm_grid = self.logm_grid_center)
+            HaloAbundanceObject.compute_multiplicity_grid_MZ(z_grid = self.z_grid_center, log10m_grid = self.log10m_grid_center)
             #we consider using the trapezoidal integral method here, given by int = dx(f(a) + f(b))/2
 
-            hmf_correction = self.hmf_correction(10 ** self.logm_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
-            dN_dzdlogMdOmega_center = HaloAbundanceObject.dN_dzdlogMdOmega * np.tile(hmf_correction, (len(self.z_grid_center), 1)).T
+            hmf_correction = self.hmf_correction(10 ** self.log10m_grid_center, self.Mstar/cosmo['h'], self.s, self.q)
+            dN_dzdlog10MdOmega_center = HaloAbundanceObject.dN_dzdlog10MdOmega * np.tile(hmf_correction, (len(self.z_grid_center), 1)).T
 
             if self.SSC: 
                 #at this stage, need to store self.sigmaij_SSC computed from PySSC
                 HaloAbundanceObject.compute_halo_bias_grid_MZ(z_grid = self.z_grid_center, 
-                                                                   logm_grid = self.logm_grid_center)
+                                                                   log10m_grid = self.log10m_grid_center)
                 #generate deltas (log-normal probabilities)
                 cov_ln1_plus_delta_SSC = np.log(1 + self.sigmaij_SSC)
                 mean = - 0.5 * cov_ln1_plus_delta_SSC.diagonal()
@@ -174,15 +174,15 @@ class HaloCatalogue:
             else: corr = 1
 
             Omega_z = np.tile(self.dOmega(self.z_grid_center), (len(self.z_grid_center), 1)).T
-            Nth = Omega_z * dN_dzdlogMdOmega_center * self.dlogm_grid * self.dz_grid * corr
+            Nth = Omega_z * dN_dzdlog10MdOmega_center * self.dlog10m_grid * self.dz_grid * corr
             Nobs = np.random.poisson(Nth)
             Nobs_flatten = Nobs.ravel()
-            log10mass = np.repeat(self.Logm_grid_center_flatten, Nobs_flatten)
+            log10mass = np.repeat(self.Log10m_grid_center_flatten, Nobs_flatten)
             redshift = np.repeat(self.Z_grid_center_flatten, Nobs_flatten)
 
-            grid = {"N_th": Omega_z * dN_dzdlogMdOmega_center * self.dlogm_grid * self.dz_grid, 
+            grid = {"N_th": Omega_z * dN_dzdlog10MdOmega_center * self.dlog10m_grid * self.dz_grid, 
                     "z_grid_center":self.z_grid_center, 
-                    "logm_grid_center":self.logm_grid_center}
+                    "log10m_grid_center":self.log10m_grid_center}
         
             if return_Nth:
                 return grid, log10mass, np.array(redshift)
