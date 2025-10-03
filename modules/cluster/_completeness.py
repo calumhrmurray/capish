@@ -18,6 +18,10 @@ def completeness(log10m, z, params = None):
     if params==None:
         a_nc, b_nc, a_mc, b_mc = 1.13, 0.77, 13.31, 0.20
     else: a_nc, b_nc, a_mc, b_mc = params
+    
     nc = a_nc + b_nc*(1+z)
     log10mc = a_mc + b_mc*(1+z)
-    return np.exp(nc*np.log(10)*(log10m-log10mc))/(1+np.exp(nc*np.log(10)*(log10m-log10mc)))
+
+    ratio = 10**log10m / (10**log10mc)
+    
+    return ratio ** nc /(1+ratio ** nc)
