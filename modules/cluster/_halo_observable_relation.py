@@ -52,7 +52,7 @@ class HaloToObservables:
 
         # ln(lambda) = alpha_lambda + beta_lambda * log10(M - M_min) + gamma_lambda * log10(1 + z)
         # Note: This returns ln(lambda), which gets exponentiated later to get lambda
-        ln_lambda = np.log( 10**(alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)))
+        ln_lambda = (alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)) * np.log(10)
         return ln_lambda
 
     def sigma_obs_relation(self, log10M, z, params_observable_sigma):
