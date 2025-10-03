@@ -188,7 +188,7 @@ class HaloCatalogue:
                 return grid, log10mass, np.array(redshift)
             else:
                 return {
-                    'mu': np.log( 10**log10mass / 1e14 ) ,
+                    'log10mass': log10mass,
                     'redshift': np.array(redshift)
                         }
             
