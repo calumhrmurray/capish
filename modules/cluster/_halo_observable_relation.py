@@ -50,10 +50,9 @@ class HaloToObservables:
         # Ensure M_term is positive to avoid log of negative numbers
         M_term = np.maximum(M_term, 1e10)  # Set minimum value to avoid log issues
 
-        # ln(lambda) = alpha_lambda + beta_lambda * log10(M - M_min) + gamma_lambda * log10(1 + z)
         # Note: This returns ln(lambda), which gets exponentiated later to get lambda
-        ln_lambda = (alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)) * np.log(10)
-        return ln_lambda
+        ln_lambda = alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)
+        return ln_lambda * np.log(10)
 
     def sigma_obs_relation(self, log10M, z, params_observable_sigma):
         sigma_lambda = params_observable_sigma[0]  # Only use first parameter, others are 0
@@ -66,7 +65,6 @@ class HaloToObservables:
         z = np.array(z, dtype=float)
         log10M = np.array(log10M, dtype=float)
 
-        # mu_mWL = alpha_mwl + beta_mwl * log10(M) + gamma_mwl * log10(1 + z)
         return alpha_mwl + beta_mwl * log10M + gamma_mwl * np.log10(1 + z)
     
     def sigma_log10mWL_f(self, log10M, z, params_mWL_sigma):
@@ -85,10 +83,7 @@ class HaloToObservables:
 
         if self.which_mass_richness_rel!='GPC':
         
-            if self.which_mass_richness_rel=='Gauss':
-                mean_lnobs = mean_lnobs
             sigma_lnobs2 = sigma_lnobs**2
-            #add poisson noise
             sigma_lnobs2 = sigma_lnobs2 + (np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
             sigma_lnobs = sigma_lnobs2**.5
     

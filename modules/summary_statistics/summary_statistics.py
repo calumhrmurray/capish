@@ -35,8 +35,8 @@ def lensing_weights(cosmo, z_l_array, z_s_max=5.0, n_zs=500, sigma_e_const=0.3):
         sigma_crit_sq_inv = 1.0 / sigma_crit_vals**2
         integrand = n_z_masked * sigma_crit_sq_inv / sigma_e_masked**2
 
-        numerator = np.trapezoid(integrand, z_s_masked)
-        denominator = np.trapezoid(n_z_masked, z_s_masked)
+        numerator = np.trapz(integrand, z_s_masked)
+        denominator = np.trapz(n_z_masked, z_s_masked)
         weights[i] = numerator / denominator if denominator > 0 else 0.0
     return weights
 
