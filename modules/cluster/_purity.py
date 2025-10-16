@@ -20,9 +20,9 @@ def purity(richness, z, params = None):
         theta_purity = [a_nc, b_nc, a_rc, b_rc]
     else: 
         a_nc, b_nc, a_rc, b_rc = params
+    
     nc = a_nc + b_nc * (1 + z)
-    lnrc = a_rc + b_rc * (1 + z)
-    lnr = np.log(richness)
-    lnr_rescaled = lnr/lnrc
+    lnrichness0 = a_rc + b_rc * (1 + z)
+    ratio = richness/np.exp(lnrichness0)
   
-    return (lnr_rescaled)**nc / ((lnr_rescaled)**nc + 1)
+    return ratio**nc / (1 + ratio**nc)

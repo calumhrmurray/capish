@@ -37,6 +37,6 @@ def f_to_map(n):
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []
-for i in range(200):
+for i in range(100):
     results.append(f_to_map(i))
 save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/'+config_file['name']+'.pkl')

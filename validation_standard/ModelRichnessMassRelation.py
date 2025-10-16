@@ -9,16 +9,28 @@ class Richness_mass_relation():
     def select(self, which = 'log_normal'):
         self.which = which
 
-    def proxy_mu_f(self, logm, z, theta_rm, which_model = 'constantins model'):
+    # def proxy_mu_f(self, logm, z, theta_rm):
+    #     r"""proxy mu"""
+    #     log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta_rm
+    #     proxy_mu = proxy_mu0 + proxy_muz * np.log((1+z)/(1 + z0)) + proxy_mulog10m * (logm-log10m0)
+    #     return proxy_mu
+
+    # def proxy_sigma_f(self, logm, z, theta_rm):
+    #     r"""proxy sigma, intrinsic"""
+    #     log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta_rm
+    #     proxy_sigma = proxy_sigma0 + proxy_sigmaz * np.log((1+z)/(1 + z0)) + proxy_sigmalog10m * (logm-log10m0)
+    #     return proxy_sigma
+
+    def proxy_mu_f(self, logm, z, theta_rm):
         r"""proxy mu"""
-        log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta_rm
-        proxy_mu = proxy_mu0 + proxy_muz * np.log((1+z)/(1 + z0)) + proxy_mulog10m * (logm-log10m0)
-        return proxy_mu
+        M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
+        proxy_mu = alpha_lambda + beta_lambda * np.log10(10**logm - M_min) + gamma_lambda * np.log10(1+z)
+        return proxy_mu * np.log(10)
 
     def proxy_sigma_f(self, logm, z, theta_rm):
         r"""proxy sigma, intrinsic"""
-        log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta_rm
-        proxy_sigma = proxy_sigma0 + proxy_sigmaz * np.log((1+z)/(1 + z0)) + proxy_sigmalog10m * (logm-log10m0)
+        M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
+        proxy_sigma = sigma_lambda
         return proxy_sigma
 
 
@@ -40,12 +52,8 @@ class Richness_mass_relation():
             richness-mass relation P(lambda|m,z)
             This is only necessary for the likelihood implementation
         """
-
-        log10m0, z0, proxy_mu0, proxy_muz, proxy_mulog10m, proxy_sigma0, proxy_sigmaz, proxy_sigmalog10m = theta_rm
         proxy_mu = self.proxy_mu_f(logm, z, theta_rm)
         proxy_sigma = self.proxy_sigma_f(logm, z, theta_rm)
-        if self.which == 'Gauss+Poiss-corr':
-           proxy_mu = proxy_mu - 0.5 * np.exp(-proxy_mu+0.5*proxy_sigma**2) - (1/12)*np.exp(-2*proxy_mu+2*proxy_sigma**2)
         proxy_sigma2 = proxy_sigma**2 + (np.exp(proxy_mu)-1)/np.exp(2*proxy_mu)  
         proxy_sigma = proxy_sigma2**.5
 
