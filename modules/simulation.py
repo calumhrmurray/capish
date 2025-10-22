@@ -44,7 +44,7 @@ class UniverseSimulator:
 
     def run_simulation_halo_catalogue(self, variable_params_values):
         """
-        Run the simulation using the variable parameters provided.
+        Run the simulation using the variable parameters provided  - only halo catalogue.
         """
 
         config = self.new_config_files(variable_params_values)
@@ -63,6 +63,16 @@ class UniverseSimulator:
         halo_data = self.halo_catalogue_class.get_halo_catalogue( config )
         log10m_halo = halo_data['log10mass']
         z_true = halo_data['redshift']
+        richness, log10mWL, z_obs = self.cluster_catalogue_class.get_cluster_catalogue( log10m_halo, z_true , config )
+
+        return richness, log10mWL, z_obs
+
+    def run_simulation_from_halo_properties(self, log10m_halo, z_true, variable_params_values):
+        """
+        Run the simulation using the variable parameters provided.
+        """
+
+        config = self.new_config_files(variable_params_values)
         richness, log10mWL, z_obs = self.cluster_catalogue_class.get_cluster_catalogue( log10m_halo, z_true , config )
 
         return richness, log10mWL, z_obs
