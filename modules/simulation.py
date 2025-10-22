@@ -71,11 +71,12 @@ class UniverseSimulator:
         """
         Run the simulation using the variable parameters provided.
         """
-
+        np.random.seed(12345)
         config = self.new_config_files(variable_params_values)
         richness, log10mWL, z_obs = self.cluster_catalogue_class.get_cluster_catalogue( log10m_halo, z_true , config )
+        summary_statistic = self.summary_statistics_class.get_summary_statistics( richness, log10mWL, z_obs, config )
 
-        return richness, log10mWL, z_obs
+        return summary_statistic
 
     def run_simulation(self, variable_params_values):
         """
