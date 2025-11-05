@@ -1,0 +1,4 @@
+/pbs/home/c/cmurray/cluster_likelihood/modules/summary_statistics/summary_statistics.py:81: RuntimeWarning: invalid value encountered in divide
+  return count_stat, np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
+/pbs/home/c/cmurray/cluster_likelihood/modules/cluster/_halo_observable_relation.py:88: RuntimeWarning: invalid value encountered in sqrt
+  sigma_lnobs = sigma_lnobs2**.5

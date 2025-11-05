@@ -1,0 +1,28 @@
+/pbs/home/c/cmurray/cluster_likelihood/modules/summary_statistics/summary_statistics.py:81: RuntimeWarning: invalid value encountered in divide
+  return count_stat, np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
+/pbs/home/c/cmurray/cluster_likelihood/modules/cluster/_halo_observable_relation.py:88: RuntimeWarning: invalid value encountered in sqrt
+  sigma_lnobs = sigma_lnobs2**.5
+/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/sbi/utils/sbiutils.py:66: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at ../aten/src/ATen/native/ReduceOps.cpp:1823.)
+  zx = (x - x.mean(0)) / x.std(0)
+WARNING:root:Found 9 NaN simulations and 0 Inf simulations. They will be excluded from training.
+Traceback (most recent call last):
+  File "/pbs/home/c/cmurray/cluster_likelihood/notebooks/calum/scripts/run_sbi.py", line 140, in <module>
+    main()
+  File "/pbs/home/c/cmurray/cluster_likelihood/notebooks/calum/scripts/run_sbi.py", line 122, in main
+    density_estimator = inference.append_simulations(theta_samples, x_samples).train()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/sbi/inference/trainers/npe/npe_c.py", line 203, in train
+    return super().train(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/sbi/inference/trainers/npe/npe_base.py", line 329, in train
+    train_loader, val_loader = self.get_dataloaders(
+                               ^^^^^^^^^^^^^^^^^^^^^
+  File "/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/sbi/inference/trainers/base.py", line 411, in get_dataloaders
+    train_loader = data.DataLoader(dataset, **train_loader_kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 382, in __init__
+    batch_sampler = BatchSampler(sampler, batch_size, drop_last)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sps/euclid/Users/cmurray/miniconda3/envs/capish/lib/python3.11/site-packages/torch/utils/data/sampler.py", line 323, in __init__
+    raise ValueError(
+ValueError: batch_size should be a positive integer value, but got batch_size=0

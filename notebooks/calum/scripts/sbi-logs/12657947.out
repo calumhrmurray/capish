@@ -1,0 +1,26 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Wed Nov  5 09:14:52 PM CET 2025
+* Job name:             flagship_sbi
+* Job id:               12657947
+* User:                 cmurray
+* Account:              euclid
+* Submit host:          cca014
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0017
+* Operating System:     Red Hat Enterprise Linux release 9.6 (Plow)
+* Architecture:         x86_64
+**********************************************************************
+========================================================================
+FLAGSHIP SBI JOB CONFIGURATION
+========================================================================
+Number of simulations: 10000
+Config path: /pbs/home/c/cmurray/cluster_likelihood/config/capish.ini
+Output suffix: flagship
+SLURM Job ID: 12657947
+Number of CPUs: 20
+Memory allocated: 64000 MB
+========================================================================
