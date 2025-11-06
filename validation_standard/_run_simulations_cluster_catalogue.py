@@ -9,7 +9,7 @@ from multiprocessing import Pool, cpu_count
 from tqdm.auto import tqdm
 import numpy as np
 import pickle
-import capish_config_to_test
+import capish_config_to_test as capish_config_to_test
 
 def save_pickle(dat, filename, **kwargs):
     file = open(filename,'wb')
@@ -37,6 +37,8 @@ def f_to_map(n):
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []
-for i in range(100):
-    results.append(f_to_map(i))
+for i in range(150):
+    res = f_to_map(i)
+    print(res)
+    results.append(res)
 save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/'+config_file['name']+'.pkl')

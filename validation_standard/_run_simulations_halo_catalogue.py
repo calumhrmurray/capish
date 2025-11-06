@@ -33,7 +33,7 @@ simulator = simulation.UniverseSimulator(
 def f_to_map(n):
     np.random.seed(n)
     print(f"Starting simulation" +str(n), flush=True)
-    return simulator.run_simulation_halo_only([float(config_file['ini_file']['parameters']['Omega_m'])])
+    return simulator.run_simulation_halo_catalogue([float(config_file['ini_file']['parameters']['Omega_m'])])
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []

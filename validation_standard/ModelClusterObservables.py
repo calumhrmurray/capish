@@ -181,15 +181,15 @@ class UniversePrediction:
         if add_WL_weight == False: 
             Nth = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count, grids = self.grids)
             NthMwl = Omega * self.ClusterAbundanceObject.Cluster_dNd0mega_Mass_ProxyZ(self.bins, integrand_count = integrand_count, grids = self.grids, gamma=gamma)
-            return NthMwl/Nth
+            return NthMwl, Nth
         if add_WL_weight == True: 
             z_grid = self.grids['z_grid']
             WLz = lensing_weights(self.params_default['CCL_cosmology'], z_grid) * 1e32
             WLz_expanded = WLz[np.newaxis, np.newaxis, :]
             integrand_count_w = integrand_count * WLz_expanded
-            Nth_w = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count_w , grids = self.grids)
+            Nth_w = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count_w, grids = self.grids)
             NthMwl_w = Omega * self.ClusterAbundanceObject.Cluster_dNd0mega_Mass_ProxyZ(self.bins, integrand_count = integrand_count_w , grids = self.grids, gamma=gamma)
-            return NthMwl_w/Nth_w
+            return NthMwl_w, Nth_w
             
     def model_bias(self, params_new, compute_new, adds_new):
         count_modelling_new = self.ClusterAbundanceObject.recompute_count_modelling(self.count_modelling_defaut, grids = self.grids, compute = compute_new, params=params_new)
