@@ -84,7 +84,7 @@ class HaloToObservables:
         if self.which_mass_richness_rel!='GPC':
         
             sigma_lnobs2 = sigma_lnobs**2
-            sigma_lnobs2 = sigma_lnobs2 + (np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
+            sigma_lnobs2 = sigma_lnobs2 + np.exp(-mean_lnobs)#(np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
             sigma_lnobs = sigma_lnobs2**.5
     
             lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
