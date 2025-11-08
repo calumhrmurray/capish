@@ -25,8 +25,10 @@ z = halo_cat_flagship['true_redshift_gal']
 m200bh, m200ch, m500ch = halo_cat_flagship['m200b'], halo_cat_flagship['m200c'],halo_cat_flagship['m500c']
 m200b, m200c, m500c = m200bh / 0.67, m200ch / 0.67, m500ch / 0.67
 
-count200b, mean_log10m200b = simulator.run_simulation_from_halo_properties(np.log10(m200b), z, [Omegam_fid])
-count200c, mean_log10m200c = simulator.run_simulation_from_halo_properties(np.log10(m200c), z, [Omegam_fid])
+mask_m200b = m200b > 10 ** 13.3
+count200b, mean_log10m200b = simulator.run_simulation_from_halo_properties(np.log10(m200b)[mask_m200b], z[mask_m200b], [Omegam_fid])
+mask_m200c = m200c > 10 ** 13.3
+count200c, mean_log10m200c = simulator.run_simulation_from_halo_properties(np.log10(m200c)[mask_m200c], z[mask_m200c], [Omegam_fid])
 
 t = dict()
 t['count_with_m200b_def'] = count200b
@@ -34,4 +36,4 @@ t['mean_log10m200b'] = mean_log10m200b
 t['count_with_m200c_def'] = count200c
 t['mean_log10m200c'] = mean_log10m200c
 
-np.save('flagship_cluster_catalogue_summary_statstics_DES_MoR', t)
+np.save('flagship_cluster_catalogue_summary_statstics_DES_MoR_no_log10mass_obs_scatter', t)
