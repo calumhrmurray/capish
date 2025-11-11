@@ -1,11 +1,14 @@
 import numpy as np
+import sys, os
+import pickle
 from scipy.interpolate import RegularGridInterpolator
 import pyccl as ccl
 from . import _completeness
 from . import _halo_observable_relation
 from . import _purity
 from . import _selection
-from .. import utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import utils
 
 class ClusterCatalogue:
      
@@ -37,23 +40,47 @@ class ClusterCatalogue:
         mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
         delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
 
-        if self.default_config['cluster_catalogue']['theory_sigma_Mwl'] == 'True':
+        if self.default_config['cluster_catalogue']['theory_sigma_Mwl']=='True':
 
-            sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
+            Rmin=1
+            Rmax=3
+            ngal_arcmin2=25
+            shape_noise=0.25
+            mass_def=mass_def
+            delta=delta
+            cM='Duffy08'
+            name = 'model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl'
+            name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
+            try:
+                import clmm
+                sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
                                                                 cosmo_ccl_fid, 
                                                                Rmin=1, Rmax=3, 
                                                                ngal_arcmin2=25, shape_noise=0.25,
                                                                delta=delta, mass_def=mass_def,
                                                                cM = 'Duffy08')
             
-            self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
-
-            sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                            self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-
+                self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
+    
+                sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
+                                self.sigma_log10M, bounds_error=False, fill_value=np.nan)
+                
+                if not os.path.exists(name_to_save):
+                    with open(name_to_save, 'wb') as f:
+                        pickle.dump(sigma_interp, f)
+                        
+                else: print(f"{name_to_save} already exists, skipping.")
+                
+            except ImportError:
+                
+                print(f"clmm not found - load {name_to_save}")
+                with open(name_to_save, 'rb') as f:
+                    sigma_interp = pickle.load(f)
+                    
             def sigma_log10M_interp(log10m_array, z_array):
                 points = np.column_stack([log10m_array, z_array])
-                return sigma_interp (points)
+                return sigma_interp(points)
+            print(1)
             self.sigma_log10M_interp = sigma_log10M_interp
 
         else: 
@@ -67,15 +94,15 @@ class ClusterCatalogue:
 
         params_completeness = [float(k) for k in config_new['cluster_catalogue']['params_completeness'].split(', ')]
         params_purity = [float(k) for k in config_new['cluster_catalogue']['params_purity'].split(', ')]
+
+        MoR = _halo_observable_relation.HaloToObservables(config_new, sigma_log10mWL_model = self.sigma_log10M_interp)
+        richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
+        z_obs[z_obs < 0] = None
         
         if config_new['cluster_catalogue']['add_completeness']=='True':
             u = np.random.random(len(log10m_true))
             mask = u < _completeness.completeness(log10m_true, z_true, params = params_completeness)
             log10m_true, z_true = log10m_true[mask], z_true[mask]
-
-        MoR = _halo_observable_relation.HaloToObservables(config_new, sigma_log10mWL_model = self.sigma_log10M_interp)
-        richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
-        z_obs[z_obs < 0] = None
 
         if config_new['cluster_catalogue']['add_purity']=='True': 
             richness_edges = np.logspace(np.log10(20), np.log10(300), 70) 

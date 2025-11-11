@@ -75,42 +75,75 @@ class HaloToObservables:
         sigma2 = sigma_mWLgal**2 + sigma_mWLint**2
         return sigma2**.5*np.ones(len(log10M))
 
-    def generate_observables_from_halo(self, log10M, z):
+    def generate_observables_from_halo(self, log10M, z, WL_random='Mwl'):
+        """
+        Generate mock observables for a halo given its mass and redshift.
+    
+        Parameters
+        ----------
+        log10M : float or array-like
+            True halo mass in log10(M/M_sun).
+        z : float or array-like
+            Halo redshift.
+        WL_random : str, optional
+            Method for generating weak-lensing mass:
+              - 'log10Mwl': use log10-space conditional distribution.
+              - 'Mwl' (default): use linear mass-space conditional distribution.
+    
+        Returns
+        -------
+        lnobs_exp : float or array-like
+            Realization of the observable (exp(lnobs)) with intrinsic scatter.
+        log10Mwl : float or array-like
+            Weak-lensing mass estimate in log10(M/M_sun), including correlated scatter.
+        z_out : float or array-like
+            Redshift of the halo (possibly perturbed by photometric scatter).
 
+        """
+        # Compute mean and scatter for the observable
         mean_lnobs = self.mean_obs_relation(log10M, z, self.params_observable_mean)
         sigma_lnobs = self.sigma_obs_relation(log10M, z, self.params_observable_sigma)
+    
+        # Compute mean and scatter for weak-lensing mass
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
         if self.theory_sigma_Mwl == 'False':
             sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
-        else: 
-            sigma_log10mWL = self.sigma_log10mWL_model(log10M, z,)
+        else:
+            sigma_log10mWL = self.sigma_log10mWL_model(log10M, z)
+    
         rho = self.rho_obs_mWL
-
-        if self.which_mass_richness_rel!='GPC':
-        
-            sigma_lnobs2 = sigma_lnobs**2
-            sigma_lnobs2 = sigma_lnobs2 + np.exp(-mean_lnobs)#(np.exp(mean_lnobs)-1)/np.exp(2*mean_lnobs)
-            sigma_lnobs = sigma_lnobs2**.5
     
-            lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
-            lnobs = mean_lnobs + lnobs_noise
+        # Include extra term in observable scatter (optional)
+        sigma_lnobs2 = sigma_lnobs**2
+        sigma_lnobs2 = sigma_lnobs2 + np.exp(-mean_lnobs)
+        sigma_lnobs = np.sqrt(sigma_lnobs2)
     
+        # Draw observable from Gaussian scatter
+        lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
+        lnobs = mean_lnobs + lnobs_noise
+    
+        # Sample weak-lensing mass conditional on lnobs
+        if WL_random == 'log10Mwl':
             cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
             log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
-
-        elif self.which_mass_richness_rel=='GPC':
-            #only if rho == 0, else not relevant
-            n_halo = len(z)
-            lnint = mean_lnobs + np.random.randn(n_halo) * sigma_lnobs
-            lnobs = np.log(np.random.poisson(lam=np.exp(lnint)))
-            log10Mwl = mean_log10mWL + np.random.randn(n_halo) * sigma_log10mWL
-
+    
+        elif WL_random == 'Mwl':
+            #bettet for large scatter, otherwise will shift the mean mass
+            mean_mWL = 10 ** mean_log10mWL
+            sigma_mWL = sigma_log10mWL * np.log(10) * log10M
+            cond_mean_mWL = mean_mWL + rho * (sigma_mWL / sigma_lnobs) * (lnobs - mean_lnobs)
+            cond_sigma_mWL = sigma_mWL * np.sqrt(1 - rho**2)
+            Mwl = cond_mean_mWL + np.random.normal(loc=0, scale=cond_sigma_mWL)
+            log10Mwl = np.log10(Mwl)
+    
+        # Perturb redshift if photometric scatter is enabled
         if self.add_photoz:
-            
             z = photometric_redshift(z, self.photoz_params)
-        
+    
+        # Return observable in linear space, weak-lensing mass, and redshift
         return np.exp(lnobs), log10Mwl, z
+
 
     
     

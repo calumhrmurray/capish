@@ -70,7 +70,8 @@ def excess_surface_density_fct(R, m, concentration, z, cosmo_ccl,
 def model_error_log10m_one_cluster(log10m_grid, z_grid,
                                                 cosmo, Rmin=1,Rmax=3,
                                                 ngal_arcmin2=25,shape_noise=0.25,
-                                                delta=200,mass_def='critical',cM='Duffy08'):
+                                                delta=200,mass_def='critical',
+                                                cM='Duffy08'):
     
     # --- Concentration model setup ---
     deff = ccl.halos.massdef.MassDef(delta, mass_def)
