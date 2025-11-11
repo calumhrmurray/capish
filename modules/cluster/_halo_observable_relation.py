@@ -82,10 +82,8 @@ class HaloToObservables:
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
         if self.theory_sigma_Mwl == 'False':
             sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
-            print(sigma_log10mWL)
         else: 
             sigma_log10mWL = self.sigma_log10mWL_model(log10M, z,)
-            print(sigma_log10mWL)
         rho = self.rho_obs_mWL
 
         if self.which_mass_richness_rel!='GPC':
