@@ -207,7 +207,7 @@ class UniversePrediction:
 
     def model_error_log10m_one_cluster(self, mass_center, cosmo, 
                                        Rmin=1, Rmax=3, 
-                                       ngal_arcmin2=25, shape_noise=0.25, 
+                                       ngal_arcmin2=25, shape_noise=0.25, fLSS=0.01,
                                        delta=200, mass_def='critical',
                                        sigma_A_prior = 0.03,
                                        sigma_c_prior=0.1,
@@ -236,6 +236,7 @@ class UniversePrediction:
                                                                                        Rmin=Rmin, Rmax=Rmax, 
                                                                                        ngal_arcmin2=ngal_arcmin2, 
                                                                                        shape_noise=shape_noise, 
+                                                                                       fLSS=fLSS,
                                                                                        delta=delta, mass_def=mass_def,
                                                                                        sigma_A_prior = sigma_A_prior,
                                                                                        sigma_c_prior = sigma_c_prior)
@@ -245,7 +246,7 @@ class UniversePrediction:
 
     def model_error_log10m_one_cluster_(self, mass_center, c_center, z_center, cosmo, 
                                        Rmin=1, Rmax=3, 
-                                       ngal_arcmin2=25, shape_noise=0.25, 
+                                       ngal_arcmin2=25, shape_noise=0.25, fLSS=0.01,
                                        delta=200, mass_def='critical',
                                        sigma_A_prior = 0.03,
                                        sigma_c_prior=0.1):
@@ -306,7 +307,9 @@ class UniversePrediction:
     
         ngal_background = ngal * np.trapz(nz_background, z_background)/np.trapz(nz_s, z_s)
 
-        error_DS_per_R_2 = (mean_Sigma_crit**2 * shape_noise**2)/(ngal_background * 2 * np.pi * R)
+        error_DS_per_R_2_SN = (mean_Sigma_crit**2 * shape_noise**2)/(ngal_background * 2 * np.pi * R)
+
+        error_DS_per_R_2 = error_DS_per_R_2_SN + fLSS**2 * deltasigma_0 ** 2
 
         # Build Fisher matrix for [M, c, A]
         F_mm = np.trapz((d_DS_dm**2) * error_DS_per_R_2**(-1) , R)
