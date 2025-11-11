@@ -8,7 +8,7 @@ def photometric_redshift(z_true, photoz_params):
     return z_obs
 
 class HaloToObservables:
-    def __init__(self, config_new):
+    def __init__(self, config_new, sigma_log10mWL_model = None):
 
         parameters = config_new['parameters']
         M_min = float(parameters['M_min'])
@@ -23,6 +23,8 @@ class HaloToObservables:
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.M_min = M_min
+        self.theory_sigma_Mwl = config_new['cluster_catalogue']['theory_sigma_Mwl']
+        self.sigma_log10mWL_model = sigma_log10mWL_model
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
         self.params_mWL_mean = params_mWL_mean
@@ -78,7 +80,12 @@ class HaloToObservables:
         mean_lnobs = self.mean_obs_relation(log10M, z, self.params_observable_mean)
         sigma_lnobs = self.sigma_obs_relation(log10M, z, self.params_observable_sigma)
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
-        sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
+        if self.theory_sigma_Mwl == 'False':
+            sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
+            print(sigma_log10mWL)
+        else: 
+            sigma_log10mWL = self.sigma_log10mWL_model(log10M, z,)
+            print(sigma_log10mWL)
         rho = self.rho_obs_mWL
 
         if self.which_mass_richness_rel!='GPC':
