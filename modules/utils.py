@@ -3,10 +3,42 @@ import pyccl as ccl
 from scipy import stats
 
 def ngal_arcmin2_to_Mpc2(ngal_arcmin2, Da_Mpc):
+    """
+    Convert galaxy number density from arcmin⁻² to Mpc⁻² given an angular diameter distance.
+
+    Parameters
+    ----------
+    ngal_arcmin2 : float or array_like
+        Galaxy number density in units of galaxies per square arcminute.
+    Da_Mpc : float or array_like
+        Angular diameter distance to the lens in megaparsecs (Mpc).
+
+    Returns
+    -------
+    ngal_Mpc2 : float or np.ndarray
+        Galaxy number density in units of galaxies per square Mpc.
+    """
     return ngal_arcmin2 * (180*60/(np.pi*Da_Mpc))**2
 
 def mean_sigma_crit(z_lens, cosmo, zmax=5.0):
-    """Compute average Sigma_crit over Chang+2013 n(z) for given lens redshift."""
+    """
+    Compute the mean critical surface density Σ_crit for a lens at redshift `z_lens`,
+    averaged over a source galaxy redshift distribution (Chang et al. 2013).
+
+    Parameters
+    ----------
+    z_lens : float
+        Redshift of the lens.
+    cosmo : ccl.Cosmology
+        Fiducial cosmology object from pyccl.
+    zmax : float, optional
+        Maximum source redshift to consider. Default is 5.0.
+
+    Returns
+    -------
+    mean_Sigma_crit : float
+        Mean critical surface density [M_sun / pc² or consistent units with Σ_crit function].
+    """
     z_s = np.linspace(z_lens + 0.2, zmax, 500)
     nz = nz_chang2013(z_s)
     sigma_crit_2 = sigma_crit(cosmo, z_lens, z_s) ** (-2)
@@ -26,7 +58,33 @@ def sigma_crit(cosmo, z_l, z_s):
     return ccl.sigma_critical(cosmo, a_lens=1/(1+z_l), a_source=1/(1+z_s))
 
 def lensing_weights(cosmo, z_l_array, z_s_max=5.0, n_zs=500, sigma_e_const=0.3):
-    """Compute W(z_l) for an array of lens redshifts using np.trapz."""
+
+    """
+    Compute lensing efficiency weights W(z_l) for an array of lens redshifts.
+
+    The weight W(z_l) is defined as the average inverse variance of the critical surface density 
+    Σ_crit for source galaxies behind a lens at redshift z_l, weighted by the source redshift 
+    distribution and intrinsic shape noise.
+
+    Parameters
+    ----------
+    cosmo : ccl.Cosmology
+        Fiducial cosmology object from pyccl.
+    z_l_array : array_like
+        Array of lens redshifts for which to compute the weights.
+    z_s_max : float, optional
+        Maximum source redshift to consider. Default is 5.0.
+    n_zs : int, optional
+        Number of points in the source redshift grid. Default is 500.
+    sigma_e_const : float, optional
+        RMS intrinsic ellipticity of source galaxies. Default is 0.3.
+
+    Returns
+    -------
+    weights : np.ndarray
+        Array of lensing weights W(z_l), same shape as `z_l_array`.
+    """
+    
     z_l_array = np.atleast_1d(z_l_array)
     weights = np.zeros_like(z_l_array)
 
@@ -56,6 +114,31 @@ def lensing_weights(cosmo, z_l_array, z_s_max=5.0, n_zs=500, sigma_e_const=0.3):
 
 def excess_surface_density_fct(R, m, concentration, z, cosmo_ccl,
                                mdef='mean', delta_mdef=200):
+    """
+    Compute the excess surface density ΔΣ(R) for a single halo using a given concentration-mass profile.
+
+    Parameters
+    ----------
+    R : array_like
+        Array of projected radial distances [Mpc/h] at which to compute ΔΣ.
+    m : float
+        Halo mass [M_sun/h] at redshift `z`.
+    concentration : float
+        Halo concentration parameter.
+    z : float
+        Redshift of the halo.
+    cosmo_ccl : ccl.Cosmology
+        Cosmology object from pyccl.
+    mdef : str, optional
+        Mass definition type, e.g., 'mean' or 'critical'. Default is 'mean'.
+    delta_mdef : float, optional
+        Overdensity parameter for the halo mass definition. Default is 200.
+
+    Returns
+    -------
+    excess_surface_density : np.ndarray
+        Array of ΔΣ values at the radial points specified in `R`.
+    """
     import clmm
     from clmm import Cosmology
     clmm_cosmology = Cosmology()
@@ -72,6 +155,40 @@ def model_error_log10m_one_cluster(log10m_grid, z_grid,
                                                 ngal_arcmin2=25,shape_noise=0.25,
                                                 delta=200,mass_def='critical',
                                                 cM='Duffy08'):
+
+    """
+    Compute the weak-lensing 1σ error on log10(M) for a single cluster as a function of halo mass 
+    and redshift, using a Fisher matrix approach with ΔΣ (excess surface density) measurements.
+    
+    Parameters
+    ----------
+    log10m_grid : array_like
+        Array of log10 halo masses [M_sun/h] to evaluate.
+    z_grid : array_like
+        Array of redshifts at which to evaluate the mass error.
+    cosmo : ccl.Cosmology
+        Fiducial cosmology object from pyccl.
+    Rmin : float, optional
+        Minimum projected radius for ΔΣ computation [Mpc/h]. Default is 1.
+    Rmax : float, optional
+        Maximum projected radius for ΔΣ computation [Mpc/h]. Default is 3.
+    ngal_arcmin2 : float, optional
+        Galaxy number density per square arcminute for shape noise computation. Default is 25.
+    shape_noise : float, optional
+        RMS of intrinsic galaxy ellipticity. Default is 0.25.
+    delta : float, optional
+        Overdensity parameter for halo mass definition (e.g., 200 for 200c). Default is 200.
+    mass_def : str, optional
+        Mass definition type: 'critical' or 'mean'. Default is 'critical'.
+    cM : str, optional
+        Concentration-mass relation model. Options include:
+        'Diemer15', 'Duffy08', 'Prada12', 'Bhattacharya13', 'Klypin11'. Default is 'Duffy08'.
+
+    Returns
+    -------
+    sigma_log10M : np.ndarray
+        2D array of 1σ errors on log10(M), shape (len(log10m_grid), len(z_grid)).
+    """
     
     # --- Concentration model setup ---
     deff = ccl.halos.massdef.MassDef(delta, mass_def)
