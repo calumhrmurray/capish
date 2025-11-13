@@ -5,9 +5,10 @@ import sys
 import os 
 import copy
 import configparser
-from modules.halo.halo_catalogue import HaloCatalogue
-from modules.cluster.cluster_catalogue import ClusterCatalogue
-from modules.summary_statistics.summary_statistics import SummaryStatistics
+from halo.halo_catalogue import HaloCatalogue
+from cluster.cluster_catalogue import ClusterCatalogue
+from summary_statistics.summary_statistics import SummaryStatistics
+import utils
 
 class UniverseSimulator:
     

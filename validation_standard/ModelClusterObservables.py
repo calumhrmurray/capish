@@ -29,7 +29,7 @@ def nz_chang2013(z, alpha=2.0, beta=1.5, z0=0.5):
 
 def sigma_epsilon(z, sigma_e=0.3):
     return sigma_e * np.ones(len(z))  # constant or e.g., sigma_e * (1 + z)
-
+            
 def sigma_crit(cosmo, z_l, z_s):
     return ccl.sigma_critical(cosmo, a_lens=1/(1+z_l), a_source=1/(1+z_s))
 
@@ -102,12 +102,12 @@ class UniversePrediction:
         RM_count_and_mass.select(which = which)
 
         logm_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
-                              float( default_config['halo_catalogue']['log10m_max']), 300 )
+                              float( default_config['halo_catalogue']['log10m_max']), 20 )
 
         #redshift grid
         z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
-                            float( default_config['halo_catalogue']['z_max'] ), 302 )
-        richness_grid = np.logspace(np.log10(20), np.log10(200), 301)
+                            float( default_config['halo_catalogue']['z_max'] ), 50 )
+        richness_grid = np.logspace(np.log10(20), np.log10(200), 150 )
 
         Omega_m = float(default_config['parameters']['Omega_m'])
         Omega_b = float(default_config['parameters']['Omega_b'])
@@ -149,6 +149,8 @@ class UniversePrediction:
         Z_bin = binning(self.redshift_edges)
         Richness_bin = binning(self.richness_edges)
 
+        self.Z_bin, self.Richness_bin = Z_bin, Richness_bin
+
         self.bins = {'redshift_bins':Z_bin, 'richness_bins': Richness_bin}
         self.grids = {'logm_grid': logm_grid, 'z_grid': z_grid, 'richness_grid':richness_grid}
 
@@ -175,30 +177,162 @@ class UniversePrediction:
         return Nth
 
     def model_mass(self, params_new, compute_new, adds_new, gamma = 0.7, add_WL_weight = False):
+        
         count_modelling_new = self.ClusterAbundanceObject.recompute_count_modelling(self.count_modelling_defaut, grids = self.grids, compute = compute_new, params=params_new)
         integrand_count = self.ClusterAbundanceObject.define_count_integrand(count_modelling_new, adds_new)
         Omega = (self.HaloAbundanceObject.sky_area/(4*np.pi))*(4*np.pi)
         if add_WL_weight == False: 
             Nth = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count, grids = self.grids)
             NthMwl = Omega * self.ClusterAbundanceObject.Cluster_dNd0mega_Mass_ProxyZ(self.bins, integrand_count = integrand_count, grids = self.grids, gamma=gamma)
-            return NthMwl/Nth
+            
+            return NthMwl, Nth
+            
         if add_WL_weight == True: 
             z_grid = self.grids['z_grid']
             WLz = lensing_weights(self.params_default['CCL_cosmology'], z_grid) * 1e32
             WLz_expanded = WLz[np.newaxis, np.newaxis, :]
             integrand_count_w = integrand_count * WLz_expanded
-            Nth_w = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count_w , grids = self.grids)
+            Nth_w = Omega * self.ClusterAbundanceObject.Cluster_SurfaceDensity_ProxyZ(self.bins, integrand_count = integrand_count_w, grids = self.grids)
             NthMwl_w = Omega * self.ClusterAbundanceObject.Cluster_dNd0mega_Mass_ProxyZ(self.bins, integrand_count = integrand_count_w , grids = self.grids, gamma=gamma)
-            return NthMwl_w/Nth_w
+            
+            return NthMwl_w, Nth_w
             
     def model_bias(self, params_new, compute_new, adds_new):
+        
         count_modelling_new = self.ClusterAbundanceObject.recompute_count_modelling(self.count_modelling_defaut, grids = self.grids, compute = compute_new, params=params_new)
         integrand_count = self.ClusterAbundanceObject.define_count_integrand(count_modelling_new, adds_new)
         Nb = self.ClusterAbundanceObject.Cluster_NHaloBias_ProxyZ(self.bins, integrand_count = integrand_count, halo_bias = count_modelling_new['halo_bias'], grids = self.grids)
-        return (self.HaloAbundanceObject.sky_area/(4*np.pi))*(4*np.pi) * Nb
         
+        return (self.HaloAbundanceObject.sky_area/(4*np.pi))*(4*np.pi) * Nb
+
+    def model_error_log10m_one_cluster(self, mass_center, cosmo, 
+                                       Rmin=1, Rmax=3, 
+                                       ngal_arcmin2=25, shape_noise=0.25, fLSS=0.01,
+                                       delta=200, mass_def='critical',
+                                       sigma_A_prior = 0.03,
+                                       sigma_c_prior=0.1,
+                                       cM ='Diemer15'):
+
+        mass_def_ccl = 'critical' if mass_def == 'critical' else None
+        mass_def_ccl = 'matter' if mass_def == 'mean' else None
+    
+        deff = ccl.halos.massdef.MassDef(delta, mass_def_ccl)
+        if cM == 'Diemer15': conc = ccl.halos.concentration.ConcentrationDiemer15(mass_def=deff)
+        if cM == 'Duffy08': conc = ccl.halos.concentration.ConcentrationDuffy08(mass_def=deff)
+        if cM == 'Prada12': conc = ccl.halos.concentration.ConcentrationPrada12(mass_def=deff)
+        if cM == 'Bhattacharya13': conc = ccl.halos.concentration.ConcentrationBhattacharya13(mass_def=deff)
+    
+        error_logm10mass_array = np.zeros([len(self.Richness_bin), len(self.Z_bin)])
+        for i in range(len(self.Richness_bin)):
+                
+                for j in range(len(self.Z_bin)):
+    
+                    z_center = np.mean(self.Z_bin[j])
+                
+                    c_center = conc._concentration(cosmo, mass_center[i,j], 1./(1. + z_center))
+    
+                    error_logm10mass_array[i,j] = self.model_error_log10m_one_cluster_(mass_center[i,j], 
+                                                                                       c_center, z_center, cosmo, 
+                                                                                       Rmin=Rmin, Rmax=Rmax, 
+                                                                                       ngal_arcmin2=ngal_arcmin2, 
+                                                                                       shape_noise=shape_noise, 
+                                                                                       fLSS=fLSS,
+                                                                                       delta=delta, mass_def=mass_def,
+                                                                                       sigma_A_prior = sigma_A_prior,
+                                                                                       sigma_c_prior = sigma_c_prior)
+
+        return error_logm10mass_array
         
 
+    def model_error_log10m_one_cluster_(self, mass_center, c_center, z_center, cosmo, 
+                                       Rmin=1, Rmax=3, 
+                                       ngal_arcmin2=25, shape_noise=0.25, fLSS=0.01,
+                                       delta=200, mass_def='critical',
+                                       sigma_A_prior = 0.03,
+                                       sigma_c_prior=0.1):
+
+        from clmm import Cosmology
+        clmm_cosmology = Cosmology()
+        clmm_cosmology.be_cosmo = cosmo
+
+        def ngal_arcmin2_to_Mpc2(ngal_arcmin2, Da_Mpc):
+            return ngal_arcmin2 * (180*60/(np.pi*Da_Mpc))**2
+
+        def mean_sigma_crit(z_lens, clmm_cosmology, zmax=5.0):
+            """Compute average Sigma_crit over Chang+2013 n(z) for given lens redshift."""
+            z_s = np.linspace(z_lens + 0.2, zmax, 500)
+            nz = nz_chang2013(z_s)
+            sigma_crit_2 = sigma_crit(cosmo, z_lens, z_s) ** (-2)
+    
+            numerator = np.trapz(nz * sigma_crit_2, z_s)
+            denominator = np.trapz(nz, z_s)
+    
+            return (numerator / denominator) ** (-0.5)
+
+        def excess_surface_density_fct(R, m, concentration, A, z, cosmo_clmm):
+            "predict the standard well-centered excess surface density profile"
+            import clmm
+            excess_surface_density = A * clmm.compute_excess_surface_density(R, m, 
+                                                                        concentration, z, 
+                                                                        cosmo_clmm, delta_mdef=delta,
+                                                                        halo_profile_model='nfw',
+                                                                        massdef=mass_def)
+            return excess_surface_density
+    
+        mean_Sigma_crit = mean_sigma_crit(z_center, clmm_cosmology, zmax=5.0) 
+        Da = clmm_cosmology.eval_da(z_center)
+        R = np.geomspace(Rmin, Rmax, 500)
+    
+        dm = 0.02*mass_center
+        dc = 0.02*c_center
+        A=1
+        deltasigma_0 = excess_surface_density_fct(R, mass_center, c_center, A, z_center, clmm_cosmology)
+        deltasigma_m_pdm = excess_surface_density_fct(R, mass_center + dm, c_center,A, z_center, clmm_cosmology)
+        deltasigma_m_mdm = excess_surface_density_fct(R, mass_center - dm, c_center,A, z_center, clmm_cosmology)
+        d_DS_dm = (deltasigma_m_pdm - deltasigma_m_mdm) / (2 * dm)
+
+        deltasigma_c_pdc = excess_surface_density_fct(R, mass_center, c_center + dc,A, z_center, clmm_cosmology)
+        deltasigma_c_mdc = excess_surface_density_fct(R, mass_center, c_center - dc,A, z_center, clmm_cosmology)
+        d_DS_dc = (deltasigma_c_pdc - deltasigma_c_mdc) / (2 * dc)
+
+        # Derivative with respect to amplitude (simple scaling)
+        d_DS_dA = deltasigma_0.copy()
+    
+        ngal = ngal_arcmin2_to_Mpc2(ngal_arcmin2, Da)
+        
+        z_s = np.linspace(0, 5, 500)
+        z_background = np.linspace(z_center + 0.2, 5, 500)
+        nz_s = nz_chang2013(z_s)
+        nz_background = nz_chang2013(z_background)
+    
+        ngal_background = ngal * np.trapz(nz_background, z_background)/np.trapz(nz_s, z_s)
+
+        error_DS_per_R_2_SN = (mean_Sigma_crit**2 * shape_noise**2)/(ngal_background * 2 * np.pi * R)
+
+        error_DS_per_R_2 = error_DS_per_R_2_SN + fLSS**2 * deltasigma_0 ** 2
+
+        # Build Fisher matrix for [M, c, A]
+        F_mm = np.trapz((d_DS_dm**2) * error_DS_per_R_2**(-1) , R)
+        F_cc = np.trapz((d_DS_dc**2) * error_DS_per_R_2**(-1), R)
+        F_AA = np.trapz((d_DS_dA**2) * error_DS_per_R_2**(-1), R)
+
+        F_mc = np.trapz((d_DS_dm * d_DS_dc) * error_DS_per_R_2**(-1), R)
+        F_mA = np.trapz((d_DS_dm * d_DS_dA) * error_DS_per_R_2**(-1), R)
+        F_cA = np.trapz((d_DS_dc * d_DS_dA) * error_DS_per_R_2**(-1), R)
+
+        Fisher = np.array([[F_mm, F_mc, F_mA],
+                           [F_mc, F_cc, F_cA],
+                           [F_mA, F_cA, F_AA]])
+
+        Fisher[1,1] += 1.0 / sigma_c_prior**2    
+        Fisher[2,2] += 1.0 / sigma_A_prior**2
+
+        Cov = np.linalg.inv(Fisher)
+        sigma_m = np.sqrt(Cov[0,0])
+        error_mass = sigma_m
+
+        return error_mass / (np.log(10) * mass_center)
+        
 #does the math calculation for 
 class ClusterAbundanceMath():
 
