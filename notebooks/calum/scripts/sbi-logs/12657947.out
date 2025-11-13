@@ -24,3 +24,249 @@ SLURM Job ID: 12657947
 Number of CPUs: 20
 Memory allocated: 64000 MB
 ========================================================================
+======================================================================
+RUNNING SBI FOR FLAGSHIP CLUSTER ANALYSIS
+======================================================================
+Configuration file: /pbs/home/c/cmurray/cluster_likelihood/config/capish.ini
+Number of simulations: 10000
+Output suffix: flagship
+======================================================================
+
+Initializing simulator...
+Simulator initialized successfully
+
+Prior ranges:
+  Omega_m: [0.1, 0.6]
+  sigma8: [0.5, 1.0]
+  alpha_lambda: [-12.0, -6.5]
+  beta_lambda: [0.5, 1.2]
+
+Running SBI with 10000 simulations...
+Generating simulation samples from prior...
+Running simulations (this may take a while)...
+  Progress: 50/10000 (0.5%) - Elapsed: 1.8m - ETA: 354.1m
+  Progress: 100/10000 (1.0%) - Elapsed: 3.4m - ETA: 335.4m
+  Progress: 150/10000 (1.5%) - Elapsed: 5.2m - ETA: 339.8m
+  Progress: 200/10000 (2.0%) - Elapsed: 6.7m - ETA: 329.3m
+  Progress: 250/10000 (2.5%) - Elapsed: 8.5m - ETA: 330.2m
+  Progress: 300/10000 (3.0%) - Elapsed: 10.1m - ETA: 325.5m
+  Progress: 350/10000 (3.5%) - Elapsed: 11.8m - ETA: 325.9m
+  Progress: 400/10000 (4.0%) - Elapsed: 13.6m - ETA: 327.3m
+  Progress: 450/10000 (4.5%) - Elapsed: 15.4m - ETA: 326.5m
+  Progress: 500/10000 (5.0%) - Elapsed: 17.0m - ETA: 323.4m
+  Progress: 550/10000 (5.5%) - Elapsed: 18.9m - ETA: 324.2m
+  Progress: 600/10000 (6.0%) - Elapsed: 20.6m - ETA: 322.6m
+  Progress: 650/10000 (6.5%) - Elapsed: 22.5m - ETA: 324.1m
+  Progress: 700/10000 (7.0%) - Elapsed: 24.3m - ETA: 323.5m
+  Progress: 750/10000 (7.5%) - Elapsed: 26.2m - ETA: 323.2m
+  Progress: 800/10000 (8.0%) - Elapsed: 27.9m - ETA: 321.3m
+  Progress: 850/10000 (8.5%) - Elapsed: 29.7m - ETA: 319.5m
+  Progress: 900/10000 (9.0%) - Elapsed: 31.4m - ETA: 317.1m
+  Progress: 950/10000 (9.5%) - Elapsed: 33.0m - ETA: 314.4m
+  Progress: 1000/10000 (10.0%) - Elapsed: 34.7m - ETA: 312.6m
+  Progress: 1050/10000 (10.5%) - Elapsed: 36.5m - ETA: 310.7m
+  Progress: 1100/10000 (11.0%) - Elapsed: 38.2m - ETA: 308.7m
+  Progress: 1150/10000 (11.5%) - Elapsed: 39.7m - ETA: 305.6m
+  Progress: 1200/10000 (12.0%) - Elapsed: 41.7m - ETA: 305.6m
+  Progress: 1250/10000 (12.5%) - Elapsed: 43.4m - ETA: 304.1m
+  Progress: 1300/10000 (13.0%) - Elapsed: 45.4m - ETA: 303.6m
+  Progress: 1350/10000 (13.5%) - Elapsed: 47.2m - ETA: 302.5m
+  Progress: 1400/10000 (14.0%) - Elapsed: 49.1m - ETA: 301.4m
+  Progress: 1450/10000 (14.5%) - Elapsed: 50.9m - ETA: 299.9m
+  Progress: 1500/10000 (15.0%) - Elapsed: 52.8m - ETA: 299.3m
+  Progress: 1550/10000 (15.5%) - Elapsed: 54.4m - ETA: 296.5m
+  Progress: 1600/10000 (16.0%) - Elapsed: 56.0m - ETA: 293.9m
+  Progress: 1650/10000 (16.5%) - Elapsed: 57.8m - ETA: 292.7m
+  Progress: 1700/10000 (17.0%) - Elapsed: 59.6m - ETA: 291.1m
+  Progress: 1750/10000 (17.5%) - Elapsed: 61.2m - ETA: 288.6m
+  Progress: 1800/10000 (18.0%) - Elapsed: 63.1m - ETA: 287.4m
+  Progress: 1850/10000 (18.5%) - Elapsed: 65.0m - ETA: 286.2m
+  Progress: 1900/10000 (19.0%) - Elapsed: 66.8m - ETA: 284.6m
+  Progress: 1950/10000 (19.5%) - Elapsed: 68.4m - ETA: 282.3m
+  Progress: 2000/10000 (20.0%) - Elapsed: 70.0m - ETA: 280.1m
+  Progress: 2050/10000 (20.5%) - Elapsed: 71.9m - ETA: 278.8m
+  Progress: 2100/10000 (21.0%) - Elapsed: 73.8m - ETA: 277.7m
+  Progress: 2150/10000 (21.5%) - Elapsed: 75.5m - ETA: 275.8m
+  Progress: 2200/10000 (22.0%) - Elapsed: 77.2m - ETA: 273.6m
+  Progress: 2250/10000 (22.5%) - Elapsed: 78.9m - ETA: 271.6m
+  Progress: 2300/10000 (23.0%) - Elapsed: 80.7m - ETA: 270.0m
+  Progress: 2350/10000 (23.5%) - Elapsed: 82.5m - ETA: 268.6m
+  Progress: 2400/10000 (24.0%) - Elapsed: 84.2m - ETA: 266.8m
+  Progress: 2450/10000 (24.5%) - Elapsed: 86.0m - ETA: 265.0m
+  Progress: 2500/10000 (25.0%) - Elapsed: 87.6m - ETA: 262.9m
+  Progress: 2550/10000 (25.5%) - Elapsed: 89.3m - ETA: 260.9m
+  Progress: 2600/10000 (26.0%) - Elapsed: 90.9m - ETA: 258.8m
+  Progress: 2650/10000 (26.5%) - Elapsed: 92.6m - ETA: 256.9m
+  Progress: 2700/10000 (27.0%) - Elapsed: 94.4m - ETA: 255.3m
+  Progress: 2750/10000 (27.5%) - Elapsed: 96.3m - ETA: 253.8m
+  Progress: 2800/10000 (28.0%) - Elapsed: 97.9m - ETA: 251.8m
+  Progress: 2850/10000 (28.5%) - Elapsed: 99.8m - ETA: 250.4m
+  Progress: 2900/10000 (29.0%) - Elapsed: 101.6m - ETA: 248.7m
+  Progress: 2950/10000 (29.5%) - Elapsed: 103.5m - ETA: 247.4m
+  Progress: 3000/10000 (30.0%) - Elapsed: 105.1m - ETA: 245.3m
+  Progress: 3050/10000 (30.5%) - Elapsed: 106.7m - ETA: 243.1m
+  Progress: 3100/10000 (31.0%) - Elapsed: 108.5m - ETA: 241.5m
+  Progress: 3150/10000 (31.5%) - Elapsed: 110.3m - ETA: 239.8m
+  Progress: 3200/10000 (32.0%) - Elapsed: 112.1m - ETA: 238.2m
+  Progress: 3250/10000 (32.5%) - Elapsed: 113.7m - ETA: 236.2m
+  Progress: 3300/10000 (33.0%) - Elapsed: 115.6m - ETA: 234.7m
+  Progress: 3350/10000 (33.5%) - Elapsed: 117.3m - ETA: 232.8m
+  Progress: 3400/10000 (34.0%) - Elapsed: 119.0m - ETA: 231.0m
+  Progress: 3450/10000 (34.5%) - Elapsed: 120.8m - ETA: 229.3m
+  Progress: 3500/10000 (35.0%) - Elapsed: 122.6m - ETA: 227.6m
+  Progress: 3550/10000 (35.5%) - Elapsed: 124.5m - ETA: 226.1m
+  Progress: 3600/10000 (36.0%) - Elapsed: 126.2m - ETA: 224.4m
+  Progress: 3650/10000 (36.5%) - Elapsed: 127.9m - ETA: 222.5m
+  Progress: 3700/10000 (37.0%) - Elapsed: 129.5m - ETA: 220.5m
+  Progress: 3750/10000 (37.5%) - Elapsed: 131.3m - ETA: 218.9m
+  Progress: 3800/10000 (38.0%) - Elapsed: 133.0m - ETA: 217.0m
+  Progress: 3850/10000 (38.5%) - Elapsed: 134.7m - ETA: 215.1m
+  Progress: 3900/10000 (39.0%) - Elapsed: 136.4m - ETA: 213.4m
+  Progress: 3950/10000 (39.5%) - Elapsed: 138.1m - ETA: 211.5m
+  Progress: 4000/10000 (40.0%) - Elapsed: 139.9m - ETA: 209.8m
+  Progress: 4050/10000 (40.5%) - Elapsed: 141.7m - ETA: 208.1m
+  Progress: 4100/10000 (41.0%) - Elapsed: 143.4m - ETA: 206.3m
+  Progress: 4150/10000 (41.5%) - Elapsed: 145.2m - ETA: 204.6m
+  Progress: 4200/10000 (42.0%) - Elapsed: 146.7m - ETA: 202.6m
+  Progress: 4250/10000 (42.5%) - Elapsed: 148.4m - ETA: 200.8m
+  Progress: 4300/10000 (43.0%) - Elapsed: 150.3m - ETA: 199.2m
+  Progress: 4350/10000 (43.5%) - Elapsed: 152.0m - ETA: 197.4m
+  Progress: 4400/10000 (44.0%) - Elapsed: 153.6m - ETA: 195.5m
+  Progress: 4450/10000 (44.5%) - Elapsed: 155.3m - ETA: 193.7m
+  Progress: 4500/10000 (45.0%) - Elapsed: 156.9m - ETA: 191.8m
+  Progress: 4550/10000 (45.5%) - Elapsed: 158.9m - ETA: 190.4m
+  Progress: 4600/10000 (46.0%) - Elapsed: 160.6m - ETA: 188.5m
+  Progress: 4650/10000 (46.5%) - Elapsed: 162.2m - ETA: 186.6m
+  Progress: 4700/10000 (47.0%) - Elapsed: 164.0m - ETA: 185.0m
+  Progress: 4750/10000 (47.5%) - Elapsed: 165.6m - ETA: 183.0m
+  Progress: 4800/10000 (48.0%) - Elapsed: 167.2m - ETA: 181.1m
+  Progress: 4850/10000 (48.5%) - Elapsed: 169.1m - ETA: 179.6m
+  Progress: 4900/10000 (49.0%) - Elapsed: 170.9m - ETA: 177.8m
+  Progress: 4950/10000 (49.5%) - Elapsed: 172.5m - ETA: 176.0m
+  Progress: 5000/10000 (50.0%) - Elapsed: 174.4m - ETA: 174.4m
+  Progress: 5050/10000 (50.5%) - Elapsed: 176.1m - ETA: 172.6m
+  Progress: 5100/10000 (51.0%) - Elapsed: 177.7m - ETA: 170.8m
+  Progress: 5150/10000 (51.5%) - Elapsed: 179.7m - ETA: 169.2m
+  Progress: 5200/10000 (52.0%) - Elapsed: 181.4m - ETA: 167.4m
+  Progress: 5250/10000 (52.5%) - Elapsed: 183.1m - ETA: 165.7m
+  Progress: 5300/10000 (53.0%) - Elapsed: 185.1m - ETA: 164.1m
+  Progress: 5350/10000 (53.5%) - Elapsed: 186.9m - ETA: 162.4m
+  Progress: 5400/10000 (54.0%) - Elapsed: 188.6m - ETA: 160.6m
+  Progress: 5450/10000 (54.5%) - Elapsed: 190.3m - ETA: 158.9m
+  Progress: 5500/10000 (55.0%) - Elapsed: 192.1m - ETA: 157.2m
+  Progress: 5550/10000 (55.5%) - Elapsed: 194.0m - ETA: 155.6m
+  Progress: 5600/10000 (56.0%) - Elapsed: 195.8m - ETA: 153.8m
+  Progress: 5650/10000 (56.5%) - Elapsed: 197.6m - ETA: 152.1m
+  Progress: 5700/10000 (57.0%) - Elapsed: 199.3m - ETA: 150.3m
+  Progress: 5750/10000 (57.5%) - Elapsed: 201.2m - ETA: 148.7m
+  Progress: 5800/10000 (58.0%) - Elapsed: 202.8m - ETA: 146.9m
+  Progress: 5850/10000 (58.5%) - Elapsed: 204.4m - ETA: 145.0m
+  Progress: 5900/10000 (59.0%) - Elapsed: 206.2m - ETA: 143.3m
+  Progress: 5950/10000 (59.5%) - Elapsed: 207.9m - ETA: 141.5m
+  Progress: 6000/10000 (60.0%) - Elapsed: 209.6m - ETA: 139.7m
+  Progress: 6050/10000 (60.5%) - Elapsed: 211.3m - ETA: 137.9m
+  Progress: 6100/10000 (61.0%) - Elapsed: 212.9m - ETA: 136.1m
+  Progress: 6150/10000 (61.5%) - Elapsed: 214.8m - ETA: 134.5m
+  Progress: 6200/10000 (62.0%) - Elapsed: 216.5m - ETA: 132.7m
+  Progress: 6250/10000 (62.5%) - Elapsed: 218.4m - ETA: 131.0m
+  Progress: 6300/10000 (63.0%) - Elapsed: 220.0m - ETA: 129.2m
+  Progress: 6350/10000 (63.5%) - Elapsed: 221.9m - ETA: 127.5m
+  Progress: 6400/10000 (64.0%) - Elapsed: 223.8m - ETA: 125.9m
+  Progress: 6450/10000 (64.5%) - Elapsed: 225.5m - ETA: 124.1m
+  Progress: 6500/10000 (65.0%) - Elapsed: 227.2m - ETA: 122.3m
+  Progress: 6550/10000 (65.5%) - Elapsed: 229.0m - ETA: 120.6m
+  Progress: 6600/10000 (66.0%) - Elapsed: 230.7m - ETA: 118.8m
+  Progress: 6650/10000 (66.5%) - Elapsed: 232.5m - ETA: 117.1m
+  Progress: 6700/10000 (67.0%) - Elapsed: 234.1m - ETA: 115.3m
+  Progress: 6750/10000 (67.5%) - Elapsed: 236.2m - ETA: 113.7m
+  Progress: 6800/10000 (68.0%) - Elapsed: 238.1m - ETA: 112.0m
+  Progress: 6850/10000 (68.5%) - Elapsed: 239.9m - ETA: 110.3m
+  Progress: 6900/10000 (69.0%) - Elapsed: 241.6m - ETA: 108.5m
+  Progress: 6950/10000 (69.5%) - Elapsed: 243.2m - ETA: 106.7m
+  Progress: 7000/10000 (70.0%) - Elapsed: 245.0m - ETA: 105.0m
+  Progress: 7050/10000 (70.5%) - Elapsed: 246.7m - ETA: 103.2m
+  Progress: 7100/10000 (71.0%) - Elapsed: 248.4m - ETA: 101.4m
+  Progress: 7150/10000 (71.5%) - Elapsed: 250.2m - ETA: 99.7m
+  Progress: 7200/10000 (72.0%) - Elapsed: 251.9m - ETA: 97.9m
+  Progress: 7250/10000 (72.5%) - Elapsed: 253.5m - ETA: 96.1m
+  Progress: 7300/10000 (73.0%) - Elapsed: 255.2m - ETA: 94.4m
+  Progress: 7350/10000 (73.5%) - Elapsed: 256.8m - ETA: 92.6m
+  Progress: 7400/10000 (74.0%) - Elapsed: 258.6m - ETA: 90.9m
+  Progress: 7450/10000 (74.5%) - Elapsed: 260.3m - ETA: 89.1m
+  Progress: 7500/10000 (75.0%) - Elapsed: 262.1m - ETA: 87.4m
+  Progress: 7550/10000 (75.5%) - Elapsed: 263.9m - ETA: 85.6m
+  Progress: 7600/10000 (76.0%) - Elapsed: 265.6m - ETA: 83.9m
+  Progress: 7650/10000 (76.5%) - Elapsed: 267.4m - ETA: 82.2m
+  Progress: 7700/10000 (77.0%) - Elapsed: 269.3m - ETA: 80.4m
+  Progress: 7750/10000 (77.5%) - Elapsed: 271.2m - ETA: 78.7m
+  Progress: 7800/10000 (78.0%) - Elapsed: 272.9m - ETA: 77.0m
+  Progress: 7850/10000 (78.5%) - Elapsed: 274.6m - ETA: 75.2m
+  Progress: 7900/10000 (79.0%) - Elapsed: 276.3m - ETA: 73.4m
+  Progress: 7950/10000 (79.5%) - Elapsed: 278.2m - ETA: 71.7m
+  Progress: 8000/10000 (80.0%) - Elapsed: 280.1m - ETA: 70.0m
+  Progress: 8050/10000 (80.5%) - Elapsed: 281.7m - ETA: 68.2m
+  Progress: 8100/10000 (81.0%) - Elapsed: 283.6m - ETA: 66.5m
+  Progress: 8150/10000 (81.5%) - Elapsed: 285.2m - ETA: 64.7m
+  Progress: 8200/10000 (82.0%) - Elapsed: 287.0m - ETA: 63.0m
+  Progress: 8250/10000 (82.5%) - Elapsed: 288.6m - ETA: 61.2m
+  Progress: 8300/10000 (83.0%) - Elapsed: 290.3m - ETA: 59.5m
+  Progress: 8350/10000 (83.5%) - Elapsed: 291.9m - ETA: 57.7m
+  Progress: 8400/10000 (84.0%) - Elapsed: 293.9m - ETA: 56.0m
+  Progress: 8450/10000 (84.5%) - Elapsed: 295.8m - ETA: 54.3m
+  Progress: 8500/10000 (85.0%) - Elapsed: 297.5m - ETA: 52.5m
+  Progress: 8550/10000 (85.5%) - Elapsed: 299.2m - ETA: 50.7m
+  Progress: 8600/10000 (86.0%) - Elapsed: 301.0m - ETA: 49.0m
+  Progress: 8650/10000 (86.5%) - Elapsed: 302.6m - ETA: 47.2m
+  Progress: 8700/10000 (87.0%) - Elapsed: 304.5m - ETA: 45.5m
+  Progress: 8750/10000 (87.5%) - Elapsed: 306.3m - ETA: 43.8m
+  Progress: 8800/10000 (88.0%) - Elapsed: 308.0m - ETA: 42.0m
+  Progress: 8850/10000 (88.5%) - Elapsed: 309.9m - ETA: 40.3m
+  Progress: 8900/10000 (89.0%) - Elapsed: 311.7m - ETA: 38.5m
+  Progress: 8950/10000 (89.5%) - Elapsed: 313.5m - ETA: 36.8m
+  Progress: 9000/10000 (90.0%) - Elapsed: 315.1m - ETA: 35.0m
+  Progress: 9050/10000 (90.5%) - Elapsed: 316.9m - ETA: 33.3m
+  Progress: 9100/10000 (91.0%) - Elapsed: 318.6m - ETA: 31.5m
+  Progress: 9150/10000 (91.5%) - Elapsed: 320.3m - ETA: 29.8m
+  Progress: 9200/10000 (92.0%) - Elapsed: 322.1m - ETA: 28.0m
+  Progress: 9250/10000 (92.5%) - Elapsed: 324.0m - ETA: 26.3m
+  Progress: 9300/10000 (93.0%) - Elapsed: 325.8m - ETA: 24.5m
+  Progress: 9350/10000 (93.5%) - Elapsed: 327.5m - ETA: 22.8m
+  Progress: 9400/10000 (94.0%) - Elapsed: 329.3m - ETA: 21.0m
+  Progress: 9450/10000 (94.5%) - Elapsed: 331.0m - ETA: 19.3m
+  Progress: 9500/10000 (95.0%) - Elapsed: 332.6m - ETA: 17.5m
+  Progress: 9550/10000 (95.5%) - Elapsed: 334.3m - ETA: 15.8m
+  Progress: 9600/10000 (96.0%) - Elapsed: 335.9m - ETA: 14.0m
+  Progress: 9650/10000 (96.5%) - Elapsed: 337.7m - ETA: 12.2m
+  Progress: 9700/10000 (97.0%) - Elapsed: 339.5m - ETA: 10.5m
+  Progress: 9750/10000 (97.5%) - Elapsed: 341.1m - ETA: 8.7m
+  Progress: 9800/10000 (98.0%) - Elapsed: 342.7m - ETA: 7.0m
+  Progress: 9850/10000 (98.5%) - Elapsed: 344.7m - ETA: 5.2m
+  Progress: 9900/10000 (99.0%) - Elapsed: 346.4m - ETA: 3.5m
+  Progress: 9950/10000 (99.5%) - Elapsed: 348.1m - ETA: 1.7m
+  Progress: 10000/10000 (100.0%) - Elapsed: 350.0m - ETA: 0.0m
+
+Simulations completed in 350.1 minutes
+Average time per simulation: 2.10 seconds
+
+Training neural density estimator...
+ Training neural network. Epochs trained: 1 Training neural network. Epochs trained: 2 Training neural network. Epochs trained: 3 Training neural network. Epochs trained: 4 Training neural network. Epochs trained: 5 Training neural network. Epochs trained: 6 Training neural network. Epochs trained: 7 Training neural network. Epochs trained: 8 Training neural network. Epochs trained: 9 Training neural network. Epochs trained: 10 Training neural network. Epochs trained: 11 Training neural network. Epochs trained: 12 Training neural network. Epochs trained: 13 Training neural network. Epochs trained: 14 Training neural network. Epochs trained: 15 Training neural network. Epochs trained: 16 Training neural network. Epochs trained: 17 Training neural network. Epochs trained: 18 Training neural network. Epochs trained: 19 Training neural network. Epochs trained: 20 Training neural network. Epochs trained: 21 Training neural network. Epochs trained: 22 Training neural network. Epochs trained: 23 Training neural network. Epochs trained: 24 Training neural network. Epochs trained: 25 Training neural network. Epochs trained: 26 Training neural network. Epochs trained: 27 Training neural network. Epochs trained: 28 Training neural network. Epochs trained: 29 Training neural network. Epochs trained: 30 Training neural network. Epochs trained: 31 Training neural network. Epochs trained: 32 Training neural network. Epochs trained: 33 Training neural network. Epochs trained: 34 Training neural network. Epochs trained: 35 Training neural network. Epochs trained: 36 Training neural network. Epochs trained: 37 Training neural network. Epochs trained: 38 Training neural network. Epochs trained: 39 Training neural network. Epochs trained: 40 Training neural network. Epochs trained: 41 Training neural network. Epochs trained: 42 Training neural network. Epochs trained: 43 Training neural network. Epochs trained: 44 Training neural network. Epochs trained: 45 Training neural network. Epochs trained: 46 Training neural network. Epochs trained: 47 Training neural network. Epochs trained: 48 Training neural network. Epochs trained: 49 Training neural network. Epochs trained: 50 Training neural network. Epochs trained: 51 Training neural network. Epochs trained: 52 Training neural network. Epochs trained: 53 Training neural network. Epochs trained: 54 Training neural network. Epochs trained: 55 Training neural network. Epochs trained: 56 Training neural network. Epochs trained: 57 Training neural network. Epochs trained: 58 Training neural network. Epochs trained: 59 Training neural network. Epochs trained: 60 Training neural network. Epochs trained: 61 Training neural network. Epochs trained: 62 Training neural network. Epochs trained: 63 Training neural network. Epochs trained: 64 Training neural network. Epochs trained: 65 Training neural network. Epochs trained: 66 Training neural network. Epochs trained: 67 Training neural network. Epochs trained: 68 Training neural network. Epochs trained: 69 Training neural network. Epochs trained: 70 Training neural network. Epochs trained: 71 Training neural network. Epochs trained: 72 Training neural network. Epochs trained: 73 Training neural network. Epochs trained: 74 Training neural network. Epochs trained: 75 Training neural network. Epochs trained: 76 Training neural network. Epochs trained: 77 Training neural network. Epochs trained: 78 Training neural network. Epochs trained: 79 Training neural network. Epochs trained: 80 Training neural network. Epochs trained: 81 Training neural network. Epochs trained: 82 Training neural network. Epochs trained: 83 Training neural network. Epochs trained: 84 Training neural network. Epochs trained: 85 Training neural network. Epochs trained: 86 Training neural network. Epochs trained: 87 Training neural network. Epochs trained: 88 Training neural network. Epochs trained: 89 Training neural network. Epochs trained: 90 Training neural network. Epochs trained: 91 Training neural network. Epochs trained: 92 Training neural network. Epochs trained: 93 Training neural network. Epochs trained: 94 Training neural network. Epochs trained: 95 Training neural network. Epochs trained: 96 Training neural network. Epochs trained: 97 Training neural network. Epochs trained: 98 Training neural network. Epochs trained: 99 Training neural network. Epochs trained: 100 Training neural network. Epochs trained: 101 Training neural network. Epochs trained: 102 Training neural network. Epochs trained: 103 Training neural network. Epochs trained: 104 Training neural network. Epochs trained: 105 Training neural network. Epochs trained: 106 Training neural network. Epochs trained: 107 Training neural network. Epochs trained: 108 Training neural network. Epochs trained: 109 Training neural network. Epochs trained: 110 Training neural network. Epochs trained: 111 Training neural network. Epochs trained: 112 Training neural network. Epochs trained: 113 Training neural network. Epochs trained: 114 Training neural network. Epochs trained: 115 Training neural network. Epochs trained: 116 Training neural network. Epochs trained: 117 Training neural network. Epochs trained: 118 Training neural network. Epochs trained: 119 Training neural network. Epochs trained: 120 Training neural network. Epochs trained: 121 Training neural network. Epochs trained: 122 Training neural network. Epochs trained: 123 Training neural network. Epochs trained: 124 Training neural network. Epochs trained: 125 Training neural network. Epochs trained: 126 Training neural network. Epochs trained: 127 Training neural network. Epochs trained: 128 Training neural network. Epochs trained: 129 Training neural network. Epochs trained: 130 Training neural network. Epochs trained: 131 Training neural network. Epochs trained: 132 Training neural network. Epochs trained: 133 Training neural network. Epochs trained: 134 Training neural network. Epochs trained: 135 Training neural network. Epochs trained: 136 Training neural network. Epochs trained: 137 Training neural network. Epochs trained: 138 Training neural network. Epochs trained: 139 Training neural network. Epochs trained: 140 Training neural network. Epochs trained: 141 Training neural network. Epochs trained: 142 Training neural network. Epochs trained: 143 Training neural network. Epochs trained: 144 Training neural network. Epochs trained: 145 Training neural network. Epochs trained: 146 Training neural network. Epochs trained: 147 Training neural network. Epochs trained: 148 Training neural network. Epochs trained: 149 Training neural network. Epochs trained: 150 Training neural network. Epochs trained: 151 Training neural network. Epochs trained: 152 Training neural network. Epochs trained: 153 Training neural network. Epochs trained: 154 Training neural network. Epochs trained: 155 Training neural network. Epochs trained: 156 Training neural network. Epochs trained: 157 Training neural network. Epochs trained: 158 Training neural network. Epochs trained: 159 Training neural network. Epochs trained: 160 Training neural network. Epochs trained: 161 Training neural network. Epochs trained: 162 Training neural network. Epochs trained: 163 Training neural network. Epochs trained: 164 Training neural network. Epochs trained: 165 Training neural network. Epochs trained: 166 Training neural network. Epochs trained: 167 Training neural network. Epochs trained: 168 Training neural network. Epochs trained: 169 Training neural network. Epochs trained: 170 Training neural network. Epochs trained: 171 Training neural network. Epochs trained: 172 Training neural network. Epochs trained: 173 Training neural network. Epochs trained: 174 Training neural network. Epochs trained: 175 Training neural network. Epochs trained: 176 Training neural network. Epochs trained: 177 Training neural network. Epochs trained: 178 Training neural network. Epochs trained: 179 Training neural network. Epochs trained: 180 Training neural network. Epochs trained: 181 Training neural network. Epochs trained: 182 Training neural network. Epochs trained: 183 Training neural network. Epochs trained: 184 Training neural network. Epochs trained: 185 Training neural network. Epochs trained: 186 Training neural network. Epochs trained: 187 Training neural network. Epochs trained: 188 Training neural network. Epochs trained: 189 Training neural network. Epochs trained: 190 Training neural network. Epochs trained: 191 Training neural network. Epochs trained: 192 Training neural network. Epochs trained: 193 Training neural network. Epochs trained: 194 Training neural network. Epochs trained: 195 Training neural network. Epochs trained: 196 Training neural network. Epochs trained: 197 Training neural network. Epochs trained: 198 Training neural network. Epochs trained: 199 Training neural network. Epochs trained: 200 Training neural network. Epochs trained: 201 Training neural network. Epochs trained: 202 Training neural network. Epochs trained: 203 Training neural network. Epochs trained: 204 Training neural network. Epochs trained: 205 Training neural network. Epochs trained: 206 Training neural network. Epochs trained: 207 Training neural network. Epochs trained: 208 Training neural network. Epochs trained: 209 Training neural network. Epochs trained: 210 Training neural network. Epochs trained: 211 Training neural network. Epochs trained: 212 Training neural network. Epochs trained: 213 Training neural network. Epochs trained: 214 Training neural network. Epochs trained: 215 Training neural network. Epochs trained: 216 Training neural network. Epochs trained: 217 Training neural network. Epochs trained: 218 Training neural network. Epochs trained: 219 Training neural network. Epochs trained: 220 Training neural network. Epochs trained: 221 Training neural network. Epochs trained: 222 Training neural network. Epochs trained: 223 Training neural network. Epochs trained: 224 Training neural network. Epochs trained: 225 Training neural network. Epochs trained: 226 Training neural network. Epochs trained: 227 Training neural network. Epochs trained: 228 Training neural network. Epochs trained: 229 Training neural network. Epochs trained: 230 Training neural network. Epochs trained: 231 Training neural network. Epochs trained: 232 Training neural network. Epochs trained: 233 Training neural network. Epochs trained: 234 Training neural network. Epochs trained: 235 Training neural network. Epochs trained: 236 Training neural network. Epochs trained: 237 Training neural network. Epochs trained: 238 Training neural network. Epochs trained: 239 Training neural network. Epochs trained: 240 Training neural network. Epochs trained: 241 Training neural network. Epochs trained: 242 Training neural network. Epochs trained: 243 Training neural network. Epochs trained: 244 Training neural network. Epochs trained: 245 Training neural network. Epochs trained: 246 Training neural network. Epochs trained: 247 Training neural network. Epochs trained: 248 Training neural network. Epochs trained: 249 Training neural network. Epochs trained: 250 Training neural network. Epochs trained: 251 Training neural network. Epochs trained: 252 Training neural network. Epochs trained: 253 Training neural network. Epochs trained: 254 Training neural network. Epochs trained: 255 Training neural network. Epochs trained: 256 Training neural network. Epochs trained: 257 Training neural network. Epochs trained: 258 Training neural network. Epochs trained: 259 Training neural network. Epochs trained: 260 Training neural network. Epochs trained: 261 Training neural network. Epochs trained: 262 Training neural network. Epochs trained: 263 Training neural network. Epochs trained: 264 Training neural network. Epochs trained: 265 Training neural network. Epochs trained: 266 Training neural network. Epochs trained: 267 Training neural network. Epochs trained: 268 Training neural network. Epochs trained: 269 Training neural network. Epochs trained: 270 Training neural network. Epochs trained: 271 Training neural network. Epochs trained: 272 Training neural network. Epochs trained: 273 Training neural network. Epochs trained: 274 Training neural network. Epochs trained: 275 Training neural network. Epochs trained: 276 Training neural network. Epochs trained: 277 Training neural network. Epochs trained: 278 Training neural network. Epochs trained: 279 Training neural network. Epochs trained: 280 Training neural network. Epochs trained: 281 Training neural network. Epochs trained: 282 Training neural network. Epochs trained: 283 Training neural network. Epochs trained: 284 Training neural network. Epochs trained: 285 Training neural network. Epochs trained: 286 Training neural network. Epochs trained: 287 Training neural network. Epochs trained: 288 Training neural network. Epochs trained: 289 Training neural network. Epochs trained: 290 Training neural network. Epochs trained: 291 Training neural network. Epochs trained: 292 Training neural network. Epochs trained: 293 Training neural network. Epochs trained: 294 Training neural network. Epochs trained: 295 Training neural network. Epochs trained: 296 Training neural network. Epochs trained: 297 Training neural network. Epochs trained: 298 Training neural network. Epochs trained: 299 Training neural network. Epochs trained: 300 Training neural network. Epochs trained: 301 Training neural network. Epochs trained: 302 Training neural network. Epochs trained: 303 Training neural network. Epochs trained: 304 Training neural network. Epochs trained: 305 Training neural network. Epochs trained: 306 Training neural network. Epochs trained: 307 Training neural network. Epochs trained: 308 Training neural network. Epochs trained: 309 Training neural network. Epochs trained: 310 Training neural network. Epochs trained: 311 Training neural network. Epochs trained: 312 Training neural network. Epochs trained: 313 Training neural network. Epochs trained: 314 Training neural network. Epochs trained: 315 Training neural network. Epochs trained: 316 Training neural network. Epochs trained: 317 Training neural network. Epochs trained: 318 Training neural network. Epochs trained: 319 Training neural network. Epochs trained: 320 Training neural network. Epochs trained: 321 Training neural network. Epochs trained: 322 Training neural network. Epochs trained: 323 Training neural network. Epochs trained: 324 Training neural network. Epochs trained: 325 Training neural network. Epochs trained: 326 Training neural network. Epochs trained: 327 Training neural network. Epochs trained: 328 Training neural network. Epochs trained: 329 Training neural network. Epochs trained: 330 Neural network successfully converged after 330 epochs.
+SBI training completed!
+
+Saving posterior to: /sps/euclid/Users/cmurray/clusters_likelihood/posterior_estimator_flagship.pkl
+
+Done! Posterior saved successfully.
+======================================================================
+========================================================================
+Job completed at Thu Nov  6 03:09:30 AM CET 2025
+========================================================================
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Thu Nov  6 03:09:30 AM CET 2025
+Job informations can be found using these commands:
+Accounting:
+sacct -j 12657947
+Efficiency:
+seff 12657947
+****************************************************************
