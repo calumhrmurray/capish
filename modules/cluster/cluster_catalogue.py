@@ -23,11 +23,45 @@ class ClusterCatalogue:
             self.sigma_log10Mwl_gal_interp = self.sigma_log10Mwl_gal_interp
 
         else: 
-            self.sigma_log10M_interp = None
+            self.sigma_log10Mwl_gal_interp = None
             
         return None
     
     def get_cluster_catalogue(self, log10m_true, z_true, config_new):
+
+        """
+        Generate a synthetic cluster catalogue with optional observational effects 
+        including weak-lensing mass scatter, completeness, purity, and selection.
+    
+        Parameters
+        ----------
+        log10m_true : array_like
+            True halo masses in log10(M_sun/h).
+        z_true : array_like
+            True halo redshifts.
+        config_new : dict
+            Configuration dictionary specifying cluster catalogue settings:
+            - 'params_completeness' : str
+                Comma-separated parameters for the completeness function.
+            - 'params_purity' : str
+                Comma-separated parameters for the purity function.
+            - 'add_completeness' : str
+                If 'True', apply completeness to the halo sample.
+            - 'add_purity' : str
+                If 'True', add fake clusters according to purity.
+            - 'add_selection' : str
+                If 'True', apply additional selection cuts.
+    
+        Returns
+        -------
+        richness : np.ndarray
+            Array of observed cluster richness values (including fakes if purity applied).
+        log10mWL : np.ndarray
+            Array of weak-lensing mass estimates (log10) corresponding to clusters. 
+            Fake clusters have value None.
+        z_obs : np.ndarray
+            Array of observed cluster redshifts.
+        """
 
         params_completeness = [float(k) for k in config_new['cluster_catalogue']['params_completeness'].split(', ')]
         params_purity = [float(k) for k in config_new['cluster_catalogue']['params_purity'].split(', ')]
@@ -137,15 +171,16 @@ class ClusterCatalogue:
         delta=delta
         cM=default_config['cluster_catalogue']["concentration_mass_relation"]
         name = './cluster/model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl'
+        
         name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
         try:
             import clmm
             sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
                                                             cosmo_ccl_fid, 
-                                                           Rmin=1, Rmax=3, 
-                                                           ngal_arcmin2=25, shape_noise=0.25,
+                                                           Rmin=Rmin, Rmax=Rmax, 
+                                                           ngal_arcmin2=ngal_arcmin2, shape_noise=shape_noise,
                                                            delta=delta, mass_def=mass_def,
-                                                           cM = 'Duffy08')
+                                                           cM = cM)
         
             self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
 
