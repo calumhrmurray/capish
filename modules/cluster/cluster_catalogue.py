@@ -18,74 +18,11 @@ class ClusterCatalogue:
         """
         self.default_config = default_config
 
-        # set up the different grids
-        ## mass grid
-
-        log10m_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
-                                      float( default_config['halo_catalogue']['log10m_max']),
-                                      int( 10 ) )
-        log10m_grid_center = (log10m_grid[:-1] + log10m_grid[1:]) / 2
-        #redshift grid
-        z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
-                                    float( default_config['halo_catalogue']['z_max'] ),
-                                    int( 10 ) )
-        z_grid_center = (z_grid[:-1] + z_grid[1:]) / 2
-        
-        cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
-                                           Omega_b = float( default_config['halo_catalogue']['Omega_b_fiducial'] ), 
-                                           h = float( default_config['halo_catalogue']['h_fiducial'] ), 
-                                           sigma8 = float( default_config['halo_catalogue']['sigma_8_fiducial'] ), 
-                                           n_s=float( default_config['halo_catalogue']['n_s_fiducial'] ) )
-
-        mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
-        delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
-
-        if self.default_config['cluster_catalogue']['theory_sigma_Mwl']=='True':
-
-            Rmin=1
-            Rmax=3
-            ngal_arcmin2=25
-            shape_noise=0.25
-            mass_def=mass_def
-            delta=delta
-            cM='Duffy08'
-            name = 'model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl'
-            name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
-            try:
-                import clmm
-                sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
-                                                                cosmo_ccl_fid, 
-                                                               Rmin=1, Rmax=3, 
-                                                               ngal_arcmin2=25, shape_noise=0.25,
-                                                               delta=delta, mass_def=mass_def,
-                                                               cM = 'Duffy08')
-            
-                self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
-    
-                sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                                self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-                
-                if not os.path.exists(name_to_save):
-                    with open(name_to_save, 'wb') as f:
-                        pickle.dump(sigma_interp, f)
-                        
-                else: print(f"{name_to_save} already exists, skipping.")
-                
-            except ImportError:
-                
-                print(f"clmm not found - load {name_to_save}")
-                with open(name_to_save, 'rb') as f:
-                    sigma_interp = pickle.load(f)
-                    
-            def sigma_log10M_interp(log10m_array, z_array):
-                points = np.column_stack([log10m_array, z_array])
-                return sigma_interp(points)
-            print(1)
-            self.sigma_log10M_interp = sigma_log10M_interp
+        if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal']=='True':
+            self.define_log10Mwl_error_model(default_config)
+            self.sigma_log10Mwl_gal_interp = self.sigma_log10Mwl_gal_interp
 
         else: 
-            
-            self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, None
             self.sigma_log10M_interp = None
             
         return None
@@ -95,7 +32,7 @@ class ClusterCatalogue:
         params_completeness = [float(k) for k in config_new['cluster_catalogue']['params_completeness'].split(', ')]
         params_purity = [float(k) for k in config_new['cluster_catalogue']['params_purity'].split(', ')]
 
-        MoR = _halo_observable_relation.HaloToObservables(config_new, sigma_log10mWL_model = self.sigma_log10M_interp)
+        MoR = _halo_observable_relation.HaloToObservables(config_new, sigma_log10Mwl_gal_interp = self.sigma_log10Mwl_gal_interp)
         richness, log10mWL, z_obs = MoR.generate_observables_from_halo(log10m_true, z_true)
         z_obs[z_obs < 0] = None
         
@@ -139,3 +76,96 @@ class ClusterCatalogue:
             richness, log10mWL, z_obs = richness[mask_selection], log10mWL[mask_selection], z_obs[mask_selection]
 
         return richness, log10mWL, z_obs
+
+    def define_log10Mwl_error_model(self, default_config):
+
+        """
+        Define and interpolate the weak-lensing mass error model in log10(M) as a function of halo mass 
+        and redshift, based on CLMM (Cluster Lensing Mass Modeling) or a precomputed file.
+    
+        Parameters
+        ----------
+        default_config : dict
+            Configuration dictionary containing halo catalogue and cosmology settings. Expected keys:
+            - 'halo_catalogue':
+                - 'log10m_min', 'log10m_max' : float
+                    Minimum and maximum log10(M) for the grid.
+                - 'z_min', 'z_max' : float
+                    Minimum and maximum redshift for the grid.
+                - 'Omega_c_fiducial', 'Omega_b_fiducial', 'h_fiducial', 'sigma_8_fiducial', 'n_s_fiducial' : float
+                    Cosmological parameters for the fiducial cosmology.
+                - 'mass_def_overdensity_type' : str
+                    Mass definition type (e.g., '200c').
+                - 'mass_def_overdensity_delta' : int
+                    Overdensity value for the mass definition (e.g., 200).
+    
+        Attributes Set
+        ----------------
+        self.log10m_grid : np.ndarray
+            The mass grid used for the error model.
+        self.z_grid : np.ndarray
+            The redshift grid used for the error model.
+        self.sigma_log10M : np.ndarray
+            Weak-lensing mass error computed on the 2D (log10M, z) grid.
+        self.sigma_log10M_interp : function
+            Interpolation function that returns `sigma_log10M` for given log10(M) and z arrays.
+        """
+        log10m_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
+                                      float( default_config['halo_catalogue']['log10m_max']),
+                                      int( 10 ) )
+        log10m_grid_center = (log10m_grid[:-1] + log10m_grid[1:]) / 2
+        #redshift grid
+        z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
+                                    float( default_config['halo_catalogue']['z_max'] ),
+                                    int( 10 ) )
+        z_grid_center = (z_grid[:-1] + z_grid[1:]) / 2
+        
+        cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
+                                           Omega_b = float( default_config['halo_catalogue']['Omega_b_fiducial'] ), 
+                                           h = float( default_config['halo_catalogue']['h_fiducial'] ), 
+                                           sigma8 = float( default_config['halo_catalogue']['sigma_8_fiducial'] ), 
+                                           n_s=float( default_config['halo_catalogue']['n_s_fiducial'] ) )
+
+        mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
+        delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
+
+        Rmin=float(default_config['cluster_catalogue']["DeltaSigma_Rmin"])
+        Rmax=float(default_config['cluster_catalogue']["DeltaSigma_Rmax"])
+        ngal_arcmin2=float(default_config['cluster_catalogue']["ngal_arcmin2"])
+        shape_noise=float(default_config['cluster_catalogue']["shape_noise"])
+        mass_def=mass_def
+        delta=delta
+        cM=default_config['cluster_catalogue']["concentration_mass_relation"]
+        name = './cluster/model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl'
+        name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
+        try:
+            import clmm
+            sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
+                                                            cosmo_ccl_fid, 
+                                                           Rmin=1, Rmax=3, 
+                                                           ngal_arcmin2=25, shape_noise=0.25,
+                                                           delta=delta, mass_def=mass_def,
+                                                           cM = 'Duffy08')
+        
+            self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
+
+            sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
+                            self.sigma_log10M, bounds_error=False, fill_value=np.nan)
+            
+            if not os.path.exists(name_to_save):
+                with open(name_to_save, 'wb') as f:
+                    pickle.dump(sigma_interp, f)
+                    
+            else: print(f"{name_to_save} already exists, skipping.")
+            
+        except ImportError:
+            
+            print(f"clmm not found - load {name_to_save}")
+            with open(name_to_save, 'rb') as f:
+                sigma_interp = pickle.load(f)
+                
+        def sigma_log10M_interp(log10m_array, z_array):
+            points = np.column_stack([log10m_array, z_array])
+            return sigma_interp(points)
+
+        self.sigma_log10Mwl_gal_interp = sigma_log10M_interp

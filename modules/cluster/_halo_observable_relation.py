@@ -8,7 +8,7 @@ def photometric_redshift(z_true, photoz_params):
     return z_obs
 
 class HaloToObservables:
-    def __init__(self, config_new, sigma_log10mWL_model = None):
+    def __init__(self, config_new, sigma_log10Mwl_gal_interp = None):
 
         parameters = config_new['parameters']
         M_min = float(parameters['M_min'])
@@ -23,8 +23,8 @@ class HaloToObservables:
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.M_min = M_min
-        self.theory_sigma_Mwl = config_new['cluster_catalogue']['theory_sigma_Mwl']
-        self.sigma_log10mWL_model = sigma_log10mWL_model
+        self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl']
+        self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
         self.params_mWL_mean = params_mWL_mean
@@ -68,12 +68,6 @@ class HaloToObservables:
         log10M = np.array(log10M, dtype=float)
 
         return alpha_mwl + beta_mwl * log10M + gamma_mwl * np.log10(1 + z)
-    
-    def sigma_log10mWL_f(self, log10M, z, params_mWL_sigma):
-
-        sigma_mWLgal, sigma_mWLint = params_mWL_sigma
-        sigma2 = sigma_mWLgal**2 + sigma_mWLint**2
-        return sigma2**.5*np.ones(len(log10M))
 
     def generate_observables_from_halo(self, log10M, z, WL_random='Mwl'):
         """
@@ -106,10 +100,15 @@ class HaloToObservables:
     
         # Compute mean and scatter for weak-lensing mass
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
-        if self.theory_sigma_Mwl == 'False':
-            sigma_log10mWL = self.sigma_log10mWL_f(log10M, z, self.params_mWL_sigma)
+
+        if self.use_theory_for_sigma_Mwl_gal=='False':
+            sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
+            sigma2 = sigma_mWLgal**2 + sigma_mWLint**2
+            sigma_log10mWL = sigma2 ** .5
         else:
-            sigma_log10mWL = self.sigma_log10mWL_model(log10M, z)
+            sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
+            sigma2 = self.sigma_log10Mwl_gal_interp(log10M, z) ** 2 + sigma_mWLint ** 2
+            sigma_log10mWL = sigma2 ** .5
     
         rho = self.rho_obs_mWL
     
