@@ -9,7 +9,7 @@ from multiprocessing import Pool, cpu_count
 from tqdm.auto import tqdm
 import numpy as np
 import pickle
-import fid_capish_config_to_test as capish_config_to_test
+import capish_config_to_test
 
 def save_pickle(dat, filename, **kwargs):
     file = open(filename,'wb')
@@ -31,13 +31,16 @@ simulator = simulation.UniverseSimulator(
                             variable_params_names=['Omega_m'])
 
 def f_to_map(n):
+    np.random.seed(n)
     print(f"Starting simulation" +str(n), flush=True)
-    return simulator.run_simulation([float(config_file['ini_file']['parameters']['Omega_m'])])
+    return simulator.run_simulation_halo_catalogue([float(config_file['ini_file']['parameters']['Omega_m'])])
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []
-for i in range(100):
-    res = f_to_map(i)
-    print(res)
-    results.append(res)
-save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/capish_sims_at_fiducial_cosmology/'+config_file['name']+'.pkl')
+log10m_edges = np.linspace(13.5, 16, 10)
+z_edges = np.linspace(0.2, 1.2, 5)
+for i in range(200):
+    log10m_true, z_true = f_to_map(i)
+    Ni = np.histogram2d(log10m_true, z_true, bins = [log10m_edges, z_edges])
+    results.append(Ni)
+save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/count_from_halo_catalogue_default_capish.pkl')

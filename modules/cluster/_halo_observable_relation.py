@@ -25,6 +25,7 @@ class HaloToObservables:
         self.M_min = M_min
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
+        self.gaussian_lensing_variable = config_new['cluster_catalogue']['gaussian_lensing_variable']
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
         self.params_mWL_mean = params_mWL_mean
@@ -69,7 +70,7 @@ class HaloToObservables:
 
         return alpha_mwl + beta_mwl * log10M + gamma_mwl * np.log10(1 + z)
 
-    def generate_observables_from_halo(self, log10M, z, WL_random='Mwl'):
+    def generate_observables_from_halo(self, log10M, z):
         """
         Generate mock observables for a halo given its mass and redshift.
     
@@ -122,18 +123,20 @@ class HaloToObservables:
         lnobs = mean_lnobs + lnobs_noise
     
         # Sample weak-lensing mass conditional on lnobs
-        if WL_random == 'log10Mwl':
+        if self.gaussian_lensing_variable == 'log10Mwl':
             cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
             log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
     
-        elif WL_random == 'Mwl':
+        elif self.gaussian_lensing_variable == 'Mwl':
             #bettet for large scatter, otherwise will shift the mean mass
             mean_mWL = 10 ** mean_log10mWL
-            sigma_mWL = sigma_log10mWL * np.log(10) * log10M
+            m = 10 ** log10M
+            sigma_mWL = sigma_log10mWL * (np.log(10) * m) #conversion
             cond_mean_mWL = mean_mWL + rho * (sigma_mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_mWL = sigma_mWL * np.sqrt(1 - rho**2)
             Mwl = cond_mean_mWL + np.random.normal(loc=0, scale=cond_sigma_mWL)
+            Mwl = np.maximum(Mwl, 1e-5) #ensure that the mass is positive
             log10Mwl = np.log10(Mwl)
     
         # Perturb redshift if photometric scatter is enabled
@@ -142,7 +145,3 @@ class HaloToObservables:
     
         # Return observable in linear space, weak-lensing mass, and redshift
         return np.exp(lnobs), log10Mwl, z
-
-
-    
-    
