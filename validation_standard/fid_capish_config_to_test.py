@@ -37,6 +37,14 @@ config_2bis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
 config_2bis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_2bis['name'] = 'default_capish_Gamma_0.7_WL_noise'
 
+config_2bisbis = {}
+config_2bisbis['ini_file'] = clone_config(default_config_capish)
+config_2bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
+config_2bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+config_2bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+config_2bisbis['ini_file']['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'True'
+config_2bisbis['name'] = 'default_capish_Gamma_0.7_WL_noise_model'
+
 config_3 = {}
 config_3['ini_file'] = clone_config(default_config_capish)
 config_3['ini_file']['summary_statistics']['Gamma'] = '0.7'
@@ -79,7 +87,7 @@ config_5['ini_file']['summary_statistics']['Gamma'] = '0.7'
 config_5['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
 config_5['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_5['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'True'
-config_5['ini_file']['parameters']['rho'] = '-0.1'
+config_5['ini_file']['parameters']['rho_0'] = '-0.1'
 config_5['name'] = 'rho_m0.1'
 
 config_5bis = {}
@@ -88,7 +96,7 @@ config_5bis['ini_file']['summary_statistics']['Gamma'] = '0.7'
 config_5bis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
 config_5bis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_5bis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'True'
-config_5bis['ini_file']['parameters']['rho'] = '0.1'
+config_5bis['ini_file']['parameters']['rho_0'] = '0.1'
 config_5bis['name'] = 'rho_p0.1'
 
 config_5bisbis = {}
@@ -97,10 +105,10 @@ config_5bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
 config_5bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
 config_5bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_5bisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'True'
-config_5bisbis['ini_file']['parameters']['rho'] = '0.2'
+config_5bisbis['ini_file']['parameters']['rho_0'] = '0.2'
 config_5bisbis['name'] = 'rho_p0.2'
 
-config = [config_1, config_2, config_2bis,  config_3,
+config = [config_1, config_2, config_2bis, config_2bisbis, config_3,
            config_4,config_4bis,config_4bisbis,
            config_5,config_5bis,config_5bisbis]
 
