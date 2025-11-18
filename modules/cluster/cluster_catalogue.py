@@ -168,8 +168,12 @@ class ClusterCatalogue:
         mass_def=mass_def
         delta=delta
         cM=default_config['cluster_catalogue']["concentration_mass_relation"]
-        name = './cluster/model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl'
-        
+
+        # Use absolute path relative to this file's location
+        import os
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        name = os.path.join(module_dir, 'model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl')
+
         name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
         try:
             import clmm

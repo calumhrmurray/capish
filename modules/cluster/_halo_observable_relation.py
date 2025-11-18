@@ -23,7 +23,7 @@ class HaloToObservables:
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.M_min = M_min
-        self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl']
+        self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
