@@ -1,5 +1,4 @@
 import numpy as np
-import sys, os
 import pickle
 from scipy.interpolate import RegularGridInterpolator
 import pyccl as ccl
@@ -7,8 +6,7 @@ from . import _completeness
 from . import _halo_observable_relation
 from . import _purity
 from . import _selection
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import utils
+import modules.utils as utils
 
 class ClusterCatalogue:
      

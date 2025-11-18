@@ -1,0 +1,82 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Wed Nov  5 09:23:54 PM CET 2025
+* Job name:             flagship_sbi
+* Job id:               12659312
+* User:                 cmurray
+* Account:              euclid
+* Submit host:          cca014
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0022
+* Operating System:     Red Hat Enterprise Linux release 9.6 (Plow)
+* Architecture:         x86_64
+**********************************************************************
+========================================================================
+FLAGSHIP SBI JOB CONFIGURATION
+========================================================================
+Number of simulations: 100
+Config path: /pbs/home/c/cmurray/cluster_likelihood/config/capish.ini
+Output suffix: flagship
+SLURM Job ID: 12659312
+Number of CPUs: 20
+Memory allocated: 64000 MB
+========================================================================
+======================================================================
+RUNNING SBI FOR FLAGSHIP CLUSTER ANALYSIS
+======================================================================
+Configuration file: /pbs/home/c/cmurray/cluster_likelihood/config/capish.ini
+Number of simulations: 100
+Output suffix: flagship
+======================================================================
+
+Initializing simulator...
+Simulator initialized successfully
+
+Prior ranges:
+  Omega_m: [0.1, 0.6]
+  sigma8: [0.7, 0.9]
+  alpha_lambda: [-10.0, -8.5]
+  beta_lambda: [0.6, 0.9]
+
+Running SBI with 100 simulations...
+Generating simulation samples from prior...
+Running simulations (this may take a while)...
+  Progress: 50/100 (50.0%) - Elapsed: 2.2m - ETA: 2.2m - NaNs: 40
+  Progress: 100/100 (100.0%) - Elapsed: 4.1m - ETA: 0.0m - NaNs: 80
+
+Simulations completed in 4.1 minutes
+Average time per simulation: 2.48 seconds
+Total NaN/Inf simulations: 81/100 (81.0%)
+
+WARNING: Only 19 valid simulations!
+Consider:
+  1. Narrowing prior ranges further
+  2. Increasing total number of simulations
+  3. Checking for issues in the simulator
+
+Training neural density estimator...
+SBI will automatically exclude NaN/Inf simulations...
+ Training neural network. Epochs trained: 1 Training neural network. Epochs trained: 2 Training neural network. Epochs trained: 3 Training neural network. Epochs trained: 4 Training neural network. Epochs trained: 5 Training neural network. Epochs trained: 6 Training neural network. Epochs trained: 7 Training neural network. Epochs trained: 8 Training neural network. Epochs trained: 9 Training neural network. Epochs trained: 10 Training neural network. Epochs trained: 11 Training neural network. Epochs trained: 12 Training neural network. Epochs trained: 13 Training neural network. Epochs trained: 14 Training neural network. Epochs trained: 15 Training neural network. Epochs trained: 16 Training neural network. Epochs trained: 17 Training neural network. Epochs trained: 18 Training neural network. Epochs trained: 19 Training neural network. Epochs trained: 20 Training neural network. Epochs trained: 21 Training neural network. Epochs trained: 22 Training neural network. Epochs trained: 23 Training neural network. Epochs trained: 24 Training neural network. Epochs trained: 25 Training neural network. Epochs trained: 26 Training neural network. Epochs trained: 27 Training neural network. Epochs trained: 28 Training neural network. Epochs trained: 29 Training neural network. Epochs trained: 30 Training neural network. Epochs trained: 31 Training neural network. Epochs trained: 32 Training neural network. Epochs trained: 33 Training neural network. Epochs trained: 34 Neural network successfully converged after 34 epochs.
+SBI training completed!
+
+Saving posterior to: /sps/euclid/Users/cmurray/clusters_likelihood/posterior_estimator_flagship.pkl
+
+Done! Posterior saved successfully.
+======================================================================
+========================================================================
+Job completed at Wed Nov  5 09:29:56 PM CET 2025
+========================================================================
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Wed Nov  5 09:29:56 PM CET 2025
+Job informations can be found using these commands:
+Accounting:
+sacct -j 12659312
+Efficiency:
+seff 12659312
+****************************************************************

@@ -5,10 +5,10 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import copy
 import configparser
-from halo.halo_catalogue import HaloCatalogue
-from cluster.cluster_catalogue import ClusterCatalogue
-from summary_statistics.summary_statistics import SummaryStatistics
-import utils
+from modules.halo.halo_catalogue import HaloCatalogue
+from modules.cluster.cluster_catalogue import ClusterCatalogue
+from modules.summary_statistics.summary_statistics import SummaryStatistics
+import modules.utils as utils
 
 class UniverseSimulator:
     
