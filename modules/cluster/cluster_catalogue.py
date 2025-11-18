@@ -71,7 +71,7 @@ class ClusterCatalogue:
         if config_new['cluster_catalogue']['add_completeness']=='True':
             u = np.random.random(len(log10m_true))
             mask = u < _completeness.completeness(log10m_true, z_true, params = params_completeness)
-            log10m_true, z_true = log10m_true[mask], z_true[mask]
+            richness, log10mWL, z_obs = richness[mask], log10mWL[mask], z_obs[mask]
 
         if config_new['cluster_catalogue']['add_purity']=='True': 
             richness_edges = np.logspace(np.log10(20), np.log10(300), 70) 
@@ -169,11 +169,12 @@ class ClusterCatalogue:
         delta=delta
         cM=default_config['cluster_catalogue']["concentration_mass_relation"]
 
-        # Use absolute path relative to this file's location
-        import os
-        module_dir = os.path.dirname(os.path.abspath(__file__))
-        name = os.path.join(module_dir, 'model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl')
+        here = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.join(here, "")
+        os.makedirs(base_dir, exist_ok=True)
 
+        name = os.path.join(base_dir, "model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl")
+        print(name)
         name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
         try:
             import clmm
@@ -193,7 +194,8 @@ class ClusterCatalogue:
                 with open(name_to_save, 'wb') as f:
                     pickle.dump(sigma_interp, f)
                     
-            else: print(f"{name_to_save} already exists, skipping.")
+            else: 
+                print(f"{name_to_save} already exists, skipping.")
             
         except ImportError:
             

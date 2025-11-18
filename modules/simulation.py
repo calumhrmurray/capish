@@ -1,8 +1,8 @@
 import numpy as np
 import pyccl as ccl
 import itertools
-import sys
-import os 
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import copy
 import configparser
 from modules.halo.halo_catalogue import HaloCatalogue

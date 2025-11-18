@@ -24,4 +24,4 @@ def completeness(log10m, z, params = None):
 
     ratio = 10**log10m / (10**log10mc)
     
-    return ratio ** nc /(1+ratio ** nc)
+    return ratio ** nc /(1 + ratio ** nc)

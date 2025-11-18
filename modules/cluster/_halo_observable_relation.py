@@ -16,20 +16,20 @@ class HaloToObservables:
         params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
         params_mWL_mean = [float(parameters['alpha_mwl']), float(parameters['beta_mwl']), float(parameters['gamma_mwl'])]
         params_mWL_sigma = [float(parameters['sigma_Mwl_gal']), float(parameters['sigma_Mwl_int'])]
-        rho_obs_mWL = float(parameters['rho'])
         which_mass_richness_rel = config_new['cluster_catalogue.mass_observable_relation']['which_relation']
-
+        params_rho_mWL = [float(parameters['rho_0']), float(parameters['rho_A']), float(parameters['rho_alpha']), float(parameters['rho_log10m0'])]
         add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.M_min = M_min
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
+        self.gaussian_lensing_variable = config_new['cluster_catalogue']['gaussian_lensing_variable']
         self.params_observable_mean = params_observable_mean
         self.params_observable_sigma = params_observable_sigma
         self.params_mWL_mean = params_mWL_mean
         self.params_mWL_sigma = params_mWL_sigma
-        self.rho_obs_mWL = rho_obs_mWL
+        self.rho_obs_mWL_params = params_rho_mWL
         self.add_photoz = add_photoz
         self.photoz_params = photoz_params
         self.which_mass_richness_rel = which_mass_richness_rel
@@ -69,7 +69,11 @@ class HaloToObservables:
 
         return alpha_mwl + beta_mwl * log10M + gamma_mwl * np.log10(1 + z)
 
-    def generate_observables_from_halo(self, log10M, z, WL_random='Mwl'):
+    def rho_mWL_f(self, log10m, z, rho_params):
+        rho_0, rho_A, rho_alpha, rho_log10m0 = rho_params
+        return rho_0 + rho_A * np.exp(- rho_alpha * (log10m - rho_log10m0))
+
+    def generate_observables_from_halo(self, log10M, z):
         """
         Generate mock observables for a halo given its mass and redshift.
     
@@ -110,7 +114,7 @@ class HaloToObservables:
             sigma2 = self.sigma_log10Mwl_gal_interp(log10M, z) ** 2 + sigma_mWLint ** 2
             sigma_log10mWL = sigma2 ** .5
     
-        rho = self.rho_obs_mWL
+        rho = self.rho_mWL_f(log10M, z, self.rho_obs_mWL_params)
     
         # Include extra term in observable scatter (optional)
         sigma_lnobs2 = sigma_lnobs**2
@@ -122,18 +126,20 @@ class HaloToObservables:
         lnobs = mean_lnobs + lnobs_noise
     
         # Sample weak-lensing mass conditional on lnobs
-        if WL_random == 'log10Mwl':
+        if self.gaussian_lensing_variable == 'log10Mwl':
             cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
             log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
     
-        elif WL_random == 'Mwl':
+        elif self.gaussian_lensing_variable == 'Mwl':
             #bettet for large scatter, otherwise will shift the mean mass
             mean_mWL = 10 ** mean_log10mWL
-            sigma_mWL = sigma_log10mWL * np.log(10) * log10M
+            m = 10 ** log10M
+            sigma_mWL = sigma_log10mWL * (np.log(10) * m) #conversion
             cond_mean_mWL = mean_mWL + rho * (sigma_mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_mWL = sigma_mWL * np.sqrt(1 - rho**2)
             Mwl = cond_mean_mWL + np.random.normal(loc=0, scale=cond_sigma_mWL)
+            Mwl = np.maximum(Mwl, 1e-5) #ensure that the mass is positive
             log10Mwl = np.log10(Mwl)
     
         # Perturb redshift if photometric scatter is enabled
@@ -142,7 +148,3 @@ class HaloToObservables:
     
         # Return observable in linear space, weak-lensing mass, and redshift
         return np.exp(lnobs), log10Mwl, z
-
-
-    
-    
