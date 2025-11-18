@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/pbs/home/c/cmurray/cluster_likelihood/notebooks/calum/scripts/run_sbi_parallel.py", line 34, in <module>
+    from sbi import utils as sbi_utils
+ModuleNotFoundError: No module named 'sbi'

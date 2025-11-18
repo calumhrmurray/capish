@@ -1,0 +1,53 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Tue Nov 18 05:20:39 PM CET 2025
+* Job name:             capish_sbi_parallel
+* Job id:               14174139
+* User:                 cmurray
+* Account:              lsst
+* Submit host:          cca013
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0017
+* Operating System:     Red Hat Enterprise Linux release 9.6 (Plow)
+* Architecture:         x86_64
+**********************************************************************
+==================================================
+Capish Parallel SBI Training
+==================================================
+Job ID: 14174139
+Node: ccwpslurm0017
+Start time: Tue Nov 18 05:20:39 PM CET 2025
+CPUs allocated: 20
+Memory allocated: 65536 MB
+==================================================
+
+Python version:
+Python 3.11.14
+
+Environment: capish
+
+Running command:
+python run_sbi_parallel.py --n-sims 10000 --n-cores 20 --checkpoint-interval 1000 --output-name flagship_posterior_14174139
+
+==================================================
+
+
+==================================================
+Job completed with exit code: 1
+End time: Tue Nov 18 05:23:48 PM CET 2025
+Total runtime: 3 minutes 9 seconds
+==================================================
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Tue Nov 18 05:23:48 PM CET 2025
+Job informations can be found using these commands:
+Accounting:
+sacct -j 14174139
+Efficiency:
+seff 14174139
+****************************************************************
