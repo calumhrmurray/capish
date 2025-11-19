@@ -31,9 +31,8 @@ sys.path.insert(0, os.path.abspath('../../../'))
 
 import configparser
 from modules.simulation_parallel import ParallelSimulator
-from sbi import utils as sbi_utils
-from sbi import analysis as analysis
-from sbi.inference.base import infer
+from sbi.utils import BoxUniform
+from sbi.inference import SNPE
 import torch
 
 
@@ -103,11 +102,11 @@ def define_prior():
     torch.distributions.Distribution
         Prior distribution over parameters
     """
-    # Prior ranges (matching flagship_analysis.ipynb)
-    prior_min = torch.tensor([0.2, 0.7, -10.0, 0.6])   # [Omega_m, sigma8, alpha_lambda, beta_lambda]
-    prior_max = torch.tensor([0.4, 0.9, -8.5, 0.9])
+    # Prior ranges (widened for better parameter space coverage)
+    prior_min = torch.tensor([0.15, 0.65, -10.5, 0.5])   # [Omega_m, sigma8, alpha_lambda, beta_lambda]
+    prior_max = torch.tensor([0.45, 0.95, -8.0, 1.0])
 
-    prior = sbi_utils.BoxUniform(low=prior_min, high=prior_max)
+    prior = BoxUniform(low=prior_min, high=prior_max)
 
     return prior
 
@@ -246,13 +245,18 @@ def train_posterior(theta, x, prior, method='SNPE'):
     theta_torch = torch.tensor(theta, dtype=torch.float32)
     x_torch = torch.tensor(x, dtype=torch.float32)
 
-    # Train posterior
-    posterior = infer(
-        theta_torch,
-        x_torch,
-        prior,
-        method=method
+    # Train posterior using SNPE
+    inference = SNPE(prior=prior)
+
+    # Adaptive batch size based on number of samples
+    training_batch_size = min(50, max(10, len(theta) // 10))
+
+    density_estimator = inference.append_simulations(theta_torch, x_torch).train(
+        training_batch_size=training_batch_size
     )
+    posterior = inference.build_posterior(density_estimator)
+
+    print(f"Training completed successfully!")
 
     return posterior
 

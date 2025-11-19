@@ -1,0 +1,9 @@
+Capish SBI Training Summary
+======================================================================
+
+Total simulations: 10000
+Successful: 5930
+Failed: 4070
+Success rate: 59.30%
+Elapsed time: 1249.2 seconds (20.8 minutes)
+Average time per simulation: 0.12 seconds
