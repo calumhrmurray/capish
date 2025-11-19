@@ -158,9 +158,9 @@ samples = posterior.sample((10000,), x=x_obs_torch)
 
 # Analyze
 import matplotlib.pyplot as plt
-from sbi import analysis
+from sbi import analysis as sbi_analysis
 
-fig = analysis.pairplot(samples, labels=['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda'])
+fig = sbi_analysis.pairplot(samples, labels=['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda'])
 plt.show()
 ```
 
@@ -258,6 +258,38 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 - Increase time limit: `#SBATCH --time=04:00:00`
 - Use checkpointing and resume
 - Reduce number of simulations
+
+## SBI API Reference
+
+The pipeline uses the modern `sbi` library API (v0.19+):
+
+**Correct imports:**
+```python
+from sbi.utils import BoxUniform
+from sbi.inference import SNPE  # Or SNLE, SNRE
+```
+
+**Training workflow:**
+```python
+# 1. Define prior
+prior = BoxUniform(low=torch.tensor([...]), high=torch.tensor([...]))
+
+# 2. Run simulations to get (theta, x) pairs
+theta = ... # Parameter samples
+x = ...     # Summary statistics
+
+# 3. Train posterior
+inference = SNPE(prior=prior)
+density_estimator = inference.append_simulations(theta, x).train()
+posterior = inference.build_posterior(density_estimator)
+
+# 4. Sample from posterior given observed data
+samples = posterior.sample((n_samples,), x=x_observed)
+```
+
+**Deprecated (DO NOT USE):**
+- ❌ `from sbi.inference.base import infer` - This API no longer exists
+- ❌ `from sbi import utils as sbi_utils` - Use specific imports instead
 
 ## Technical Details
 

@@ -1,0 +1,125 @@
+**********************************************************************
+*                         SLURM Batch System                         *
+*              IN2P3 Computing Centre, Villeurbanne FR               *
+**********************************************************************
+* Date:                 Tue Nov 18 05:26:47 PM CET 2025
+* Job name:             capish_sbi_parallel
+* Job id:               14175061
+* User:                 cmurray
+* Account:              lsst
+* Submit host:          cca013
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0017
+* Operating System:     Red Hat Enterprise Linux release 9.6 (Plow)
+* Architecture:         x86_64
+**********************************************************************
+==================================================
+Capish Parallel SBI Training
+==================================================
+Job ID: 14175061
+Node: ccwpslurm0017
+Start time: Tue Nov 18 05:26:47 PM CET 2025
+CPUs allocated: 20
+Memory allocated: 65536 MB
+==================================================
+
+Python version:
+Python 3.11.14
+
+Environment: capish
+
+Running command:
+python run_sbi_parallel.py --n-sims 10000 --n-cores 20 --checkpoint-interval 1000 --output-name flagship_posterior_14175061
+
+==================================================
+
+
+======================================================================
+CAPISH PARALLEL SBI TRAINING
+======================================================================
+Start time: 2025-11-18 17:27:39
+Method: SNPE
+Number of simulations: 10000
+Number of cores: 20
+Random seed: 42
+======================================================================
+
+
+======================================================================
+RUNNING PARALLEL SIMULATIONS
+======================================================================
+Total simulations: 10000
+CPU cores: 20
+Checkpoint interval: 1000
+Checkpoint path: checkpoints/flagship_posterior_14175061_checkpoint.pkl
+======================================================================
+
+
+Checkpoint saved: 1000 simulations completed
+
+Checkpoint saved: 2000 simulations completed
+
+Checkpoint saved: 3000 simulations completed
+
+Checkpoint saved: 4000 simulations completed
+
+Checkpoint saved: 5000 simulations completed
+
+Checkpoint saved: 6000 simulations completed
+
+Checkpoint saved: 7000 simulations completed
+
+Checkpoint saved: 8000 simulations completed
+
+Checkpoint saved: 9000 simulations completed
+
+Checkpoint saved: 10000 simulations completed
+
+======================================================================
+SIMULATION SUMMARY
+======================================================================
+Total simulations: 10000
+Successful: 5930
+Failed (NaN/Inf): 4070
+Success rate: 59.30%
+Total time: 1249.2 seconds (20.8 minutes)
+Average per simulation: 0.12 seconds
+======================================================================
+
+
+======================================================================
+TRAINING SNPE POSTERIOR
+======================================================================
+Training samples: 5930
+Feature dimension: 40
+======================================================================
+
+ Training neural network. Epochs trained: 1 Training neural network. Epochs trained: 2 Training neural network. Epochs trained: 3 Training neural network. Epochs trained: 4 Training neural network. Epochs trained: 5 Training neural network. Epochs trained: 6 Training neural network. Epochs trained: 7 Training neural network. Epochs trained: 8 Training neural network. Epochs trained: 9 Training neural network. Epochs trained: 10 Training neural network. Epochs trained: 11 Training neural network. Epochs trained: 12 Training neural network. Epochs trained: 13 Training neural network. Epochs trained: 14 Training neural network. Epochs trained: 15 Training neural network. Epochs trained: 16 Training neural network. Epochs trained: 17 Training neural network. Epochs trained: 18 Training neural network. Epochs trained: 19 Training neural network. Epochs trained: 20 Training neural network. Epochs trained: 21 Training neural network. Epochs trained: 22 Training neural network. Epochs trained: 23 Training neural network. Epochs trained: 24 Training neural network. Epochs trained: 25 Training neural network. Epochs trained: 26 Training neural network. Epochs trained: 27 Training neural network. Epochs trained: 28 Training neural network. Epochs trained: 29 Training neural network. Epochs trained: 30 Training neural network. Epochs trained: 31 Training neural network. Epochs trained: 32 Training neural network. Epochs trained: 33 Training neural network. Epochs trained: 34 Training neural network. Epochs trained: 35 Training neural network. Epochs trained: 36 Training neural network. Epochs trained: 37 Training neural network. Epochs trained: 38 Training neural network. Epochs trained: 39 Training neural network. Epochs trained: 40 Training neural network. Epochs trained: 41 Training neural network. Epochs trained: 42 Training neural network. Epochs trained: 43 Training neural network. Epochs trained: 44 Training neural network. Epochs trained: 45 Training neural network. Epochs trained: 46 Training neural network. Epochs trained: 47 Training neural network. Epochs trained: 48 Training neural network. Epochs trained: 49 Training neural network. Epochs trained: 50 Training neural network. Epochs trained: 51 Training neural network. Epochs trained: 52 Training neural network. Epochs trained: 53 Training neural network. Epochs trained: 54 Training neural network. Epochs trained: 55 Training neural network. Epochs trained: 56 Training neural network. Epochs trained: 57 Training neural network. Epochs trained: 58 Training neural network. Epochs trained: 59 Training neural network. Epochs trained: 60 Training neural network. Epochs trained: 61 Training neural network. Epochs trained: 62 Training neural network. Epochs trained: 63 Training neural network. Epochs trained: 64 Training neural network. Epochs trained: 65 Training neural network. Epochs trained: 66 Training neural network. Epochs trained: 67 Training neural network. Epochs trained: 68 Training neural network. Epochs trained: 69 Training neural network. Epochs trained: 70 Training neural network. Epochs trained: 71 Training neural network. Epochs trained: 72 Training neural network. Epochs trained: 73 Training neural network. Epochs trained: 74 Training neural network. Epochs trained: 75 Training neural network. Epochs trained: 76 Training neural network. Epochs trained: 77 Training neural network. Epochs trained: 78 Training neural network. Epochs trained: 79 Training neural network. Epochs trained: 80 Training neural network. Epochs trained: 81 Training neural network. Epochs trained: 82 Training neural network. Epochs trained: 83 Training neural network. Epochs trained: 84 Training neural network. Epochs trained: 85 Training neural network. Epochs trained: 86 Training neural network. Epochs trained: 87 Training neural network. Epochs trained: 88 Training neural network. Epochs trained: 89 Training neural network. Epochs trained: 90 Training neural network. Epochs trained: 91 Training neural network. Epochs trained: 92 Training neural network. Epochs trained: 93 Training neural network. Epochs trained: 94 Training neural network. Epochs trained: 95 Training neural network. Epochs trained: 96 Training neural network. Epochs trained: 97 Training neural network. Epochs trained: 98 Training neural network. Epochs trained: 99 Training neural network. Epochs trained: 100 Neural network successfully converged after 100 epochs.Training completed successfully!
+
+Simulation results saved: outputs/flagship_posterior_14175061_simulations.pkl
+Posterior saved: outputs/flagship_posterior_14175061.pkl
+Summary saved: outputs/flagship_posterior_14175061_summary.txt
+
+======================================================================
+COMPLETED SUCCESSFULLY
+End time: 2025-11-18 17:49:47
+======================================================================
+
+
+==================================================
+Job completed with exit code: 0
+End time: Tue Nov 18 05:49:48 PM CET 2025
+Total runtime: 23 minutes 1 seconds
+==================================================
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Tue Nov 18 05:49:48 PM CET 2025
+Job informations can be found using these commands:
+Accounting:
+sacct -j 14175061
+Efficiency:
+seff 14175061
+****************************************************************
