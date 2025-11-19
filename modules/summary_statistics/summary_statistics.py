@@ -1,7 +1,9 @@
 import numpy as np
 import pyccl as ccl
 from scipy import stats
-import modules.utils as utils
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '../')
+import utils
 
 class SummaryStatistics:
      
