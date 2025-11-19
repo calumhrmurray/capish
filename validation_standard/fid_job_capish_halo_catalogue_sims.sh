@@ -5,10 +5,10 @@
 #SBATCH --partition=htc               # Partition choice
 #SBATCH --ntasks=9                    # Run a single task (by default tasks == CPU)
 #SBATCH --mem=3000                    # Memory in MB per default
-#SBATCH --time=0-00:20:00             # 7 days by default on htc partition
+#SBATCH --time=0-01:00:00             # 7 days by default on htc partition
 #SBATCH --array=0-0
 ID=$SLURM_ARRAY_TASK_ID
 source /pbs/home/c/cpayerne/setup_mydesc.sh
 
-python _run_simulations_halo_catalogue.py $ID
+python fid_run_simulations_halo_catalogue.py $ID
 

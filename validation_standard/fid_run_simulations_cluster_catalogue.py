@@ -36,7 +36,7 @@ def f_to_map(n):
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []
-for i in range(200):
+for i in range(100):
     res = f_to_map(i)
     print(res)
     results.append(res)
