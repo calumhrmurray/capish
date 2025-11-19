@@ -25,6 +25,12 @@ config_1 = {}
 config_1['ini_file'] = clone_config(default_config_capish)
 config_1['name'] = 'default_capish_Gamma_1.0_noWL_noise'
 
+config_1bis = {}
+config_1bis['ini_file'] = clone_config(default_config_capish)
+config_1bis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+config_1bis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+config_1bis['name'] = 'default_capish_Gamma_1.0_WL_noise'
+
 config_2 = {}
 config_2['ini_file'] = clone_config(default_config_capish)
 config_2['ini_file']['summary_statistics']['Gamma'] = '0.7'
@@ -108,8 +114,20 @@ config_5bisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'T
 config_5bisbis['ini_file']['parameters']['rho_0'] = '0.2'
 config_5bisbis['name'] = 'rho_p0.2'
 
-config = [config_1, config_2, config_2bis, config_2bisbis, config_3,
+config_5bisbisbis = {}
+config_5bisbisbis['ini_file'] = clone_config(default_config_capish)
+config_5bisbisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
+config_5bisbisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+config_5bisbisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+config_5bisbisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'True'
+config_5bisbisbis['ini_file']['parameters']['rho_0'] = '0.0'
+config_5bisbisbis['ini_file']['parameters']['rho_A'] = '0.3'
+config_5bisbisbis['ini_file']['parameters']['rho_alpha'] = '2'
+config_5bisbisbis['ini_file']['parameters']['rho_log10m0'] = '13.3'
+config_5bisbisbis['name'] = 'rho_model'
+
+config = [config_1, config_1bis, config_2, config_2bis, config_2bisbis, config_3,
            config_4,config_4bis,config_4bisbis,
-           config_5,config_5bis,config_5bisbis]
+           config_5,config_5bis,config_5bisbis, config_5bisbisbis]
 
 print(config_5['ini_file']['parameters']['sigma_Mwl_gal'])
