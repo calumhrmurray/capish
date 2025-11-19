@@ -1,5 +1,4 @@
 import numpy as np
-import sys, os
 import pickle
 from scipy.interpolate import RegularGridInterpolator
 import pyccl as ccl
@@ -7,8 +6,8 @@ from . import _completeness
 from . import _halo_observable_relation
 from . import _purity
 from . import _selection
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import utils
+import modules.utils as utils
+import os
 
 class ClusterCatalogue:
      
@@ -180,31 +179,47 @@ class ClusterCatalogue:
         name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
         try:
             import clmm
-            sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid, 
-                                                            cosmo_ccl_fid, 
-                                                           Rmin=Rmin, Rmax=Rmax, 
+            sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid,
+                                                            cosmo_ccl_fid,
+                                                           Rmin=Rmin, Rmax=Rmax,
                                                            ngal_arcmin2=ngal_arcmin2, shape_noise=shape_noise,
                                                            delta=delta, mass_def=mass_def,
                                                            cM = cM)
-        
+
             self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
 
-            sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                            self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-            
+            # Save data arrays instead of scipy object for version compatibility
             if not os.path.exists(name_to_save):
                 with open(name_to_save, 'wb') as f:
-                    pickle.dump(sigma_interp, f)
-                    
-            else: 
+                    pickle.dump({
+                        'log10m_grid': self.log10m_grid,
+                        'z_grid': self.z_grid,
+                        'sigma_log10M': self.sigma_log10M
+                    }, f)
+                    print(f"Saved {name_to_save}")
+            else:
                 print(f"{name_to_save} already exists, skipping.")
-            
+
         except ImportError:
-            
-            print(f"clmm not found - load {name_to_save}")
+            print(f"clmm not found - loading from {name_to_save}")
             with open(name_to_save, 'rb') as f:
-                sigma_interp = pickle.load(f)
-                
+                data = pickle.load(f)
+                # Handle both old format (scipy object) and new format (dict)
+                if isinstance(data, dict):
+                    self.log10m_grid = data['log10m_grid']
+                    self.z_grid = data['z_grid']
+                    self.sigma_log10M = data['sigma_log10M']
+                else:
+                    # Old format - try to extract data, but this might fail
+                    raise RuntimeError(
+                        f"Old pickle format detected. Please install clmm to regenerate {name_to_save}, "
+                        f"or delete the file and provide clmm for regeneration."
+                    )
+
+        # Create interpolator from the data
+        sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
+                        self.sigma_log10M, bounds_error=False, fill_value=np.nan)
+
         def sigma_log10M_interp(log10m_array, z_array):
             points = np.column_stack([log10m_array, z_array])
             return sigma_interp(points)

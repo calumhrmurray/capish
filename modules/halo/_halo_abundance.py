@@ -70,8 +70,8 @@ class HaloAbundance():
             differential comoving volume 
         """
         a = 1./(1. + z)
-        da = ccl.background.angular_diameter_distance(cosmo, a)
-        ez = ccl.background.h_over_h0(cosmo, a) 
+        da = ccl.angular_diameter_distance(cosmo, a)
+        ez = ccl.h_over_h0(cosmo, a) 
         dh = ccl.physical_constants.CLIGHT_HMPC / cosmo['h']
         dVdzdOmega_value = dh * da * da/( ez * a ** 2)
         return dVdzdOmega_value
