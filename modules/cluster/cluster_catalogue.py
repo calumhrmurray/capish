@@ -29,68 +29,50 @@ class ClusterCatalogue:
         Initialize the ClusterCatalogue class with the given settings.
         """
         self.default_config = default_config
-        if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal']=='True':
+        if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal'] == 'True':
 
-            mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
-            delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
-    
-            Rmin=float(default_config['cluster_catalogue']["DeltaSigma_Rmin"])
-            Rmax=float(default_config['cluster_catalogue']["DeltaSigma_Rmax"])
-            ngal_arcmin2=float(default_config['cluster_catalogue']["ngal_arcmin2"])
-            shape_noise=float(default_config['cluster_catalogue']["shape_noise"])
-            mass_def=mass_def
-            delta=delta
-            cM=default_config['cluster_catalogue']["concentration_mass_relation"]
-
-            here = os.path.dirname(os.path.abspath(__file__))
-            base_dir = os.path.join(here, "")
-            os.makedirs(base_dir, exist_ok=True)
-    
-            name = os.path.join(base_dir, "model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl")
-            name = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
-
-            if self.default_config['cluster_catalogue']['recompute_theory_sigma_Mwl_gal']=='True':
-                print('recomputing theory_sigma_Mwl_gal')
-                
+            name = self.name_sigma_Mwl(self.default_config)
+            recompute = self.default_config['cluster_catalogue']['recompute_theory_sigma_Mwl_gal'] == 'True'
+        
+            if recompute:
+                print("Recomputing theory_sigma_Mwl_gal...")
+        
                 self.define_log10Mwl_error_model(default_config)
-                
-                sigma_log10Mwl_gal_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                        self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-
-                to_save = dict()
-                to_save['log10m'] = self.log10m_grid
-                to_save['z'] = self.z_grid
-                to_save['sigma_log10M_grid'] = self.sigma_log10M
-
+        
+                to_save = {'log10m': self.log10m_grid,
+                            'z': self.z_grid,
+                            'sigma_log10M_grid': self.sigma_log10M }
+        
                 save_pickle(to_save, name)
-
-                def sigma_log10Mwl_gal_interp_fct(log10m_array, z_array):
-                    points = np.column_stack([log10m_array, z_array])
-                    return sigma_log10Mwl_gal_interp(points)
-                
-                self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp_fct
-            
+        
             else:
-                print('loading ' , name)
+                print(f"Loading {name}")
                 file = load_pickle(name)
                 self.log10m_grid = file['log10m']
                 self.z_grid = file['z']
                 self.sigma_log10M = file['sigma_log10M_grid']
-                sigma_log10Mwl_gal_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                        self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-
-                def sigma_log10Mwl_gal_interp_fct(log10m_array, z_array):
-                    points = np.column_stack([log10m_array, z_array])
-                    return sigma_log10Mwl_gal_interp(points)
-
-                self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp_fct
-
-        else: 
+        
+            # Build interpolator
+            sigma_log10Mwl_gal_interp = RegularGridInterpolator(
+                                                    (self.log10m_grid, self.z_grid),
+                                                    self.sigma_log10M,
+                                                    bounds_error=False,
+                                                    fill_value=np.nan)
+        
+            # Wrap interpolator into your callable function
+            def sigma_log10Mwl_gal_interp_fct(log10m_array, z_array):
+                points = np.column_stack((log10m_array, z_array))
+                return sigma_log10Mwl_gal_interp(points)
+        
+            self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp_fct
+    
+        else:
+            
             self.log10m_grid = None
             self.z_grid = None
-            self.sigma_log10M_grid = None
+            self.sigma_log10M = None
             self.sigma_log10Mwl_gal_interp = None
-            
+                
         return None
     
     def get_cluster_catalogue(self, log10m_true, z_true, config_new):
@@ -212,12 +194,12 @@ class ClusterCatalogue:
         """
         log10m_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
                                       float( default_config['halo_catalogue']['log10m_max']),
-                                      int( 10 ) )
+                                      int( 20 ) )
         log10m_grid_center = (log10m_grid[:-1] + log10m_grid[1:]) / 2
         #redshift grid
         z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
                                     float( default_config['halo_catalogue']['z_max'] ),
-                                    int( 10 ) )
+                                    int( 20 ) )
         z_grid_center = (z_grid[:-1] + z_grid[1:]) / 2
         
         cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
@@ -246,3 +228,23 @@ class ClusterCatalogue:
 
         self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
         return None
+
+    def name_sigma_Mwl(self,default_config):
+        mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
+        delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
+    
+        Rmin=float(default_config['cluster_catalogue']["DeltaSigma_Rmin"])
+        Rmax=float(default_config['cluster_catalogue']["DeltaSigma_Rmax"])
+        ngal_arcmin2=float(default_config['cluster_catalogue']["ngal_arcmin2"])
+        shape_noise=float(default_config['cluster_catalogue']["shape_noise"])
+        mass_def=mass_def
+        delta=delta
+        cM=default_config['cluster_catalogue']["concentration_mass_relation"]
+    
+        here = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.join(here, "")
+        os.makedirs(base_dir, exist_ok=True)
+    
+        name = os.path.join(base_dir, "model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl")
+        name = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
+        return name
