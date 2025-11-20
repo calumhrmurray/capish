@@ -2,16 +2,12 @@ import numpy as np
 import pickle
 from scipy.interpolate import RegularGridInterpolator
 import pyccl as ccl
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from . import _completeness
 from . import _halo_observable_relation
 from . import _purity
 from . import _selection
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '../')
-import utils
-
+import modules.utils as utils
+import os
 
 def save_pickle(dat, filename, **kwargs):
     file = open(filename,'wb')
