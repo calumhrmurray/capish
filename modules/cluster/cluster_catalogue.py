@@ -9,6 +9,15 @@ from . import _selection
 import modules.utils as utils
 import os
 
+def save_pickle(dat, filename, **kwargs):
+    file = open(filename,'wb')
+    pickle.dump(dat, file)
+    file.close()
+    
+def load_pickle(filename, **kwargs):
+    with open(filename, 'rb') as fin:
+        return pickle.load(fin, **kwargs)
+
 class ClusterCatalogue:
      
     def __init__( self , default_config):
@@ -16,14 +25,50 @@ class ClusterCatalogue:
         Initialize the ClusterCatalogue class with the given settings.
         """
         self.default_config = default_config
+        if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal'] == 'True':
 
-        if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal']=='True':
-            self.define_log10Mwl_error_model(default_config)
-            self.sigma_log10Mwl_gal_interp = self.sigma_log10Mwl_gal_interp
-
-        else: 
-            self.sigma_log10Mwl_gal_interp = None
+            name = self.name_sigma_Mwl(self.default_config)
+            recompute = self.default_config['cluster_catalogue']['recompute_theory_sigma_Mwl_gal'] == 'True'
+        
+            if recompute:
+                print("Recomputing theory_sigma_Mwl_gal...")
+        
+                self.define_log10Mwl_error_model(default_config)
+        
+                to_save = {'log10m': self.log10m_grid,
+                            'z': self.z_grid,
+                            'sigma_log10M_grid': self.sigma_log10M }
+        
+                save_pickle(to_save, name)
+        
+            else:
+                print(f"Loading {name}")
+                file = load_pickle(name)
+                self.log10m_grid = file['log10m']
+                self.z_grid = file['z']
+                self.sigma_log10M = file['sigma_log10M_grid']
+        
+            # Build interpolator
+            sigma_log10Mwl_gal_interp = RegularGridInterpolator(
+                                                    (self.log10m_grid, self.z_grid),
+                                                    self.sigma_log10M,
+                                                    bounds_error=False,
+                                                    fill_value=np.nan)
+        
+            # Wrap interpolator into your callable function
+            def sigma_log10Mwl_gal_interp_fct(log10m_array, z_array):
+                points = np.column_stack((log10m_array, z_array))
+                return sigma_log10Mwl_gal_interp(points)
+        
+            self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp_fct
+    
+        else:
             
+            self.log10m_grid = None
+            self.z_grid = None
+            self.sigma_log10M = None
+            self.sigma_log10Mwl_gal_interp = None
+                
         return None
     
     def get_cluster_catalogue(self, log10m_true, z_true, config_new):
@@ -145,12 +190,12 @@ class ClusterCatalogue:
         """
         log10m_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
                                       float( default_config['halo_catalogue']['log10m_max']),
-                                      int( 10 ) )
+                                      int( 20 ) )
         log10m_grid_center = (log10m_grid[:-1] + log10m_grid[1:]) / 2
         #redshift grid
         z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
                                     float( default_config['halo_catalogue']['z_max'] ),
-                                    int( 10 ) )
+                                    int( 20 ) )
         z_grid_center = (z_grid[:-1] + z_grid[1:]) / 2
         
         cosmo_ccl_fid = ccl.Cosmology( Omega_c = float( default_config['halo_catalogue']['Omega_c_fiducial'] ), 
@@ -170,58 +215,32 @@ class ClusterCatalogue:
         delta=delta
         cM=default_config['cluster_catalogue']["concentration_mass_relation"]
 
+        sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid,
+                                                                cosmo_ccl_fid,
+                                                                Rmin=Rmin, Rmax=Rmax,
+                                                                ngal_arcmin2=ngal_arcmin2, shape_noise=shape_noise,
+                                                                delta=delta, mass_def=mass_def,
+                                                                cM = cM)
+
+        self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
+        return None
+
+    def name_sigma_Mwl(self,default_config):
+        mass_def = default_config['halo_catalogue']["mass_def_overdensity_type"]
+        delta = int(default_config['halo_catalogue']["mass_def_overdensity_delta"])
+    
+        Rmin=float(default_config['cluster_catalogue']["DeltaSigma_Rmin"])
+        Rmax=float(default_config['cluster_catalogue']["DeltaSigma_Rmax"])
+        ngal_arcmin2=float(default_config['cluster_catalogue']["ngal_arcmin2"])
+        shape_noise=float(default_config['cluster_catalogue']["shape_noise"])
+        mass_def=mass_def
+        delta=delta
+        cM=default_config['cluster_catalogue']["concentration_mass_relation"]
+    
         here = os.path.dirname(os.path.abspath(__file__))
         base_dir = os.path.join(here, "")
         os.makedirs(base_dir, exist_ok=True)
-
+    
         name = os.path.join(base_dir, "model_log10mWL_Rmin{}_Rmax{}_ngal{}_ShapeNoise{}_M{}{}_cM{}.pkl")
-        print(name)
-        name_to_save = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
-        try:
-            import clmm
-            sigma_log10M = utils.model_error_log10m_one_cluster(log10m_grid, z_grid,
-                                                            cosmo_ccl_fid,
-                                                           Rmin=Rmin, Rmax=Rmax,
-                                                           ngal_arcmin2=ngal_arcmin2, shape_noise=shape_noise,
-                                                           delta=delta, mass_def=mass_def,
-                                                           cM = cM)
-
-            self.log10m_grid, self.z_grid, self.sigma_log10M = log10m_grid, z_grid, sigma_log10M
-
-            # Save data arrays instead of scipy object for version compatibility
-            if not os.path.exists(name_to_save):
-                with open(name_to_save, 'wb') as f:
-                    pickle.dump({
-                        'log10m_grid': self.log10m_grid,
-                        'z_grid': self.z_grid,
-                        'sigma_log10M': self.sigma_log10M
-                    }, f)
-                    print(f"Saved {name_to_save}")
-            else:
-                print(f"{name_to_save} already exists, skipping.")
-
-        except ImportError:
-            print(f"clmm not found - loading from {name_to_save}")
-            with open(name_to_save, 'rb') as f:
-                data = pickle.load(f)
-                # Handle both old format (scipy object) and new format (dict)
-                if isinstance(data, dict):
-                    self.log10m_grid = data['log10m_grid']
-                    self.z_grid = data['z_grid']
-                    self.sigma_log10M = data['sigma_log10M']
-                else:
-                    # Old format - try to extract data, but this might fail
-                    raise RuntimeError(
-                        f"Old pickle format detected. Please install clmm to regenerate {name_to_save}, "
-                        f"or delete the file and provide clmm for regeneration."
-                    )
-
-        # Create interpolator from the data
-        sigma_interp = RegularGridInterpolator((self.log10m_grid, self.z_grid),
-                        self.sigma_log10M, bounds_error=False, fill_value=np.nan)
-
-        def sigma_log10M_interp(log10m_array, z_array):
-            points = np.column_stack([log10m_array, z_array])
-            return sigma_interp(points)
-
-        self.sigma_log10Mwl_gal_interp = sigma_log10M_interp
+        name = name.format(Rmin, Rmax, ngal_arcmin2, shape_noise, delta, mass_def, cM)
+        return name
