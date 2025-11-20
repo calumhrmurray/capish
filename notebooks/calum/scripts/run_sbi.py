@@ -54,8 +54,8 @@ def main():
     # Define priors
     # Wide ranges for cosmology, stricter ranges for mass-richness parameters to avoid NaN issues
     prior = BoxUniform(
-        low=torch.tensor([0.1, 0.5, -10.0, 0.6]),
-        high=torch.tensor([0.6, 1.0, -8.5, 0.9])
+        low=torch.tensor([0.1, 0.5, -10.0, 0.6, 0.1]),
+        high=torch.tensor([0.6, 1.0, -8.5, 0.9, 0.5])
     )
 
     print("\nPrior ranges:")
@@ -63,7 +63,8 @@ def main():
         'Omega_m': [0.1, 0.6],
         'sigma8': [0.5, 1.0],
         'alpha_lambda': [-10.0, -8.5],
-        'beta_lambda': [0.6, 0.9]
+        'beta_lambda': [0.6, 0.9],
+        'sigma_lambda': [0.1, 0.5]
     }
     for param, bounds in prior_ranges.items():
         print(f"  {param}: [{bounds[0]}, {bounds[1]}]")

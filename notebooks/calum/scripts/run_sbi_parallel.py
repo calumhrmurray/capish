@@ -81,8 +81,8 @@ def create_simulator(config_path='../../../config/capish_flagship.ini'):
     config = configparser.ConfigParser()
     config.read(config_path)
 
-    # Parameters to vary (matching flagship_analysis.ipynb)
-    variable_params_names = ['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda']
+    # Parameters to vary
+    variable_params_names = ['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda', 'sigma_lambda']
 
     # Create parallel simulator
     simulator = ParallelSimulator(
@@ -102,9 +102,10 @@ def define_prior():
     torch.distributions.Distribution
         Prior distribution over parameters
     """
-    # Prior ranges (widened for better parameter space coverage)
-    prior_min = torch.tensor([0.15, 0.65, -10.5, 0.5])   # [Omega_m, sigma8, alpha_lambda, beta_lambda]
-    prior_max = torch.tensor([0.45, 0.95, -8.0, 1.0])
+    # Prior ranges (matching run_sbi.py)
+    # Wide ranges for cosmology, stricter ranges for mass-richness parameters
+    prior_min = torch.tensor([0.1, 0.5, -10.0, 0.6, 0.1])   # [Omega_m, sigma8, alpha_lambda, beta_lambda, sigma_lambda]
+    prior_max = torch.tensor([0.6, 1.0, -8.5, 0.9, 0.5])
 
     prior = BoxUniform(low=prior_min, high=prior_max)
 
