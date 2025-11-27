@@ -63,56 +63,52 @@ def create_flagship_like_sims(config, name):
     t['mean_log10m200c'] = None
     
     np.save(f'flagship_like_summary_stat_{name}', t)
+    return None
 
-like=False
+def generate_simulation(theory_sigma_Mwl_gal,gaussian_lensing_variable, like):
 
-default_config_1 = copy.deepcopy(default_config)
-default_config_1['parameters']['sigma_Mwl_gal'] = '0.0'
-default_config_1['parameters']['sigma_Mwl_int'] = '0.0'
-default_config_1['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
-default_config_1['cluster_catalogue']['gaussian_lensing_variable'] = 'log10Mwl'
-default_config_1['summary_statistics']['Gamma'] = '1'
-if not like:
-    create_flagship_sims(default_config_1, 'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_log10Mwl')
-else: create_flagship_like_sims(default_config_1, 'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_log10Mwl')
+    if theory_sigma_Mwl_gal=='True':
+        suff_scatter = '_model'
+    else: suff_scatter = ''
 
-default_config_1['cluster_catalogue']['gaussian_lensing_variable'] = 'Mwl'
-if not like:
-    create_flagship_sims(default_config_1, 'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_Mwl')
-else: create_flagship_like_sims(default_config_1, 'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_Mwl')
+    default_config_1 = copy.deepcopy(default_config)
+    default_config_1['parameters']['sigma_Mwl_gal'] = '0.0'
+    default_config_1['parameters']['sigma_Mwl_int'] = '0.0'
+    default_config_1['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
+    default_config_1['cluster_catalogue']['gaussian_lensing_variable'] = gaussian_lensing_variable
+    default_config_1['summary_statistics']['Gamma'] = '1'
+    if not like:
+        create_flagship_sims(default_config_1, f'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_{gaussian_lensing_variable}')
+    else: create_flagship_like_sims(default_config_1, f'DES_MoR_no_Mwl_scatter_Gamma1_gaussian_lensing_variable_{gaussian_lensing_variable}')
+    
+    #######
+    default_config_2 = copy.deepcopy(default_config)
+    default_config_2['parameters']['sigma_Mwl_gal'] = '0.2'
+    default_config_2['parameters']['sigma_Mwl_int'] = '0.05'
+    default_config_2['cluster_catalogue']['theory_sigma_Mwl_gal'] = theory_sigma_Mwl_gal
+    default_config_2['cluster_catalogue']['gaussian_lensing_variable'] = gaussian_lensing_variable
+    default_config_2['summary_statistics']['Gamma'] = '1'
+    
+    if not like:
+        create_flagship_sims(default_config_2, f'DES_MoR_Mwl_scatter{suff_scatter}_Gamma1_gaussian_lensing_variable_{gaussian_lensing_variable}')
+    else: create_flagship_like_sims(default_config_2, f'DES_MoR_Mwl_scatter{suff_scatter}_Gamma1_gaussian_lensing_variable_{gaussian_lensing_variable}')
+    
+    
+    default_config_3 = copy.deepcopy(default_config)
+    default_config_3['parameters']['sigma_Mwl_gal'] = '0.2'
+    default_config_3['parameters']['sigma_Mwl_int'] = '0.5'
+    default_config_3['cluster_catalogue']['theory_sigma_Mwl_gal'] = theory_sigma_Mwl_gal
+    default_config_3['cluster_catalogue']['gaussian_lensing_variable'] = gaussian_lensing_variable
+    default_config_3['summary_statistics']['Gamma'] = '0.7'
+    if not like:
+        create_flagship_sims(default_config_3, f'DES_MoR_Mwl_scatter{suff_scatter}_Gamma0.7_gaussian_lensing_variable_{gaussian_lensing_variable}')
+    else: create_flagship_like_sims(default_config_3, f'DES_MoR_Mwl_scatter{suff_scatter}_Gamma0.7_gaussian_lensing_variable_{gaussian_lensing_variable}')
 
-#######
-default_config_2 = copy.deepcopy(default_config)
-default_config_2['parameters']['sigma_Mwl_gal'] = '0.2'
-default_config_2['parameters']['sigma_Mwl_int'] = '0.05'
-default_config_2['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
-default_config_2['cluster_catalogue']['gaussian_lensing_variable'] = 'log10Mwl'
-default_config_2['summary_statistics']['Gamma'] = '1'
-
-if not like:
-    create_flagship_sims(default_config_2, 'DES_MoR_Mwl_scatter_Gamma1_gaussian_lensing_variable_log10Mwl')
-else: create_flagship_like_sims(default_config_2, 'DES_MoR_Mwl_scatter_Gamma1_gaussian_lensing_variable_log10Mwl')
-
-default_config_2['cluster_catalogue']['gaussian_lensing_variable'] = 'Mwl'
-if not like:
-    create_flagship_sims(default_config_2, 'DES_MoR_Mwl_scatter_Gamma1_gaussian_lensing_variable_Mwl')
-else: create_flagship_like_sims(default_config_2, 'DES_MoR_Mwl_scatter_Gamma1_gaussian_lensing_variable_Mwl')
-
-default_config_3 = copy.deepcopy(default_config)
-default_config_3['parameters']['sigma_Mwl_gal'] = '0.2'
-default_config_3['parameters']['sigma_Mwl_int'] = '0.05'
-default_config_3['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
-default_config_3['cluster_catalogue']['gaussian_lensing_variable'] = 'log10Mwl'
-default_config_3['summary_statistics']['Gamma'] = '0.7'
-if not like:
-    create_flagship_sims(default_config_3, 'DES_MoR_Mwl_scatter_Gamma0.7_gaussian_lensing_variable_log10Mwl')
-else: create_flagship_like_sims(default_config_3, 'DES_MoR_Mwl_scatter_Gamma0.7_gaussian_lensing_variable_log10Mwl')
-
-default_config_3['cluster_catalogue']['gaussian_lensing_variable'] = 'Mwl'
-if not like:
-    create_flagship_sims(default_config_3, 'DES_MoR_Mwl_scatter_Gamma0.7_gaussian_lensing_variable_Mwl')
-else: create_flagship_like_sims(default_config_3, 'DES_MoR_Mwl_scatter_Gamma0.7_gaussian_lensing_variable_Mwl')
+    return None
+    
+generate_simulation('True','Mwl', False)
+generate_simulation('True','Mwl', True)
 
 
-
-
+    
+    
