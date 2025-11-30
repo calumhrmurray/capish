@@ -7,6 +7,7 @@ os.environ['NUMEXPR_NUM_THREADS'] = '1'
 import numpy as np
 import torch
 import pickle
+import argparse
 import time
 from datetime import datetime
 from pathlib import Path
@@ -15,18 +16,27 @@ import configparser
 from sbi.utils import BoxUniform
 from sbi.inference import SNPE
 
-import config_training
+import config_posterior_training
 
 sys.path.append('../')
 from modules.simulation_parallel import ParallelSimulator
 
+def parse_args():
+
+    parser = argparse.ArgumentParser(description='Run parallel SBI for Capish')
+    parser.add_argument('--config_to_train', type=str, default='', help='which to train ?')
+    parser.add_argument('--seed', type=int, default=20, help='seed')
+    parser.add_argument('--n_sims', type=int, default=20, help='number of simulations')
+    parser.add_argument('--n_cores', type=int, default=20, help='Number of CPU cores to use (default: 20)')
+    parser.add_argument('--checkpoint_interval', type=int, default=10, help='checkpoint_interval')
+
+    return parser.parse_args()
+
 def create_simulator(var_names, config_path, default_config):
     cfg = configparser.ConfigParser()
     cfg.read(config_path)
-    return ParallelSimulator(
-        default_config=cfg,
-        config_path=config_path,
-        variable_params_names=var_names)
+    return ParallelSimulator(default_config=cfg,config_path=config_path,
+                                    variable_params_names=var_names)
 
 def define_prior(prior_min, prior_max):
     return BoxUniform(
@@ -43,15 +53,15 @@ def flatten_summary_stats(x):
         return np.concatenate(flattened, axis=1)
     return x.reshape(len(x), -1)
 
-def run_simulations(sim, theta, n_cores, ckpt_dir, cfg):
-    ckpt_path = ckpt_dir / f"{cfg['output_name']}_checkpoint.pkl"
+def run_simulations(sim, theta, n_cores, ckpt_dir, output_name, checkpoint_interval):
+    ckpt_path = ckpt_dir / f"{output_name}_checkpoint.pkl"
     print(f"\nRunning {len(theta)} parallel simulations on {n_cores} cores.")
 
     return sim.run_batch_parallel(
         theta_batch=theta,
         n_cores=n_cores,
         checkpoint_path=ckpt_path,
-        checkpoint_interval=cfg['checkpoint_interval'],
+        checkpoint_interval=checkpoint_interval,
         desc="Simulations")
 
 def train_posterior(theta, x, prior, method="SNPE"):
@@ -71,13 +81,13 @@ def train_posterior(theta, x, prior, method="SNPE"):
 def save_results(results, posterior, out_dir, name):
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(out_dir / f"simulations.pkl", "wb") as f:
+    with open(out_dir / f"{name}simulations.pkl", "wb") as f:
         pickle.dump(results, f)
 
-    with open(out_dir / f"posterior.pkl", "wb") as f:
+    with open(out_dir / f"{name}posterior.pkl", "wb") as f:
         pickle.dump(posterior, f)
 
-    with open(out_dir / f"summary.txt", "w") as f:
+    with open(out_dir / f"{name}summary.txt", "w") as f:
         f.write("Capish SBI Summary\n")
         f.write("=" * 70 + "\n\n")
         f.write(f"Total simulations: {results['n_total']}\n")
@@ -91,23 +101,31 @@ def save_results(results, posterior, out_dir, name):
 # ------------------------------------------------------------
 
 def main():
-    _, index = sys.argv
-    cfg = config_training.config_list[int(index)]
 
-    np.random.seed(cfg['seed'])
-    torch.manual_seed(cfg['seed'])
+    args = parse_args()
+    name = args.config_to_train
+    n_sims = args.n_sims
+    ncores = int(args.n_cores)
+    seed = int(args.seed)
+    checkpoint_interval = int(args.checkpoint_interval)
+
+    
+    cfg = config_posterior_training.config_dict[name]
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
     checkpoint_dir = Path(cfg['checkpoint_dir'])
     output_dir = Path(cfg['output_dir'])
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    output_name = cfg["output_name"]
 
     print("\n" + "=" * 70)
     print("CAPISH PARALLEL SBI TRAINING")
     print("=" * 70)
     print(f"Start: {datetime.now():%Y-%m-%d %H:%M:%S}")
     print(f"Method: {cfg['method']}")
-    print(f"Simulations: {cfg['n_sims']}")
-    print(f"Cores: {cfg['n_cores']}")
+    print(f"Simulations: {n_sims}")
+    print(f"Cores: {ncores}")
     print("=" * 70)
 
     simulator = create_simulator(
@@ -122,10 +140,10 @@ def main():
         ckpt = ParallelSimulator.load_checkpoint(cfg['resume_from'])
         results = ckpt['results']
 
-        remaining = cfg['n_sims'] - ckpt['n_completed']
+        remaining = n_sims - ckpt['n_completed']
         if remaining > 0:
-            theta = sample_parameters(prior, remaining, cfg['seed'] + ckpt['n_completed'])
-            new = run_simulations(simulator, theta, cfg['n_cores'], checkpoint_dir, cfg)
+            theta = sample_parameters(prior, remaining, seed + ckpt['n_completed'])
+            new = run_simulations(simulator, theta, ncores, checkpoint_dir, output_name, checkpoint_interval)
 
             results['theta'] = np.vstack([results['theta'], new['theta']])
             results['failed_theta'] = np.vstack([results['failed_theta'], new['failed_theta']])
@@ -143,8 +161,8 @@ def main():
             results['success_rate'] = results['n_success'] / results['n_total']
 
     else:
-        theta = sample_parameters(prior, cfg['n_sims'], cfg['seed'])
-        results = run_simulations(simulator, theta, cfg['n_cores'], checkpoint_dir, cfg)
+        theta = sample_parameters(prior, n_sims, seed)
+        results = run_simulations(simulator, theta, ncores, checkpoint_dir, output_name, checkpoint_interval)
 
     print("Simulation Summary")
     print("=" * 70)
@@ -155,10 +173,20 @@ def main():
     print(f"Time: {results['elapsed_time']:.1f}s")
     print("=" * 70)
 
-    x_flat = flatten_summary_stats(results['x'])
-    posterior = train_posterior(results['theta'], x_flat, prior, cfg['method'])
+    x_tot = results['x']
+    x_count, x_mass = x_tot
 
-    save_results(results, posterior, output_dir, cfg['output_name'])
+    x_flat_tot = flatten_summary_stats(x_tot)
+    x_flat_count = flatten_summary_stats(x_count)
+    x_flat_mass = flatten_summary_stats(x_mass)
+    
+    posterior_tot = train_posterior(results['theta'], x_flat_tot, prior, cfg['method'])
+    posterior_count = train_posterior(results['theta'], x_flat_count, prior, cfg['method'])
+    posterior_mass = train_posterior(results['theta'], x_flat_mass, prior, cfg['method'])
+
+    save_results(results, posterior_tot, output_dir, 'count_mass'+cfg['output_name'] + '_')
+    save_results(results, posterior_count, output_dir, 'count'+cfg['output_name'] + '_')
+    save_results(results, posterior_mass, output_dir, 'mass'+cfg['output_name'] + '_')
 
     print("\nCompleted successfully.")
     print(f"End: {datetime.now():%Y-%m-%d %H:%M:%S}")
