@@ -173,20 +173,24 @@ def main():
     print(f"Time: {results['elapsed_time']:.1f}s")
     print("=" * 70)
 
-    x_tot = results['x']
-    x_count, x_mass = x_tot
+    x_count_log10m = results['x']
+    x_count, x_log10mass = x_count_log10m
+    x_count_Nmass = (x_count, x_count * 10 ** x_log10mass)
 
-    x_flat_tot = flatten_summary_stats(x_tot)
+    x_flat_count_log10m = flatten_summary_stats(x_count_log10m)
     x_flat_count = flatten_summary_stats(x_count)
-    x_flat_mass = flatten_summary_stats(x_mass)
+    x_flat_log10mass = flatten_summary_stats(x_log10mass)
+    x_flat_count_Nmass = flatten_summary_stats(x_count_Nmass)
     
-    posterior_tot = train_posterior(results['theta'], x_flat_tot, prior, cfg['method'])
+    posterior_count_log10m = train_posterior(results['theta'], x_flat_count_log10m, prior, cfg['method'])
     posterior_count = train_posterior(results['theta'], x_flat_count, prior, cfg['method'])
-    posterior_mass = train_posterior(results['theta'], x_flat_mass, prior, cfg['method'])
+    posterior_log10mass = train_posterior(results['theta'], x_flat_log10mass, prior, cfg['method'])
+    posterior_count_Nmass = train_posterior(results['theta'], x_flat_count_Nmass, prior, cfg['method'])
 
-    save_results(results, posterior_tot, output_dir, 'count_mass'+cfg['output_name'] + '_')
+    save_results(results, posterior_count_log10m, output_dir, 'count_log10mass'+cfg['output_name'] + '_')
     save_results(results, posterior_count, output_dir, 'count'+cfg['output_name'] + '_')
-    save_results(results, posterior_mass, output_dir, 'mass'+cfg['output_name'] + '_')
+    save_results(results, posterior_log10mass, output_dir, 'log10mass'+cfg['output_name'] + '_')
+    save_results(results, posterior_count_Nmass, output_dir, 'count_Nmass'+cfg['output_name'] + '_')
 
     print("\nCompleted successfully.")
     print(f"End: {datetime.now():%Y-%m-%d %H:%M:%S}")

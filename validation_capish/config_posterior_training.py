@@ -13,32 +13,34 @@ def clone_config(cfg):
 default_config_capish = configparser.ConfigParser()
 default_config_capish.read('../config/capish_flagship.ini')
 
-dparam = 0.001
-config_1 = {"name": 'narrow_prior_6_params',
+dparam = 0.0001
+config_1 = {"name": 'narrow_prior_1_param',
             "config.ini" : None,
             "config.ini_path" :  '../config/capish_flagship.ini',
             "output_name": "",
             "method": "SNPE",      
             "checkpoint_dir": "./posterior_training{}/checkpoint",
             "output_dir": "./posterior_training{}/",
-            "variable_params_names" : ['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda', 'sigma_lambda'],
-            "prior_min": [0.319 - dparam, 0.813 - dparam, -9.348 - dparam, 0.75 - dparam, 0.3 - dparam],
-            "prior_max": [0.319 + dparam, 0.813 + dparam, -9.348 + dparam, 0.75 + dparam, 0.3 + dparam],
+            "variable_params_names" : ['Omega_m'],
+            "prior_min": [0.319 - dparam,],
+            "prior_max": [0.319 + dparam,],
             "resume_from": None}
 
-config_2 = {"name": 'standard_prior_6_params',
+config_2 = {"name": 'standard_prior_2_params',
             "config.ini" : None,
             "config.ini_path" :  '../config/capish_flagship.ini',
             "output_name": "",
             "method": "SNPE",
             "checkpoint_dir": "./posterior_training{}/checkpoint",
             "output_dir": "./posterior_training{}/",
-            "variable_params_names" : ['Omega_m', 'sigma8', 'alpha_lambda', 'beta_lambda', 'sigma_lambda'],
-            "prior_min": [0.2, 0.5, -10, 0.0, 0.001],
-            "prior_max": [0.6, 1.0, -7, 2.0, 1],
+            "variable_params_names" : ['Omega_m', 'sigma8'],
+            "prior_min": [0.1, 0.2,],
+            "prior_max": [1.0, 1.0,],
             "resume_from": None}
 
 config_list = [config_1,config_2]
+
+#python run_sbi_parallel_from_config_posterior_training.py --config_to_train narrow_prior_1_param --seed 30 --n_sims 20 --checkpoint_interval 10
 
 
 for i in range(len(config_list)):
