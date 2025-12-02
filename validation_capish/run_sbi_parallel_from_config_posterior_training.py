@@ -78,23 +78,25 @@ def train_posterior(theta, x, prior, method="SNPE"):
 
     return inference.build_posterior(density_est)
 
-def save_results(results, posterior, out_dir, name):
+def save_results(results, posterior, out_dir, name, save_simulations=True, save_summary=True):
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(out_dir / f"{name}simulations.pkl", "wb") as f:
-        pickle.dump(results, f)
+    if save_simulations:
+        with open(out_dir / f"{name}simulations.pkl", "wb") as f:
+            pickle.dump(results, f)
 
     with open(out_dir / f"{name}posterior.pkl", "wb") as f:
         pickle.dump(posterior, f)
 
-    with open(out_dir / f"{name}summary.txt", "w") as f:
-        f.write("Capish SBI Summary\n")
-        f.write("=" * 70 + "\n\n")
-        f.write(f"Total simulations: {results['n_total']}\n")
-        f.write(f"Successful: {results['n_success']}\n")
-        f.write(f"Failed: {results['n_failed']}\n")
-        f.write(f"Success rate: {results['success_rate']:.2%}\n")
-        f.write(f"Elapsed time: {results['elapsed_time']:.1f}s\n")
+    if save_summary:
+        with open(out_dir / f"{name}summary.txt", "w") as f:
+            f.write("Capish SBI Summary\n")
+            f.write("=" * 70 + "\n\n")
+            f.write(f"Total simulations: {results['n_total']}\n")
+            f.write(f"Successful: {results['n_success']}\n")
+            f.write(f"Failed: {results['n_failed']}\n")
+            f.write(f"Success rate: {results['success_rate']:.2%}\n")
+            f.write(f"Elapsed time: {results['elapsed_time']:.1f}s\n")
 
 # ------------------------------------------------------------
 # Main
@@ -173,27 +175,25 @@ def main():
     print(f"Time: {results['elapsed_time']:.1f}s")
     print("=" * 70)
 
-    x_count_log10m = results['x']
-    x_count, x_log10mass = x_count_log10m
-    x_count_Nmass = (x_count, x_count * 10 ** x_log10mass)
+    x_count_log10mass = results['x']
+    x_count, x_log10mass = x_count_log10mass
+    x_Nmass = x_count * 10 ** x_log10mass
+    x_count_Nmass = (x_count, x_Nmass)
 
-    x_flat_count_log10m = flatten_summary_stats(x_count_log10m)
-    x_flat_count = flatten_summary_stats(x_count)
-    x_flat_log10mass = flatten_summary_stats(x_log10mass)
-    x_flat_count_Nmass = flatten_summary_stats(x_count_Nmass)
-    
-    posterior_count_log10m = train_posterior(results['theta'], x_flat_count_log10m, prior, cfg['method'])
-    posterior_count = train_posterior(results['theta'], x_flat_count, prior, cfg['method'])
-    posterior_log10mass = train_posterior(results['theta'], x_flat_log10mass, prior, cfg['method'])
-    posterior_count_Nmass = train_posterior(results['theta'], x_flat_count_Nmass, prior, cfg['method'])
+    x = [x_count, x_log10mass, x_Nmass, x_count_log10mass, x_count_Nmass]
+    x_label = ['count', 'log10mass', 'Nmass', 'count_log10mass', 'count_Nmass']
 
-    save_results(results, posterior_count_log10m, output_dir, 'count_log10mass'+cfg['output_name'] + '_')
-    save_results(results, posterior_count, output_dir, 'count'+cfg['output_name'] + '_')
-    save_results(results, posterior_log10mass, output_dir, 'log10mass'+cfg['output_name'] + '_')
-    save_results(results, posterior_count_Nmass, output_dir, 'count_Nmass'+cfg['output_name'] + '_')
-
+    for x_, x_label_ in zip(x, x_label):
+        x_flat_ = flatten_summary_stats(x_)
+        posterior_ = train_posterior(results['theta'], x_flat_, prior, cfg['method'])
+        save_results(results, posterior_, output_dir, x_label_+cfg['output_name'] + '_')
+   
     print("\nCompleted successfully.")
     print(f"End: {datetime.now():%Y-%m-%d %H:%M:%S}")
 
 if __name__ == "__main__":
     main()
+
+
+
+

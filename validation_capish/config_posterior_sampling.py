@@ -35,49 +35,88 @@ def run_posterior(config_sampling):
     os.system('mkdir ' + save_dir)
 
     posterior_count = load_pickle(load_dir + 'count_posterior.pkl')
-    posterior_mass = load_pickle(load_dir + 'mass_posterior.pkl')
-    posterior_count_mass = load_pickle(load_dir + 'count_mass_posterior.pkl')
+    posterior_log10mass = load_pickle(load_dir + 'log10mass_posterior.pkl')
+    posterior_Nmass = load_pickle(load_dir + 'Nmass_posterior.pkl')
+    posterior_count_log10mass = load_pickle(load_dir + 'count_log10mass_posterior.pkl')
+    posterior_count_Nmass = load_pickle(load_dir + 'count_Nmass_posterior.pkl')
 
     count = config_sampling["data_vector_count"].reshape(-1)
-    log10mass = config_sampling["data_vector_mass"].reshape(-1)
+    log10mass = config_sampling["data_vector_log10mass"].reshape(-1)
+    Nmass = count * 10 ** log10mass
     count_log10mass = np.concatenate([count, log10mass])
-    count_Nmass = np.concatenate([count, count * 10 ** log10mass])
+    count_Nmass = np.concatenate([count, Nmass])
     
     observed_data_tensor_count = torch.tensor(count, dtype=torch.float32)
     observed_data_tensor_log10mass = torch.tensor(log10mass, dtype=torch.float32)
+    observed_data_tensor_Nmass = torch.tensor(Nmass, dtype=torch.float32)
     observed_data_tensor_count_log10mass = torch.tensor(count_log10mass, dtype=torch.float32)
     observed_data_tensor_count_Nmass = torch.tensor(count_Nmass, dtype=torch.float32)
 
-    num_samples = 500000
+    obs = [observed_data_tensor_count, 
+           observed_data_tensor_log10mass, 
+           observed_data_tensor_Nmass, 
+           observed_data_tensor_count_log10mass, 
+           observed_data_tensor_count_Nmass]
+    
+    post = [posterior_count, 
+            posterior_log10mass, 
+            posterior_Nmass, 
+            posterior_count_log10mass, 
+            posterior_count_Nmass]
+    
+    label =  ['count', 
+              'log10m', 
+              'Nm', 
+              'count+log10m', 
+              'count+N*m']
 
-    # ---- Sampling ----
-    posterior_count_samples_np = posterior_count.sample((num_samples,), x=observed_data_tensor_count).cpu().numpy()
-    posterior_log10mass_samples_np = posterior_log10mass.sample((num_samples,), x=observed_data_tensor_log10mass).cpu().numpy()
-    posterior_count_log10mass_samples_np = posterior_count_log10mass.sample((num_samples,), x=observed_data_tensor_count_log10mass).cpu().numpy()
-    posterior_count_Nmass_samples_np = posterior_count_Nmass.sample((num_samples,), x=observed_data_tensor_count_Nmass).cpu().numpy()
+    for obs_, post_, label_ in zip(obs, post, label):
+        print("#####################")
+        print()
+        num_samples = 500000
+        posterior_samples = post_.sample((num_samples,), x=obs_).cpu().numpy()
+        param = np.mean(posterior_samples[400000:], axis=0)
+        std = np.std(posterior_samples[400000:], axis=0)
+        print('test case=', label_)
+        print()
+        params = config_training["variable_params_names"]
+        for i, p in enumerate(params):
+            print(p, ' : ', param[i], ' pm ', std[i])
+        print()
 
-    print(np.mean(posterior_count_samples_np[100000:], axis=0))
-    print(np.mean(posterior_log10mass_samples_np[100000:], axis=0))
-    print(np.mean(posterior_count_log10mass_samples_np[10000:], axis=0))
-    print(np.mean(posterior_count_Nmass_samples_np[10000:], axis=0))
+        samples = posterior_samples[400000:]   # burn-in removed
+
+    # Compute correlation matrix (params x params)
+        corr = np.corrcoef(samples, rowvar=False)
+        print("Parameter Correlations:")
+        for i in range(len(params)):
+            for j in range(len(params)):
+                if j <= i: continue
+                print(f"corr({params[i]}, {params[j]}) = {corr[i,j]:.4f}")
+        print()
+        print("#####################")
 
     # ---- Saving ----
-    save_pickle(posterior_count_samples_np, save_dir + "count_posterior_samples.pkl")
-    save_pickle(posterior_mass_samples_np, save_dir + "mass_posterior_samples.pkl")
-    save_pickle(posterior_count_log10mass_samples_np, save_dir + "count_log10mass_posterior_samples.pkl")
-    save_pickle(posterior_count_Mmass_samples_np, save_dir + "count_Nmass_posterior_samples.pkl")
+    #save_pickle(posterior_count_samples_np, save_dir + "count_posterior_samples.pkl")
+    #save_pickle(posterior_mass_samples_np, save_dir + "mass_posterior_samples.pkl")
+    #save_pickle(posterior_count_log10mass_samples_np, save_dir + "count_log10mass_posterior_samples.pkl")
+    #save_pickle(posterior_count_Mmass_samples_np, save_dir + "count_Nmass_posterior_samples.pkl")
 
     return None
 
-data = load_pickle('./posterior_training_narrow_prior_2_params/count_mass_simulations.pkl')
+data = load_pickle('./posterior_training_narrow_prior_1_param/count_log10mass_simulations.pkl')
 count =  np.mean(data['x'][0], axis=0)
-mass = np.mean(data['x'][1], axis=0)
+log10mass = np.mean(data['x'][1], axis=0)
 
 default_config_capish = configparser.ConfigParser()
 default_config_capish.read('../config/capish_internal_validation.ini')
 config_sampling_1 = {"data_vector_infos": "flagship_like_sim",
-                     "config_training" : 'standard_prior_6_params',
+                     "config_training" : 'standard_prior_2_params',
                      "data_vector_count" :count,
-                     "data_vector_mass" : mass,}
+                     "data_vector_log10mass" : log10mass,}
+config_sampling_2 = {"data_vector_infos": "flagship_like_sim",
+                     "config_training" : 'standard_prior_5_params',
+                     "data_vector_count" :count,
+                     "data_vector_log10mass" : log10mass,}
 
 run_posterior(config_sampling_1)
