@@ -67,8 +67,8 @@ def run_posterior(config_sampling):
     label =  ['count', 
               'log10m', 
               'Nm', 
-              'count+log10m', 
-              'count+N*m']
+              'count_log10m', 
+              'count_Nm']
 
     for obs_, post_, label_ in zip(obs, post, label):
         print("#####################")
@@ -97,10 +97,8 @@ def run_posterior(config_sampling):
         print("#####################")
 
     # ---- Saving ----
-    #save_pickle(posterior_count_samples_np, save_dir + "count_posterior_samples.pkl")
-    #save_pickle(posterior_mass_samples_np, save_dir + "mass_posterior_samples.pkl")
-    #save_pickle(posterior_count_log10mass_samples_np, save_dir + "count_log10mass_posterior_samples.pkl")
-    #save_pickle(posterior_count_Mmass_samples_np, save_dir + "count_Nmass_posterior_samples.pkl")
+        save_pickle(posterior_samples, save_dir + label_ + "_posterior_samples.pkl")
+   
 
     return None
 
@@ -119,4 +117,4 @@ config_sampling_2 = {"data_vector_infos": "flagship_like_sim",
                      "data_vector_count" :count,
                      "data_vector_log10mass" : log10mass,}
 
-run_posterior(config_sampling_1)
+run_posterior(config_sampling_2)

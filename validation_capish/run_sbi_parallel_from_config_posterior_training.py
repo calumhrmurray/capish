@@ -33,10 +33,10 @@ def parse_args():
     return parser.parse_args()
 
 def create_simulator(var_names, config_path, default_config):
-    cfg = configparser.ConfigParser()
-    cfg.read(config_path)
-    return ParallelSimulator(default_config=cfg,config_path=config_path,
-                                    variable_params_names=var_names)
+
+    return ParallelSimulator(default_config=default_config,
+                             config_path=config_path,
+                             variable_params_names=var_names)
 
 def define_prior(prior_min, prior_max):
     return BoxUniform(

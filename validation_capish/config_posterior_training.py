@@ -34,7 +34,7 @@ default_config_capish.read('../config/capish_flagship.ini')
 dparam = 0.00005
 config_1 = {"name": 'narrow_prior_1_param',
             "config.ini" : None,
-            "config.ini_path" :  '../config/capish_flagship.ini',
+            "config.ini_path" : '../config/capish_flagship.ini',
             "output_name": "",
             "method": "SNPE",      
             "checkpoint_dir": "./posterior_training{}/checkpoint",
@@ -43,6 +43,8 @@ config_1 = {"name": 'narrow_prior_1_param',
             "prior_min": [0.319 - dparam,],
             "prior_max": [0.319 + dparam,],
             "resume_from": None}
+
+#python run_sbi_parallel_from_config_posterior_training.py --config_to_train narrow_prior_1_param --seed 30 --n_sims 20 --checkpoint_interval 10 --n_cores 3
 
 config_2 = {"name": 'standard_prior_2_params',
             "config.ini" : None,
@@ -77,8 +79,6 @@ config_3 = {"name": 'standard_prior_5_params',
             "resume_from": None}
 
 config_list = [config_1,config_2,config_3]
-
-#python run_sbi_parallel_from_config_posterior_training.py --config_to_train narrow_prior_1_param --seed 30 --n_sims 200 --checkpoint_interval 10 --n_cores 3
 
 
 for i in range(len(config_list)):
