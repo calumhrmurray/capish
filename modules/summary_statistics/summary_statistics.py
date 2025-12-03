@@ -34,16 +34,23 @@ class SummaryStatistics:
 
         if config_new['summary_statistics']['summary_statistic'] == 'binned_count_mean_mass':
 
-            Wz = self.W_zl_f(z_obs)
-            bins = [self.richness_edges, self.redshift_edges,]
-            count_stat, x_edges, y_edges, _ = stats.binned_statistic_2d(richness, z_obs, None, statistic='count',bins=bins)
-            mask = log10mWL != None
-            mass_gamma = np.array((10 ** log10mWL[mask]) ** self.Gamma,dtype=float)
-            sum_w_mass_gamma_stat, _, _, _ = stats.binned_statistic_2d(richness[mask], z_obs[mask], Wz[mask] * mass_gamma, statistic='sum', bins=bins)
-            sum_w_stat, _, _, _ = stats.binned_statistic_2d(richness, z_obs, Wz, statistic='sum', bins=bins)
-            mean_mass_stat = np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
-            # Set NaN masses (from empty bins) to zero
-            mean_mass_stat = np.nan_to_num(mean_mass_stat, nan=0.0)
+            if len(richness) == 0:
+                nr = len(self.richness_edges) - 1
+                nz = len(self.redshift_edges) - 1
+                count_stat = np.zeros((nr, nz))
+                mean_mass_stat = np.zeros((nr, nz))
+                #because stats.binned_statistic_2d() only works with non-empty lists
+            else:
+                Wz = self.W_zl_f(z_obs)
+                bins = [self.richness_edges, self.redshift_edges,]
+                count_stat, x_edges, y_edges, _ = stats.binned_statistic_2d(richness, z_obs, None, statistic='count',bins=bins)
+                mask = log10mWL != None
+                mass_gamma = np.array((10 ** log10mWL[mask]) ** self.Gamma,dtype=float)
+                sum_w_mass_gamma_stat, _, _, _ = stats.binned_statistic_2d(richness[mask], z_obs[mask], Wz[mask] * mass_gamma, statistic='sum', bins=bins)
+                sum_w_stat, _, _, _ = stats.binned_statistic_2d(richness, z_obs, Wz, statistic='sum', bins=bins)
+                mean_mass_stat = np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
+                # Set NaN masses (from empty bins) to zero
+                mean_mass_stat = np.nan_to_num(mean_mass_stat, nan=0.0)
             return count_stat, mean_mass_stat 
             
         if config_new['summary_statistics']['summary_statistic'] == '3d_count':
