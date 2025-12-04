@@ -41,14 +41,12 @@ config_simulation_1 = {"config.ini" : None,
                        "output_name": "", 
                        "checkpoint_dir": "./config_sbi{}/checkpoint",
                        "output_dir": "./config_sbi{}/",
-                       "variable_params_names" : ['Omega_m','sigma8','alpha_lambda' ,
-                                               'beta_lambda', 'sigma_lambda'],
-                       "prior_min"  : [0.1, 0.3,-11.0, 0.0, 0.0],
-                       "prior_max"  : [1.0, 1.0,-6.0,  2.0, 1.0],
+                       "variable_params_names" : ['Omega_m','sigma8'],
+                       "prior_min"  : [0.2, 0.6],
+                       "prior_max"  : [0.5, 0.9],
                        "resume_from": None}
-
-config_train_1 ={"method": "SNPE"}
-config_baseline_1 = {"name"            : 'standard_prior_5_params',
+config_train_1 ={"method": "NPE"}
+config_baseline_1 = {"name"            : 'standard_prior_2_params',
                     'config_simulation': config_simulation_1,
                     'config_train'     : config_train_1,}
 
@@ -56,7 +54,28 @@ config_baseline_1 = {"name"            : 'standard_prior_5_params',
 ########################################################################
 ########################################################################
 
-config_list = [config_baseline, config_baseline_1]
+config_simulation_2 = {"config.ini" : None,
+                       "config.ini_path" : '../config/capish_flagship.ini',
+                       "output_name": "", 
+                       "checkpoint_dir": "./config_sbi{}/checkpoint",
+                       "output_dir": "./config_sbi{}/",
+                       "variable_params_names" : ['Omega_m','sigma8','alpha_lambda' ,
+                                               'beta_lambda', 'sigma_lambda'],
+                       "prior_min"  : [0.2, 0.6, -12.0, 0.0, 0.0],
+                       "prior_max"  : [0.5, 0.9,  -6.0, 2.0, 1.0],
+                       "resume_from": None}
+config_train_2 ={"method": "NPE"}
+config_baseline_2 = {"name"            : 'standard_prior_5_params',
+                    'config_simulation': config_simulation_2,
+                    'config_train'     : config_train_2,}
+
+########################################################################
+########################################################################
+########################################################################
+
+config_list = [config_baseline, 
+               config_baseline_1,
+               config_baseline_2]
 
 for i in range(len(config_list)):
     config_list[i]['config_simulation']['output_dir'] = config_list[i]['config_simulation']["output_dir"].format('_'+config_list[i]["name"])
@@ -64,6 +83,6 @@ for i in range(len(config_list)):
 
 config_dict = {config_list[i]['name']: config_list[i] for i in range(len(config_list))}
 
-#python sbi_run_simulations.py --config_to_simulate narrow_prior_1_param --seed 30 --n_sims 20 --checkpoint_interval 10 --n_cores 3
+#python sbi_run_simulations.py --config_to_simulate narrow_prior_1_param --seed 30 --n_sims 200 --checkpoint_interval 10 --n_cores 3
 
 #python sbi_train_posteriors.py --config_to_train narrow_prior_1_param

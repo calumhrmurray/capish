@@ -92,24 +92,30 @@ def train():
 
     #alone
     x_count      = results['x'][0]
+    x_log10mass  = results['x'][1]
     x_Nlog10mass = results['x'][0] * results['x'][1]
     x_Nmass      = results['x'][0] * 10 ** results['x'][1]
     #together
-    x_count_Nlog10mass = (x_count, x_count * x_Nlog10mass)
+    x_count_log10mass = (x_count, x_log10mass)
+    x_count_Nlog10mass = (x_count, x_Nlog10mass)
     x_count_Nmass = (x_count, x_count * 10 ** results['x'][1])
 
-    x = [x_count, x_Nlog10mass, x_Nmass, 
-         x_count_Nlog10mass, x_count_Nmass]
+    x = [x_count,x_log10mass, 
+         x_Nlog10mass, x_Nmass, 
+         x_count_log10mass, x_count_Nlog10mass, x_count_Nmass]
     
-    x_label = ['count', 'Nlog10mass', 'Nmass',
-               'count_Nlog10mass', 'count_Nmass']
+    x_label = ['count','log10mass', 
+               'Nlog10mass', 'Nmass',
+               'count_log10mass', 'count_Nlog10mass', 'count_Nmass']
 
     prior = define_prior(cfg_sims['prior_min'], cfg_sims['prior_max'])
 
     for x_, x_label_ in zip(x, x_label):
         x_flat_ = flatten_summary_stats(x_)
+        name = cfg_sims['output_dir'] +  '/' + x_label_ + f"_trained_posterior.pkl"
+        if os.path.exists(name): continue
         posterior_ = train_posterior(results['theta'], x_flat_, prior, cfg_train['method'])
-        with open(cfg_sims['output_dir'] +  '/' + x_label_ + f"_trained_posterior.pkl", "wb") as f:
+        with open(name, "wb") as f:
             pickle.dump(posterior_, f)
    
     print("\nCompleted successfully.")
