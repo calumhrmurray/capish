@@ -10,5 +10,5 @@ Train posteriors
 
 Choose a data vector to test for sampling the posterior
 - `CONFIG_sample = narrow_prior_1_param` (in the `config_posterior_sampling.py` file)
-- `python sbi_sample_posteriors.py --config_to_simulate CONFIG_sample`
+- `python sbi_sample_posteriors.py --config_to_sample CONFIG_sample`
   

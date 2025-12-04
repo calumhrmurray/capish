@@ -15,12 +15,12 @@ def load_pickle(filename, **kwargs):
         return pickle.load(fin,  )
 
 data = load_pickle('./config_sbi_narrow_prior_1_param/simulations.pkl')
-count =  np.mean(data['x'][0], axis=0)
+count =  np.mean(data['x'][0], axis=0) 
 log10mass = np.mean(data['x'][1], axis=0)
 
-config_sampling_1 = {"name":'standard_prior_2_params',
+config_sampling_1 = {"name":'standard_prior_5_params',
                      "data_vector_infos": "flagship_like_sim",
-                     "config_sbi" : 'narrow_prior_1_param',
+                     "config_sbi" : 'standard_prior_5_params',
                      "data_vector_count" :count,
                      "data_vector_log10mass" : log10mass,}
 
