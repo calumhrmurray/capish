@@ -12,6 +12,7 @@ class HaloToObservables:
 
         parameters = config_new['parameters']
         M_min = float(parameters['M_min'])
+        z0 = float(parameters['z0'])
         params_observable_mean = [float(parameters['alpha_lambda']), float(parameters['beta_lambda']), float(parameters['gamma_lambda'])]
         params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
         params_mWL_mean = [float(parameters['alpha_mwl']), float(parameters['beta_mwl']), float(parameters['gamma_mwl'])]
@@ -22,6 +23,7 @@ class HaloToObservables:
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
         self.M_min = M_min
+        self.z0 = z0
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
         self.gaussian_lensing_variable = config_new['cluster_catalogue']['gaussian_lensing_variable']
@@ -34,7 +36,7 @@ class HaloToObservables:
         self.photoz_params = photoz_params
         self.which_mass_richness_rel = which_mass_richness_rel
 
-    def mean_obs_relation(self, log10M, z, params_observable_mean):
+    def mean_obs_relation_DES(self, log10M, z, params_observable_mean):
         alpha_lambda, beta_lambda, gamma_lambda = params_observable_mean
         # Ensure all are float
         alpha_lambda = float(alpha_lambda)
@@ -55,6 +57,19 @@ class HaloToObservables:
         # Note: This returns ln(lambda), which gets exponentiated later to get lambda
         ln_lambda = alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)
         return ln_lambda * np.log(10)
+
+    def mean_obs_relation_power_law(self, log10M, z, params_observable_mean):
+        alpha_lambda, beta_lambda, gamma_lambda = params_observable_mean
+        # Ensure all are float
+        alpha_lambda = float(alpha_lambda)
+        beta_lambda = float(beta_lambda)
+        gamma_lambda = float(gamma_lambda)
+
+        z = np.array(z, dtype=float)
+        log10M = np.array(log10M, dtype=float)
+        
+        ln_lambda = alpha_lambda + beta_lambda * (log10M - np.log10(self.M_min)) + gamma_lambda * np.log((1 + z)/(1 + self.z0))
+        return ln_lambda
 
     def sigma_obs_relation(self, log10M, z, params_observable_sigma):
         sigma_lambda = params_observable_sigma[0]  # Only use first parameter, others are 0
@@ -99,7 +114,11 @@ class HaloToObservables:
 
         """
         # Compute mean and scatter for the observable
-        mean_lnobs = self.mean_obs_relation(log10M, z, self.params_observable_mean)
+        if self.which_mass_richness_rel == 'DES':
+            mean_lnobs = self.mean_obs_relation_DES(log10M, z, self.params_observable_mean)
+        elif self.which_mass_richness_rel == 'power_law':
+            mean_lnobs = self.mean_obs_relation_power_law(log10M, z, self.params_observable_mean)
+            
         sigma_lnobs = self.sigma_obs_relation(log10M, z, self.params_observable_sigma)
     
         # Compute mean and scatter for weak-lensing mass
