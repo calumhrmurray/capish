@@ -11,7 +11,7 @@ class HaloToObservables:
     def __init__(self, config_new, sigma_log10Mwl_gal_interp = None):
 
         parameters = config_new['parameters']
-        M_min = float(parameters['M_min'])
+        log10M_min = float(parameters['log10M_min'])
         z0 = float(parameters['z0'])
         params_observable_mean = [float(parameters['alpha_lambda']), float(parameters['beta_lambda']), float(parameters['gamma_lambda'])]
         params_observable_sigma = [float(parameters['sigma_lambda']), 0.0, 0.0]  # Only sigma_lambda used
@@ -22,7 +22,7 @@ class HaloToObservables:
         add_photoz = True if config_new['cluster_catalogue']['add_photometric_redshift']=='True' else False
         photoz_params = float(config_new['cluster_catalogue.photometric_redshift']['sigma_z0'])
     
-        self.M_min = M_min
+        self.log10M_min = log10M_min
         self.z0 = z0
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
@@ -48,15 +48,15 @@ class HaloToObservables:
         log10M = np.array(log10M, dtype=float)
 
         # Convert log10M to M, subtract M_min, then back to log10
-        M = 10**log10M
-        M_term = M - self.M_min
+        M = 10 ** log10M
+        M_term = M - 10 ** self.log10M_min
 
         # Ensure M_term is positive to avoid log of negative numbers
         M_term = np.maximum(M_term, 1e10)  # Set minimum value to avoid log issues
 
         # Note: This returns ln(lambda), which gets exponentiated later to get lambda
-        ln_lambda = alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z)
-        return ln_lambda * np.log(10)
+        ln_lambda = np.log(10) * (alpha_lambda + beta_lambda * np.log10(M_term) + gamma_lambda * np.log10(1 + z))
+        return ln_lambda
 
     def mean_obs_relation_power_law(self, log10M, z, params_observable_mean):
         alpha_lambda, beta_lambda, gamma_lambda = params_observable_mean
@@ -68,7 +68,7 @@ class HaloToObservables:
         z = np.array(z, dtype=float)
         log10M = np.array(log10M, dtype=float)
         
-        ln_lambda = alpha_lambda + beta_lambda * (log10M - np.log10(self.M_min)) + gamma_lambda * np.log((1 + z)/(1 + self.z0))
+        ln_lambda = alpha_lambda + beta_lambda * (log10M - self.log10M_min) + gamma_lambda * np.log((1 + z)/(1 + self.z0))
         return ln_lambda
 
     def sigma_obs_relation(self, log10M, z, params_observable_sigma):
