@@ -92,21 +92,16 @@ def train():
 
     #alone
     x_count      = results['x'][0]
-    x_log10mass  = results['x'][1]
-    x_Nlog10mass = results['x'][0] * results['x'][1]
     x_Nmass      = results['x'][0] * 10 ** results['x'][1]
-    #together
-    x_count_log10mass = (x_count, x_log10mass)
-    x_count_Nlog10mass = (x_count, x_Nlog10mass)
-    x_count_Nmass = (x_count, x_count * 10 ** results['x'][1])
+    x_count_Nmass = (x_count, x_Nmass)
 
-    x = [x_count,x_log10mass, 
-         x_Nlog10mass, x_Nmass, 
-         x_count_log10mass, x_count_Nlog10mass, x_count_Nmass]
+    x = [x_count,
+         x_Nmass, 
+         x_count_Nmass]
     
-    x_label = ['count','log10mass', 
-               'Nlog10mass', 'Nmass',
-               'count_log10mass', 'count_Nlog10mass', 'count_Nmass']
+    x_label = ['count',
+               'Nmass',
+               'count_Nmass']
 
     prior = define_prior(cfg_sims['prior_min'], cfg_sims['prior_max'])
 

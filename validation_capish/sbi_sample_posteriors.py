@@ -33,19 +33,19 @@ def sample_posterior():
     data_vector_infos = config_sampling["data_vector_infos"]
     config_sbi_file = config_sbi.config_dict[config_sampling['config_sbi']]
 
-    save_dir = f'./config_sbi_{config_sbi_file["name"]}/'
-    load_dir = f'./config_sbi_{config_sbi_file["name"]}/'
+    save_dir = f'../../capish_sbi_data/config_sbi_{config_sbi_file["name"]}/'
+    load_dir = f'../../capish_sbi_data/config_sbi_{config_sbi_file["name"]}/'
 
     os.system('mkdir ' + save_dir)
 
     #load posteriors##########################################
     posterior_count = load_pickle(load_dir + 'count_trained_posterior.pkl')
-    posterior_log10mass = load_pickle(load_dir + 'log10mass_trained_posterior.pkl')
-    posterior_Nlog10mass = load_pickle(load_dir + 'Nlog10mass_trained_posterior.pkl')
+    #posterior_log10mass = load_pickle(load_dir + 'log10mass_trained_posterior.pkl')
+    #posterior_Nlog10mass = load_pickle(load_dir + 'Nlog10mass_trained_posterior.pkl')
     posterior_Nmass = load_pickle(load_dir + 'Nmass_trained_posterior.pkl')
     #
-    posterior_count_log10mass = load_pickle(load_dir + 'count_log10mass_trained_posterior.pkl')
-    posterior_count_Nlog10mass = load_pickle(load_dir + 'count_Nlog10mass_trained_posterior.pkl')
+    #posterior_count_log10mass = load_pickle(load_dir + 'count_log10mass_trained_posterior.pkl')
+    #posterior_count_Nlog10mass = load_pickle(load_dir + 'count_Nlog10mass_trained_posterior.pkl')
     posterior_count_Nmass = load_pickle(load_dir + 'count_Nmass_trained_posterior.pkl')
 
     ##########################################
@@ -57,26 +57,32 @@ def sample_posterior():
     count_Nlog10mass = np.concatenate([count, count*log10mass])
     count_Nmass = np.concatenate([count, count*10**log10mass])
 
-    obs_list = [count, log10mass,
-                Nlog10mass, Nmass,
-                count_log10mass,
-                count_Nlog10mass, 
+    obs_list = [count, 
+                #log10mass,
+                #Nlog10mass,
+                Nmass,
+                #count_log10mass,
+                #count_Nlog10mass, 
                 count_Nmass
                ]
     obs_torch = [torch.tensor(obs_i, dtype=torch.float32) for obs_i in obs_list]
     
     
-    post = [posterior_count, posterior_log10mass, 
-            posterior_Nlog10mass, posterior_Nmass, 
-            posterior_count_log10mass, 
-            posterior_count_Nlog10mass, 
+    post = [posterior_count,
+            #posterior_log10mass, 
+            #posterior_Nlog10mass, 
+            posterior_Nmass, 
+            #posterior_count_log10mass, 
+            #posterior_count_Nlog10mass, 
             posterior_count_Nmass
            ]
     
-    label =  ['count', 'log10mass',
-              'Nlog10m', 'Nm', 
-              'count_log10m',
-              'count_Nlog10m',
+    label =  ['count', 
+              #'log10mass',
+              #'Nlog10m',
+              'Nm', 
+              #'count_log10m',
+              #'count_Nlog10m',
               'count_Nm']
 
     for obs_, post_, label_ in zip(obs_torch, post, label):
