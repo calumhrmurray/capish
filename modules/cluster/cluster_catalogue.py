@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import io
 from scipy.interpolate import RegularGridInterpolator
 import pyccl as ccl
 from . import _completeness

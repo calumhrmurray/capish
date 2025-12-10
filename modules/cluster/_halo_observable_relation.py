@@ -25,6 +25,9 @@ class HaloToObservables:
     
         self.log10M_min = log10M_min
         self.z0 = z0
+        self.use_stacked_sigma_Mwl_gal = config_new['summary_statistics']['use_stacked_sigma_Mwl_gal']
+        self.use_stacked_sigma_Mwl_int = config_new['summary_statistics']['use_stacked_sigma_Mwl_int']
+        #if self.use_stacked_sigma_Mwl_gal == 'True'
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.add_correction_to_mean_log10Mwl = add_correction_to_mean_log10Mwl
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
@@ -122,24 +125,22 @@ class HaloToObservables:
             mean_lnobs = self.mean_obs_relation_power_law(log10M, z, self.params_observable_mean)
             
         sigma_lnobs = self.sigma_obs_relation(log10M, z, self.params_observable_sigma)
+
+        if self.use_stacked_sigma_Mwl_gal=='False':
+            if self.use_theory_for_sigma_Mwl_gal=='False':
+                sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
+            else:
+                sigma_mWLgal = self.sigma_log10Mwl_gal_interp(log10M, z) 
+        else: sigma_mWLgal = 0
             
-        if self.use_theory_for_sigma_Mwl_gal=='False':
+        if self.use_stacked_sigma_Mwl_int=='False':
             sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
-            sigma2 = sigma_mWLgal**2 + sigma_mWLint**2
-            sigma_log10mWL = sigma2 ** .5
-        else:
-            sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
-            sigma2 = self.sigma_log10Mwl_gal_interp(log10M, z) ** 2 + sigma_mWLint ** 2
-            sigma_log10mWL = sigma2 ** .5
+        else: sigma_mWLint = 0
+
+        sigma_log10mWL = np.sqrt(sigma_mWLgal ** 2 + sigma_mWLint ** 2)
 
         # Compute mean and scatter for weak-lensing mass
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)
-        if self.add_correction_to_mean_log10Mwl: #it centers the mass
-            #this ensures that <Mwl> = 10^(mean_logmWL)
-            #this is important for large values of sigma_mWLgal (like using the model)
-            mean_logmWL = mean_log10mWL * np.log(10)
-            mean_logmWL = mean_logmWL - 0.5 * (sigma_log10mWL * np.log(10)) ** 2
-            mean_log10mWL = mean_logmWL/np.log(10)
     
         rho = self.rho_mWL_f(log10M, z, self.rho_obs_mWL_params)
     
@@ -149,11 +150,17 @@ class HaloToObservables:
         sigma_lnobs = np.sqrt(sigma_lnobs2)
     
         # Draw observable from Gaussian scatter
-        lnobs_noise = np.random.normal(loc=0, scale=sigma_lnobs)
-        lnobs = mean_lnobs + lnobs_noise
+        lnobs = mean_lnobs + np.random.normal(loc=0, scale=sigma_lnobs)
     
         # Sample weak-lensing mass conditional on lnobs
         if self.gaussian_lensing_variable == 'log10Mwl':
+            if self.add_correction_to_mean_log10Mwl: #it centers the mass
+                #this ensures that <Mwl> = 10^(mean_logmWL)
+                #this is important for large values of sigma_mWLgal (like using the model)
+                mean_logmWL = mean_log10mWL * np.log(10)
+                mean_logmWL = mean_logmWL - 0.5 * (sigma_log10mWL * np.log(10)) ** 2
+                mean_log10mWL = mean_logmWL/np.log(10)
+                
             cond_mean_log10mWL = mean_log10mWL + rho * (sigma_log10mWL / sigma_lnobs) * (lnobs - mean_lnobs)
             cond_sigma_log10mWL = sigma_log10mWL * np.sqrt(1 - rho**2)
             log10Mwl = cond_mean_log10mWL + np.random.normal(loc=0, scale=cond_sigma_log10mWL)
