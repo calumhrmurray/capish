@@ -21,14 +21,14 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-CONFIG=power_law_log10Mwl
+CONFIG=power_law_log10Mwl_stacked_scatter
 
 CONFIG_NARROW_PRIOR=_narrow_prior_1_param
 
 # for the perfectly centered data vector
 python sbi_run_simulations.py --config_to_simulate $CONFIG$CONFIG_NARROW_PRIOR --seed 30 --n_sims 300 --checkpoint_interval 10 --n_cores 3
 
-# python sbi_run_simulations.py --config_to_simulate power_law_standard_prior_5_params --seed 30 --n_sims 300 --checkpoint_interval 10 --n_cores 3
+# python sbi_run_simulations.py --config_to_simulate power_law_log10Mwl_stacked_scatter_narrow_prior_1_param --seed 30 --n_sims 300 --checkpoint_interval 10 --n_cores 3
 
 # for the 5 params mcmc
 N_SIMS=25000
