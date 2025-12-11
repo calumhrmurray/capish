@@ -31,28 +31,34 @@ class SummaryStatistics:
         self.Gamma = float(default_config['summary_statistics']['Gamma'])
         
         self.use_stacked_sigma_Mwl_gal = default_config['summary_statistics']['use_stacked_sigma_Mwl_gal']
-        self.already_used = False
-        if self.use_stacked_sigma_Mwl_gal == 'True':
-            #ensure that the dispersion on Mwl is not already applied at the unbinned level
-            if default_config['cluster_catalogue']['theory_sigma_Mwl_gal']=='True': self.already_used = True
-                
-            else:
-                if float(default_config['parameters']['sigma_Mwl_gal']) != 0:
-                   self.already_used = True 
+        self.use_stacked_sigma_Mwl_int = default_config['summary_statistics']['use_stacked_sigma_Mwl_int']
+        self.theory_sigma_Mwl_gal = default_config['cluster_catalogue']['theory_sigma_Mwl_gal']
+        self.sigma_Mwl_gal = float(default_config['parameters']['sigma_Mwl_gal'])
+        self.sigma_Mwl_int = float(default_config['parameters']['sigma_Mwl_int'])
 
-            if not self.already_used:
-                print('WL scatter is not already used on individual WL masses')
-                print('=> You are allowed to apply WL scatter model on stacked WL masses!')
+        if self.use_stacked_sigma_Mwl_gal == 'True':
+            if self.theory_sigma_Mwl_gal == 'True':
                 from modules.cluster.cluster_catalogue import ClusterCatalogue
                 default_config_ClusterCatalogue = clone_config(default_config)
                 default_config_ClusterCatalogue['cluster_catalogue']['theory_sigma_Mwl_gal']='True'
                 default_config_ClusterCatalogue['cluster_catalogue']['recompute_theory_sigma_Mwl_gal']='False'
                 self.cluster_catalogue_class = ClusterCatalogue(default_config_ClusterCatalogue)
                 self.sigma_log10Mwl_gal_interp = self.cluster_catalogue_class.sigma_log10Mwl_gal_interp
-            else:
-                print('WL scatter is already used on individual WL masses')
-                print('=> You are not allowed to apply WL scatter model on stacked WL masses!')
-            
+
+            else: 
+                def sigma_log10Mwl_gal_interp(log10m, z): return self.sigma_Mwl_gal
+                self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp
+        else: 
+            def sigma_log10Mwl_gal_interp(log10m, z): return 0
+            self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp
+
+        if self.use_stacked_sigma_Mwl_int == 'True':
+            def sigma_log10Mwl_int_interp(log10m, z): return self.sigma_Mwl_int
+            self.sigma_log10Mwl_int_interp = sigma_log10Mwl_int_interp
+        else: 
+            def sigma_log10Mwl_int_interp(log10m, z): return 0
+            self.sigma_log10Mwl_int_interp = sigma_log10Mwl_int_interp
+
         cosmo_fid = ccl.Cosmology( Omega_c = Omega_c_fid, Omega_b = Omega_b_fid, 
                                   h = h_fid, sigma8 = sigma8_fid, n_s= ns_fid)
         
@@ -85,13 +91,15 @@ class SummaryStatistics:
                 mean_mass_stat = np.log10((sum_w_mass_gamma_stat/sum_w_stat)**(1/self.Gamma))
                 # Set NaN masses (from empty bins) to zero
                 mean_mass_stat = np.nan_to_num(mean_mass_stat, nan=0.0)
-                if self.use_stacked_sigma_Mwl_gal == 'True' and not self.already_used:
-                    z_centers = [(self.redshift_edges[i+1] + self.redshift_edges[i])/2 for i in range(len(self.redshift_edges)-1)]
-                    richness_centers = [(self.richness_edges[i+1] + self.richness_edges[i])/2 for i in range(len(self.richness_edges)-1)]
-                    for k in range(nz):
-                        z_centers_duplicate = np.linspace(z_centers[k], z_centers[k], nr)
-                        WLdispersion = self.sigma_log10Mwl_gal_interp(mean_mass_stat[:,k], z_centers_duplicate)
-                        mean_mass_stat[:,k] = mean_mass_stat[:,k] + np.random.randn(len(richness_centers)) * WLdispersion * 1/np.sqrt(count_stat[:,k])
+                z_centers = [(self.redshift_edges[i+1] + self.redshift_edges[i])/2 for i in range(len(self.redshift_edges)-1)]
+                richness_centers = [(self.richness_edges[i+1] + self.richness_edges[i])/2 for i in range(len(self.richness_edges)-1)]
+                for k in range(nz):
+                    z_centers_duplicate = np.linspace(z_centers[k], z_centers[k], nr)
+                    WLdispersion_gal = self.sigma_log10Mwl_gal_interp(mean_mass_stat[:,k], z_centers_duplicate)
+                    WLdispersion_int = self.sigma_log10Mwl_int_interp(mean_mass_stat[:,k], z_centers_duplicate)
+                    WLdispersion = np.sqrt(WLdispersion_gal**2 + WLdispersion_int**2)
+                    print(WLdispersion)
+                    mean_mass_stat[:,k] = mean_mass_stat[:,k] + np.random.randn(len(richness_centers)) * WLdispersion * 1/np.sqrt(count_stat[:,k])
 
             return count_stat, mean_mass_stat 
             
