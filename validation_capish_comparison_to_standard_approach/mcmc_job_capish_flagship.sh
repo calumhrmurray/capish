@@ -5,8 +5,8 @@
 #SBATCH --partition=htc               # Partition choice
 #SBATCH --ntasks=9                    # Run a single task (by default tasks == CPU)
 #SBATCH --mem=3000                    # Memory in MB per default
-#SBATCH --time=0-5:00:00             # 7 days by default on htc partition
-#SBATCH --array=0-5
+#SBATCH --time=0-20:00:00             # 7 days by default on htc partition
+#SBATCH --array=0-2
 ID=$SLURM_ARRAY_TASK_ID
 source /pbs/home/c/cpayerne/setup_mydesc.sh
 

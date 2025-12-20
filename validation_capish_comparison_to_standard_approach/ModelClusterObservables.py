@@ -83,7 +83,7 @@ def reshape_integrand(integrand_count, index_richness_grid_cut, index_z_grid_cut
 
 class UniversePrediction:
     
-    def __init__(self, default_config_path = None , default_config = None):
+    def __init__(self, default_config_path = None , default_config = None, which_MoR = 'power_law'):
 
         if default_config == None:
             default_config = configparser.ConfigParser()
@@ -95,11 +95,11 @@ class UniversePrediction:
         halobias_fct = halocat_mod.get_bias_from_config(default_config['halo_catalogue'])
        
         parameters = default_config['parameters']
-        rm_param_names = ['M_min', 'alpha_lambda', 'beta_lambda', 'gamma_lambda', 'sigma_lambda']
+        rm_param_names = ['log10M_min', 'alpha_lambda', 'beta_lambda', 'gamma_lambda', 'sigma_lambda']
         theta_rm = [float(parameters[n]) for n in rm_param_names]
         which = default_config['cluster_catalogue.mass_observable_relation']['which_relation']
         RM_count_and_mass = rm_relation.Richness_mass_relation()
-        RM_count_and_mass.select(which = which)
+        RM_count_and_mass.select(which=which_MoR)
 
         logm_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
                               float( default_config['halo_catalogue']['log10m_max']), 20 )
@@ -479,10 +479,10 @@ class ClusterAbundanceMath():
         for i, richness in enumerate(richness_grid): richness_tab[i,:,:] = richness
         for i, logm in enumerate(logm_grid): logm_tab[:,i,:] = logm
         for i, z in enumerate(z_grid): z_tab[:,:,i] = z
-        mu = self.mass_richness_relation.proxy_mu_f(logm_tab, z_tab, theta_rm)
-        sigma = self.mass_richness_relation.proxy_sigma_f(logm_tab, z_tab, theta_rm)
+        #mu = self.mass_richness_relation.proxy_mu_f(logm_tab, z_tab, theta_rm)
+        #sigma = self.mass_richness_relation.proxy_sigma_f(logm_tab, z_tab, theta_rm)
         pdf = self.mass_richness_relation.pdf_richness_mass_relation(richness_tab, logm_tab, z_tab, theta_rm)
-        return pdf, mu, sigma
+        return pdf#, mu, sigma
     
     def recompute_count_modelling(self, count_modelling, compute = None, grids = None, params = None):
         r"""
@@ -521,13 +521,13 @@ class ClusterAbundanceMath():
             count_modelling['completeness'] = completeness_new
          
         if compute['compute_richness_mass_relation']:
-            pdf_map, mu_map, sigma_map = self.compute_richness_mass_relation_grid(grids['richness_grid'], 
+            pdf_map = self.compute_richness_mass_relation_grid(grids['richness_grid'], 
                                                                              grids['logm_grid'], 
                                                                              grids['z_grid'], 
                                                                              params['params_richness_mass_relation'])
             count_modelling['richness_mass_relation'] = pdf_map
-            count_modelling['richness_mass_relation - mean'] = mu_map
-            count_modelling['richness_mass_relation - sigma'] = sigma_map
+            #count_modelling['richness_mass_relation - mean'] = mu_map
+            #count_modelling['richness_mass_relation - sigma'] = sigma_map
     
         if compute['compute_dNdzdlogMdOmega']:
             dNdzdlogMdOmega_ = self.compute_dNdzdlogMdOmega_grid(grids['logm_grid'], grids['z_grid'], 

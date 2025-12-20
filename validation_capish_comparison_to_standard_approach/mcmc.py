@@ -23,16 +23,14 @@ def save_pickle(dat, filename, **kwargs):
 n = sys.argv[1]
 analysis = flagship_mcmc_config.analysis_list[int(n)]
 default_config_capish = configparser.ConfigParser()
-default_config_capish.read('../config/capish.ini')
+default_config_capish.read('../config/capish_flagship.ini')
 default_config_capish['halo_catalogue']['n_mass_bins'] = '200'
 default_config_capish['halo_catalogue']['n_redshift_bins'] = '200'
-filename = analysis['filename'] 
-file = np.load(filename, allow_pickle=True).item()
-log10M_data, N_data = file['mean_log10m200b'], file['count_with_m200b_def']
+log10M_data, N_data = analysis['data_log10mass'] , analysis['data_count'] 
 
 def compute_count_mass(params, count=True, mass=True, recompute_bias=False):
 
-    Om, s8, alpha_lambda, beta_lambda, sigma_lambda = params
+    Om, s8, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = params
 
     config = copy.deepcopy(default_config_capish)
 
@@ -43,6 +41,8 @@ def compute_count_mass(params, count=True, mass=True, recompute_bias=False):
     config['parameters']['alpha_lambda'] = str(alpha_lambda)
     config['parameters']['beta_lambda'] = str(beta_lambda)
     config['parameters']['sigma_lambda'] = str(sigma_lambda)
+    config['parameters']['gamma_lambda'] = str(gamma_lambda)
+    config['parameters']['log10M_min'] = str(14.5)
 
     ClusterAbundanceObject = ModelClusterObservables.UniversePrediction( default_config=config )
     
@@ -78,8 +78,8 @@ def compute_count_mass(params, count=True, mass=True, recompute_bias=False):
         return ClusterAbundanceObject, N, b, np.log10(M)
     
         
-
-params_fid = 0.298, 0.8, -9.348, 0.75, 0.3
+#params_fid = 0.319, 0.813, -9.348, 0.75, 0.3
+params_fid = 0.319, 0.813, 3.5, 1.72, 0, 0.2
 ClusterAbundanceObject_fid, N_fid, b_fid, log10M_fid = compute_count_mass(params_fid, count=True, mass=True, recompute_bias=True)
 params_default = ClusterAbundanceObject_fid.params_default 
 cosmo_fid = params_default['CCL_cosmology']
@@ -130,13 +130,14 @@ print('data count=', N_data[:,0])
 
 def likelihood(params):
 
-    om, s8, alpha, beta, sigma_lambda = params
+    om, s8, alpha, beta, gamma, sigma_lambda = params
 
-    if om < 0: return -np.inf
-    if om > 1: return -np.inf
-    if s8 < 0.5: return -np.inf
-    if s8 > 1: return -np.inf
-    if sigma_lambda < 0: return -np.inf
+    if (om < 0.2) or (om > 0.5): return -np.inf
+    if (s8 < 0.5) or (s8 > 0.9): return -np.inf
+    if (alpha < 0) or (alpha > 5): return -np.inf
+    if (beta < 0) or (beta > 3): return -np.inf
+    if (gamma < -2) or (gamma > 2): return -np.inf
+    if (sigma_lambda < 0.1) or (sigma_lambda > 0.5): return -np.inf
 
     if analysis['summary_stat'] == 'count_only':
         ClusterAbundanceObject, N_th, b_th = compute_count_mass(params, count=True, mass=False)
@@ -171,7 +172,7 @@ def likelihood(params):
         return ln_likelihood_mass
 
 initial =  params_fid
-labels = [r'\Omega_m', r'\sigma_8', r'\alpha', r'\beta', r'\sigma_\lambda']
+labels = [r'\Omega_m', r'\sigma_8', r'\alpha', r'\beta',r'\gamma', r'\sigma_\lambda']
 
 ndim=len(initial)
 t = time.time()
@@ -191,9 +192,9 @@ nstep = 300
 ndim = len(initial)
 print('[MCMC]: time of the MCMC:', nwalker * nstep * (tf-t)/3600, ' hours')
 pos = np.array(initial) + .01*np.random.randn(nwalker, ndim)
-pos = pos[(pos[:,0] > 0.1)*(pos[:,0] < 1)*(pos[:,1] > 0.5)*(pos[:,1] < 1)*(pos[:,4] > 0)]
+pos = pos[(pos[:,0] > 0.2)*(pos[:,0] < 0.5)*(pos[:,1] > 0.5)*(pos[:,1] < 0.9)*(pos[:,5] > 0.1)*(pos[:,5] < 0.5)]
 nwalker = len(pos[:,0])
-filename = analysis['name_save'] + '.h5'
+filename = 'mcmc_chains/' + analysis['name_save'] + '.h5'
 backend = emcee.backends.HDFBackend(filename)
 
 if not os.path.exists(filename):

@@ -6,18 +6,25 @@ class Richness_mass_relation():
     def ___init___(self,):
         self.name = 'mass-richness relation'
     
-    def select(self, which = 'log_normal'):
+    def select(self, which='DES'):
         self.which = which
 
-    def proxy_mu_f(self, logm, z, theta_rm):
+    def proxy_mu_f_DES(self, logm, z, theta_rm):
         r"""proxy mu"""
-        M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
-        proxy_mu = alpha_lambda + beta_lambda * np.log10(10**logm - M_min) + gamma_lambda * np.log10(1+z)
+        log10M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
+        proxy_mu = alpha_lambda + beta_lambda * np.log10(10**logm - 10**log10M_min) + gamma_lambda * np.log10(1+z)
         return proxy_mu * np.log(10)
+
+    def proxy_mu_f_powerlaw(self, logm, z, theta_rm):
+        r"""proxy mu"""
+        log10M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
+        z0 = 0.5
+        proxy_mu = alpha_lambda + beta_lambda * (logm - log10M_min) + gamma_lambda * np.log((1+z)/(1+z0))
+        return proxy_mu
 
     def proxy_sigma_f(self, logm, z, theta_rm):
         r"""proxy sigma, intrinsic"""
-        M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
+        log10M_min, alpha_lambda, beta_lambda, gamma_lambda, sigma_lambda = theta_rm
         proxy_sigma = sigma_lambda
         return proxy_sigma
 
@@ -40,7 +47,14 @@ class Richness_mass_relation():
             richness-mass relation P(lambda|m,z)
             This is only necessary for the likelihood implementation
         """
-        proxy_mu = self.proxy_mu_f(logm, z, theta_rm)
+        if self.which == 'DES':
+            
+            proxy_mu = self.proxy_mu_f_DES(logm, z, theta_rm)
+
+        elif self.which == 'power_law':
+            
+            proxy_mu = self.proxy_mu_f_powerlaw(logm, z, theta_rm)
+            
         proxy_sigma = self.proxy_sigma_f(logm, z, theta_rm) #intrinsic
         proxy_sigma2_SN = np.exp(-proxy_mu)#(np.exp(proxy_mu)-1)/np.exp(2*proxy_mu)
         #proxy_sigma2_SN[proxy_mu < 0] = np.exp(-proxy_mu[proxy_mu < 0])
