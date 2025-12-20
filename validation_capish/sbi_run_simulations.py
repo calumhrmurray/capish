@@ -97,41 +97,22 @@ def main():
     output_dir = Path(cfg_sims['output_dir'])
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+    n_replicate = cfg_sims['n_replicate']
     simulator = create_simulator(
         cfg_sims['variable_params_names'],
         cfg_sims["config.ini_path"],
         cfg_sims["config.ini"])
     
     prior = define_prior(cfg_sims['prior_min'], cfg_sims['prior_max'])
-
-    # Resume or run fresh
-    if cfg_sims['resume_from']:
-        ckpt = ParallelSimulator.load_checkpoint(cfg_sims['resume_from'])
-        results = ckpt['results']
-
-        remaining = n_sims - ckpt['n_completed']
-        if remaining > 0:
-            theta = sample_parameters(prior, remaining, seed + ckpt['n_completed'])
-            new = run_simulations(simulator, theta, ncores, checkpoint_dir, checkpoint_interval)
-
-            results['theta'] = np.vstack([results['theta'], new['theta']])
-            results['failed_theta'] = np.vstack([results['failed_theta'], new['failed_theta']])
-
-            if isinstance(results['x'], tuple):
-                results['x'] = tuple(
-                    np.vstack([results['x'][i], new['x'][i]])
-                    for i in range(len(results['x'])))
-            else:
-                results['x'] = np.vstack([results['x'], new['x']])
-
-            for k in ['n_total', 'n_success', 'n_failed', 'elapsed_time']:
-                results[k] += new[k]
-
-            results['success_rate'] = results['n_success'] / results['n_total']
-
-    else:
+    if n_replicate == 1:
         theta = sample_parameters(prior, n_sims, seed)
-        results = run_simulations(simulator, theta, ncores, checkpoint_dir, checkpoint_interval)
+    else:
+        assert n_sims % n_replicate == 0
+        n_theta_unique = n_sims // n_replicate
+        theta_unique = sample_parameters(prior, n_theta_unique, seed)
+        theta = np.repeat(theta_unique, n_replicate, axis=0)
+    print(theta.shape)
+    results = run_simulations(simulator, theta, ncores, checkpoint_dir, checkpoint_interval)
 
     print("Simulation Summary")
     print("=" * 70)
@@ -143,6 +124,33 @@ def main():
     print("=" * 70)
 
     save_results(results, output_dir)
+
+# Resume or run fresh
+#    if cfg_sims['resume_from']:
+#        ckpt = ParallelSimulator.load_checkpoint(cfg_sims['resume_from'])
+#        results = ckpt['results']
+
+#        remaining = n_sims - ckpt['n_completed']
+#        if remaining > 0:
+#            theta = sample_parameters(prior, remaining, seed + ckpt['n_completed'])
+#            new = run_simulations(simulator, theta, ncores, checkpoint_dir, checkpoint_interval)
+
+#            results['theta'] = np.vstack([results['theta'], new['theta']])
+#            results['failed_theta'] = np.vstack([results['failed_theta'], new['failed_theta']])
+
+#            if isinstance(results['x'], tuple):
+#                results['x'] = tuple(
+#                    np.vstack([results['x'][i], new['x'][i]])
+#                    for i in range(len(results['x'])))
+#            else:
+#                results['x'] = np.vstack([results['x'], new['x']])
+#
+#            for k in ['n_total', 'n_success', 'n_failed', 'elapsed_time']:
+#                results[k] += new[k]
+#
+#            results['success_rate'] = results['n_success'] / results['n_total']
+
+#    else:
 
 if __name__ == "__main__":
     main()

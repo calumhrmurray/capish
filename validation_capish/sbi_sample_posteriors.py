@@ -52,9 +52,9 @@ def sample_posterior():
     count = config_sampling["data_vector_count"].reshape(-1)
     log10mass = config_sampling["data_vector_log10mass"].reshape(-1)
     Nmass = count * 10 ** log10mass
-    Nlog10mass = count * log10mass
-    count_log10mass = np.concatenate([count, log10mass])
-    count_Nlog10mass = np.concatenate([count, count*log10mass])
+    #Nlog10mass = count * log10mass
+    #count_log10mass = np.concatenate([count, log10mass])
+    #count_Nlog10mass = np.concatenate([count, count*log10mass])
     count_Nmass = np.concatenate([count, count*10**log10mass])
 
     obs_list = [count, 

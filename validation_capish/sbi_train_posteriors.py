@@ -42,7 +42,7 @@ def train_posterior(theta, x, prior, method="SNPE"):
 
     batch_size = min(50, max(10, len(theta) // 10))
     density_est = inference.append_simulations(theta, x).train(
-                        training_batch_size=batch_size)
+                        training_batch_size=batch_size, learning_rate=5e-4)
 
     return inference.build_posterior(density_est)
 
@@ -92,12 +92,13 @@ def train():
 
     #alone
     x_count      = results['x'][0]
+    mask = np.zeros(len(x_count)) == 0
     x_Nmass      = results['x'][0] * 10 ** results['x'][1]
     x_count_Nmass = (x_count, x_Nmass)
 
-    x = [x_count,
-         x_Nmass, 
-         x_count_Nmass]
+    x = [x_count[mask],
+         x_Nmass[mask], 
+         (x_count[mask], x_Nmass[mask])]
     
     x_label = ['count',
                'Nmass',
@@ -109,7 +110,7 @@ def train():
         x_flat_ = flatten_summary_stats(x_)
         name = cfg_sims['output_dir'] +  '/' + x_label_ + f"_trained_posterior.pkl"
         if os.path.exists(name): continue
-        posterior_ = train_posterior(results['theta'], x_flat_, prior, cfg_train['method'])
+        posterior_ = train_posterior(results['theta'][mask], x_flat_, prior, cfg_train['method'])
         with open(name, "wb") as f:
             pickle.dump(posterior_, f)
    
