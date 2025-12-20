@@ -138,6 +138,7 @@ class HaloToObservables:
         else: sigma_mWLint = 0
 
         sigma_log10mWL = np.sqrt(sigma_mWLgal ** 2 + sigma_mWLint ** 2)
+        print(sigma_log10mWL)
 
         # Compute mean and scatter for weak-lensing mass
         mean_log10mWL = self.mean_log10mWL_f(log10M, z, self.params_mWL_mean)

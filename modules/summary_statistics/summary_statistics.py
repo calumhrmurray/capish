@@ -93,14 +93,16 @@ class SummaryStatistics:
                 mean_mass_stat = np.nan_to_num(mean_mass_stat, nan=0.0)
                 z_centers = [(self.redshift_edges[i+1] + self.redshift_edges[i])/2 for i in range(len(self.redshift_edges)-1)]
                 richness_centers = [(self.richness_edges[i+1] + self.richness_edges[i])/2 for i in range(len(self.richness_edges)-1)]
-                for k in range(nz):
-                    z_centers_duplicate = np.linspace(z_centers[k], z_centers[k], nr)
-                    WLdispersion_gal = self.sigma_log10Mwl_gal_interp(mean_mass_stat[:,k], z_centers_duplicate)
-                    WLdispersion_int = self.sigma_log10Mwl_int_interp(mean_mass_stat[:,k], z_centers_duplicate)
-                    WLdispersion = np.sqrt(WLdispersion_gal**2 + WLdispersion_int**2)
-                    print(WLdispersion)
-                    mean_mass_stat[:,k] = mean_mass_stat[:,k] + np.random.randn(len(richness_centers)) * WLdispersion * 1/np.sqrt(count_stat[:,k])
-
+                if self.use_stacked_sigma_Mwl_gal == 'True' or self.use_stacked_sigma_Mwl_int == 'True':
+                    for k in range(nz):
+                        z_centers_duplicate = np.linspace(z_centers[k], z_centers[k], nr)
+                        WLdispersion_gal = self.sigma_log10Mwl_gal_interp(mean_mass_stat[:,k], z_centers_duplicate)
+                        WLdispersion_int = self.sigma_log10Mwl_int_interp(mean_mass_stat[:,k], z_centers_duplicate)
+                        WLdispersion = np.sqrt(WLdispersion_gal**2 + WLdispersion_int**2)
+                        WLdispersion_random = np.random.randn(len(richness_centers)) * WLdispersion
+                        positive_count = count_stat[:,k] != 0
+                        WLdispersion_random = WLdispersion_random[positive_count]
+                        mean_mass_stat[:,k][positive_count] +=  WLdispersion_random * 1/np.sqrt(count_stat[:,k][positive_count])
             return count_stat, mean_mass_stat 
             
         if config_new['summary_statistics']['summary_statistic'] == '3d_count':
