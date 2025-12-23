@@ -83,14 +83,17 @@ params_fid = 0.319, 0.813, 3.5, 1.72, 0, 0.2
 ClusterAbundanceObject_fid, N_fid, b_fid, log10M_fid = compute_count_mass(params_fid, count=True, mass=True, recompute_bias=True)
 params_default = ClusterAbundanceObject_fid.params_default 
 cosmo_fid = params_default['CCL_cosmology']
-log10M_th_err = ClusterAbundanceObject_fid.model_error_log10m_one_cluster(10**log10M_fid, cosmo_fid, 
+if analysis['which_cov_log10mass'] == 'analytical':
+    log10M_th_err = ClusterAbundanceObject_fid.model_error_log10m_one_cluster(10**log10M_fid, cosmo_fid, 
                                                                            Rmin=1, Rmax=5, 
                                                                            ngal_arcmin2=25, shape_noise=0.25, 
                                                                            delta=200, mass_def='mean',
                                                                            sigma_A_prior = 0.03,
                                                                            sigma_c_prior=0.1,
                                                                            cM ='Duffy08')
-log10M_th_err *= 1/np.sqrt(N_fid)
+    log10M_th_err *= 1/np.sqrt(N_fid)
+else: 
+    log10M_th_err = analysis['data_var_log10mass'] ** .5
 
 skyarea_fid = ClusterAbundanceObject_fid.HaloAbundanceObject.sky_area
 fsky_fid = skyarea_fid/(4*np.pi)
@@ -127,18 +130,18 @@ print()
 print('==count==')
 print('fid count= ', N_fid[:,0])
 print('data count=', N_data[:,0])
+print('fid count_err=', N_data[:,0])
+
+prior_min = [0.2, 0.6,3.0, 1.3, -0.7, 0.1]
+prior_max = [0.45, 0.95, 4.0, 2.1, 0.7, 0.5]
 
 def likelihood(params):
 
     om, s8, alpha, beta, gamma, sigma_lambda = params
 
-    if (om < 0.2) or (om > 0.5): return -np.inf
-    if (s8 < 0.5) or (s8 > 0.9): return -np.inf
-    if (alpha < 0) or (alpha > 5): return -np.inf
-    if (beta < 0) or (beta > 3): return -np.inf
-    if (gamma < -2) or (gamma > 2): return -np.inf
-    if (sigma_lambda < 0.1) or (sigma_lambda > 0.5): return -np.inf
-
+    for k in range(len(params)):
+        if (params[k] < prior_min[k]) or (params[k] > prior_max[k]): return -np.inf
+   
     if analysis['summary_stat'] == 'count_only':
         ClusterAbundanceObject, N_th, b_th = compute_count_mass(params, count=True, mass=False)
 
@@ -152,10 +155,17 @@ def likelihood(params):
 
     if analysis['summary_stat'] == 'count_only' or analysis['summary_stat'] == 'count_mass':
 
-        Covariance_count = np.diag( N_th.flatten() )
-            
-        if analysis['SSC_count_covariance']: 
-            Covariance_count += cov_SSC_fid
+        if analysis['which_cov_count'] == 'analytical':
+            Covariance_count = np.diag( N_th.flatten() )
+                
+            if analysis['SSC_count_covariance']: 
+                Covariance_count += cov_SSC_fid
+
+            #print(analysis['data_cov_count'])
+            #print()
+            #print(Covariance_count)
+        else: 
+            Covariance_count = analysis['data_cov_count']
 
         diff_N = N_data.flatten() - N_th.flatten()
         invC = np.linalg.inv(Covariance_count)
@@ -191,8 +201,11 @@ nwalker = 150
 nstep = 300
 ndim = len(initial)
 print('[MCMC]: time of the MCMC:', nwalker * nstep * (tf-t)/3600, ' hours')
-pos = np.array(initial) + .01*np.random.randn(nwalker, ndim)
-pos = pos[(pos[:,0] > 0.2)*(pos[:,0] < 0.5)*(pos[:,1] > 0.5)*(pos[:,1] < 0.9)*(pos[:,5] > 0.1)*(pos[:,5] < 0.5)]
+pos = np.array(initial) + 0.01 * np.random.randn(nwalker, ndim)
+mask = np.all((pos >= prior_min) & (pos <= prior_max), axis=1)
+print(pos.shape)
+pos = pos[mask]
+print(pos.shape)
 nwalker = len(pos[:,0])
 filename = 'mcmc_chains/' + analysis['name_save'] + '.h5'
 backend = emcee.backends.HDFBackend(filename)

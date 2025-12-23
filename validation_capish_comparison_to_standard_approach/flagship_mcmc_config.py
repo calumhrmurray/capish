@@ -13,17 +13,26 @@ def load_pickle(filename, **kwargs):
     with open(filename, 'rb') as fin:
         return pickle.load(fin,  )
 
-data = load_pickle('../../capish_sbi_data/config_sbi_DESlike4_MoR_log10Mwl_stacked_scatter_narrow_prior_1_param/simulations.pkl')
+data = load_pickle('../../capish_sbi_data/config_sbi_DESlike6_corrected_narrow_prior_1_param/simulations.pkl')
 count =  np.mean(data['x'][0], axis=0) 
+n_real, n_r, n_z = data['x'][0].shape
+counts_flat = data['x'][0].reshape(n_real, n_r * n_z)
+cov_count = np.cov(counts_flat, rowvar=False, bias=True)
+
 log10mass = np.mean(data['x'][1], axis=0)
+var_log10mass = np.std(data['x'][1], axis=0)**2
 
 analysis_list = []
 
 analysis_count = dict()
+analysis_count['data_cov_count'] = cov_count 
+analysis_count['data_var_log10mass'] = var_log10mass
 analysis_count['data_count'] = count 
 analysis_count['data_log10mass'] = log10mass
 analysis_count['Gamma'] = 0.7
 analysis_count['summary_stat'] = 'count_only'
+analysis_count['which_cov_count'] = 'analytical'
+analysis_count['which_cov_log10mass'] = 'analytical'
 analysis_count['SSC_count_covariance'] = True
 analysis_count['name_save'] = 'chains_count_only'
 analysis_count['use_fiducial_data_vector'] = False
