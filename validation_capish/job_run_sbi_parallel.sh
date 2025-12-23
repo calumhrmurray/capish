@@ -21,19 +21,19 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-CONFIG=DESlike5_replicate
+CONFIG=DESlike6_corrected
 CONFIG_NARROW_PRIOR=_narrow_prior_1_param
 
 # for the perfectly centered data vector
 python sbi_run_simulations.py --config_to_simulate $CONFIG$CONFIG_NARROW_PRIOR --seed 30 --n_sims 300 --checkpoint_interval 10 --n_cores 3
 
-# python sbi_run_simulations.py --config_to_simulate DESlike3_MoR_log10Mwl_stacked_scatter_narrow_prior_1_param --seed 30 --n_sims 300 --checkpoint_interval 10 --n_cores 3
+# python sbi_run_simulations.py --config_to_simulate DESlike6_corrected_narrow_prior_1_param --seed 30 --n_sims 1000 --checkpoint_interval 10 --n_cores 3
 
 # for the 5 params mcmc
-N_SIMS=50000
+N_SIMS=60000
 N_CORES=$SLURM_CPUS_PER_TASK
 CHECKPOINT_INTERVAL=1000
-SEED=49
+SEED=1
 CONFIG_LARGE_PRIOR=_standard_prior_6_params
 
 CMD="python sbi_run_simulations.py"

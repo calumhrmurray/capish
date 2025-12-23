@@ -13,7 +13,7 @@ def save_pickle(dat, filename, **kwargs):
     file = open(filename,'wb')
     pickle.dump(dat, file)
     file.close()
-    
+
 def load_pickle(filename, **kwargs):
     with open(filename, 'rb') as fin:
         return pickle.load(fin,  )
@@ -46,23 +46,7 @@ def test_posterior():
     post ={s: load_pickle(load_dir + f'{s}{masked}_trained_posterior.pkl') for s in summary}
     print(post.keys())
 
-    sims = load_pickle(load_dir + f'simulations.pkl')
-    count = sims['x'][0]
-    log10m = sims['x'][1]
-    theta = sims['theta']
-    if cfg_train['mask_empty_bins']: 
-        mask = []
-        for i in range(len(count)):
-            x = count[i]
-            x = np.sum(x==0)
-            if x >= 1: mask.append(False)
-            else: mask.append(True)
-        
-        mask = np.array(mask)
-    else: mask = np.zeros(len(count)) == 0
-    #mask *= (theta[:,0] > 0.22)*(theta[:,0] < 0.42)*(theta[:,1] < 0.95)
-    count = count[mask]
-    log10m = log10m[mask]
+    theta_fid = config_sampling["theta_fid"]
     ##########################################
 
     for key_post_ in post.keys():
@@ -73,22 +57,21 @@ def test_posterior():
         print()
     
         posterior_samples_ = []
-        ntest = 500
+        ntest = 300
         num_samples = 1000
 
         for i in range(ntest):
-
-            count_i = count[i].reshape(-1)
-            log10m_i = log10m[i].reshape(-1)
-            Nm_i = count_i * 10 ** log10m_i
-            count_Nm_i = np.concatenate([count_i, Nm_i])
-            count_log10m_i = np.concatenate([count_i, log10m_i])
+            count = config_sampling["data_vector_count"][i].reshape(-1)
+            log10m = config_sampling["data_vector_log10mass"][i].reshape(-1)
+            Nm = count * 10 ** log10m
+            count_Nm = np.concatenate([count, Nm])
+            count_log10m = np.concatenate([count, log10m])
     
-            obs_list_i = {'count': count_i, 
-                          'Nm': Nm_i, 
-                          'log10m': log10m_i,
-                          'count_Nm': count_Nm_i,
-                          'count_log10m': count_log10m_i}
+            obs_list_i = {'count': count, 
+                          'Nm': Nm, 
+                          'log10m': log10m,
+                          'count_Nm': count_Nm,
+                          'count_log10m': count_log10m}
             
             obs_torch = {k: torch.tensor(obs_list_i[k], dtype=torch.float32) for k in obs_list_i.keys()}
     
@@ -99,14 +82,13 @@ def test_posterior():
             posterior_samples_.append(posterior_samples)
     
         alphas = np.linspace(0., 1, 30)
-        num_params = 6
+        num_params = len(theta_fid)
         coverages = np.zeros((len(alphas), num_params))
         
         for i, alpha in enumerate(alphas):
             for p in range(num_params):
                 covered = 0
                 for k in range(ntest):
-                    theta_fid = sims['theta'][mask][k]
                     lower = np.percentile(
                         posterior_samples_[k][:, p],
                         (1 - alpha) / 2 * 100)
@@ -117,6 +99,7 @@ def test_posterior():
                     if theta_fid[p] >= lower and theta_fid[p] <= upper:
                         covered += 1
                 coverages[i, p] = covered / ntest
+        
         # ---- Plot ----
         p_label = [r'$\Omega_m$',r'$\sigma_8$',r'$\alpha_\lambda$',r'$\beta_\lambda$', r'$\gamma_\lambda$', '$\sigma_\lambda$' ]
         plt.figure(figsize=(3,3))
@@ -125,11 +108,10 @@ def test_posterior():
         plt.plot([0,1], [0,1], 'k--', label='Ideal')
         plt.xlabel('Nominal confidence level (alpha)')
         plt.ylabel('Empirical coverage')
-        plt.title('Coverage plot - '+key_post_)
+        plt.title('Coverage plot for all parameters')
         plt.legend()
         plt.grid(True)
-        masked = '_masked' if cfg_train['mask_empty_bins'] else ''
-        plt.savefig(f"coverage_plot_{key_post_}{masked}.png", dpi=300, bbox_inches='tight')
+        plt.savefig(f"coverage_plot_{key_post_}.png", dpi=300, bbox_inches='tight')
         
     return None
 

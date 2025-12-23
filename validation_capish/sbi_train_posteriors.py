@@ -40,7 +40,7 @@ def train_posterior(theta, x, prior, method="SNPE"):
 
     inference = SNPE(prior=prior)
 
-    batch_size = min(50, max(10, len(theta) // 10))
+    batch_size = min(65, max(10, len(theta) // 10))
     density_est = inference.append_simulations(theta, x).train(
                         training_batch_size=batch_size, learning_rate=5e-4)
 
@@ -69,6 +69,7 @@ def train():
 
     cfg_sims = config_sbi.config_dict[name]['config_simulation']
     cfg_train = config_sbi.config_dict[name]['config_train']
+    summary = cfg_train['summary_stat']
 
     seed = 2
     np.random.seed(seed)
@@ -92,23 +93,42 @@ def train():
 
     #alone
     x_count      = results['x'][0]
-    mask = np.zeros(len(x_count)) == 0
-    x_Nmass      = results['x'][0] * 10 ** results['x'][1]
-    x_count_Nmass = (x_count, x_Nmass)
+    if cfg_train['mask_empty_bins']: 
+        mask = []
+        for i in range(len(x_count)):
+            x = x_count[i]
+            x = np.sum(x == 0)
+            if x >= 1: mask.append(False)
+            else: mask.append(True)
+        mask = np.array(mask)
+    else: mask = np.zeros(len(x_count)) == 0
+        
+    x_Nm      = results['x'][0] * 10 ** results['x'][1]
+    x_count_Nm = (x_count, x_Nm)
+    x_log10count = np.log10(x_count)
+    x_log10m = results['x'][1]
+
+    x_label = ['count',
+               'Nm',
+               'count_Nm',
+               'log10m',
+               'count_log10m']
 
     x = [x_count[mask],
-         x_Nmass[mask], 
-         (x_count[mask], x_Nmass[mask])]
-    
-    x_label = ['count',
-               'Nmass',
-               'count_Nmass']
+         x_Nm[mask], 
+         (x_count[mask], x_Nm[mask]),
+         x_log10m[mask],
+         (x_count[mask], x_log10m[mask])]
 
     prior = define_prior(cfg_sims['prior_min'], cfg_sims['prior_max'])
 
     for x_, x_label_ in zip(x, x_label):
+        if x_label_ not in summary: continue
         x_flat_ = flatten_summary_stats(x_)
-        name = cfg_sims['output_dir'] +  '/' + x_label_ + f"_trained_posterior.pkl"
+        name = cfg_sims['output_dir'] +  '/' + x_label_ 
+        name += '_masked' if cfg_train['mask_empty_bins']  else ''
+        name += f"_trained_posterior.pkl"
+        print(name)
         if os.path.exists(name): continue
         posterior_ = train_posterior(results['theta'][mask], x_flat_, prior, cfg_train['method'])
         with open(name, "wb") as f:
