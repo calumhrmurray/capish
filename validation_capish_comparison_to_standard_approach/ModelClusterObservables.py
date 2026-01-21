@@ -102,11 +102,11 @@ class UniversePrediction:
         RM_count_and_mass.select(which=which_MoR)
 
         logm_grid = np.linspace( float( default_config['halo_catalogue']['log10m_min']),
-                              float( default_config['halo_catalogue']['log10m_max']), 20 )
+                              float( default_config['halo_catalogue']['log10m_max']), 100 )
 
         #redshift grid
         z_grid = np.linspace( float( default_config['halo_catalogue']['z_min'] ),
-                            float( default_config['halo_catalogue']['z_max'] ), 50 )
+                            float( default_config['halo_catalogue']['z_max'] ), 100 )
         richness_grid = np.logspace(np.log10(20), np.log10(200), 150 )
 
         Omega_m = float(default_config['parameters']['Omega_m'])

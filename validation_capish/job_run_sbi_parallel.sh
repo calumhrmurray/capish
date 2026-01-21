@@ -21,7 +21,7 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-CONFIG=DESlike6_corrected
+CONFIG=selection_bias_corrected
 CONFIG_NARROW_PRIOR=_narrow_prior_1_param
 
 # for the perfectly centered data vector
@@ -34,7 +34,7 @@ N_SIMS=60000
 N_CORES=$SLURM_CPUS_PER_TASK
 CHECKPOINT_INTERVAL=1000
 SEED=1
-CONFIG_LARGE_PRIOR=_standard_prior_6_params
+CONFIG_LARGE_PRIOR=_standard_prior_7_params
 
 CMD="python sbi_run_simulations.py"
 CMD="$CMD --config_to_simulate $CONFIG$CONFIG_LARGE_PRIOR"

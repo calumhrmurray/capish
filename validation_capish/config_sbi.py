@@ -125,6 +125,100 @@ for i in range(3):
 
 config_list = config_list + new_config_list
 
+# #######################################################################
+# #######################################################################
+# ################## selection bias (default rho=0) #####################
+########################################################################
+# #######################################################################
+# #######################################################################
+
+cfg_ini_new = clone_config(default_config_capish)
+cfg_ini_new['cluster_catalogue.mass_observable_relation']['which_relation'] = 'power_law'
+cfg_ini_new['cluster_catalogue']['gaussian_lensing_variable'] = 'log10Mwl'
+cfg_ini_new['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
+cfg_ini_new['summary_statistics']['use_stacked_sigma_Mwl_gal'] = 'False'
+cfg_ini_new['summary_statistics']['use_stacked_sigma_Mwl_int'] = 'False'
+cfg_ini_new['parameters']['sigma_Mwl_gal'] = '0.2'
+cfg_ini_new['parameters']['sigma_Mwl_int'] = '0.0'
+cfg_ini_new['parameters']['log10M_min'] = '14.5'
+cfg_ini_new['parameters']['alpha_lambda'] = '3.5'
+cfg_ini_new['parameters']['beta_lambda'] = '1.72'
+cfg_ini_new['parameters']['gamma_lambda'] = '0.0'
+
+new_config_list = []
+for i in range(3):
+    config_new = copy.deepcopy(config_list[i])
+    config_new['config_simulation']['n_replicate'] = 1
+    config_new['config_simulation']["config.ini"] = cfg_ini_new
+    config_new['config_train'] ={"method": "NPE", 
+                                 'summary_stat': ['count', 'Nm', 'count_Nm'], 
+                                  #'summary_stat': ['count'], 
+                                 'mask_empty_bins': False}
+    if i==2:
+        config_new['config_simulation']["variable_params_names"] = ['Omega_m','sigma8',
+                                                                    'alpha_lambda','beta_lambda','gamma_lambda',
+                                                                    'sigma_lambda']
+        config_new['config_simulation']["prior_min"] = [0.2, 0.6, 
+                                                        3.0, 1.3, 
+                                                        -0.7, 0.1]
+        config_new['config_simulation']["prior_max"] = [0.45, 0.95, 
+                                                        4.0, 2.1, 
+                                                        0.7, 0.5]
+        config_new['name'] = 'selection_bias_default_corrected_standard_prior_6_params'
+    else:
+        config_new["name"] = 'selection_bias_default_corrected' + config_list[i]['name'].split('baseline')[1]
+    new_config_list.append(config_new)
+
+
+config_list = config_list + new_config_list
+
+# #######################################################################
+# #######################################################################
+# #################### selection bias (rho fit) #########################
+########################################################################
+# #######################################################################
+# #######################################################################
+
+cfg_ini_new = clone_config(default_config_capish)
+cfg_ini_new['cluster_catalogue.mass_observable_relation']['which_relation'] = 'power_law'
+cfg_ini_new['cluster_catalogue']['gaussian_lensing_variable'] = 'log10Mwl'
+cfg_ini_new['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
+cfg_ini_new['summary_statistics']['use_stacked_sigma_Mwl_gal'] = 'False'
+cfg_ini_new['summary_statistics']['use_stacked_sigma_Mwl_int'] = 'False'
+cfg_ini_new['parameters']['sigma_Mwl_gal'] = '0.2'
+cfg_ini_new['parameters']['sigma_Mwl_int'] = '0.0'
+cfg_ini_new['parameters']['log10M_min'] = '14.5'
+cfg_ini_new['parameters']['alpha_lambda'] = '3.5'
+cfg_ini_new['parameters']['beta_lambda'] = '1.72'
+cfg_ini_new['parameters']['gamma_lambda'] = '0.0'
+
+new_config_list = []
+for i in range(3):
+    config_new = copy.deepcopy(config_list[i])
+    config_new['config_simulation']['n_replicate'] = 1
+    config_new['config_simulation']["config.ini"] = cfg_ini_new
+    config_new['config_train'] ={"method": "NPE", 
+                                 'summary_stat': ['count', 'Nm', 'count_Nm'], 
+                                  #'summary_stat': ['count'], 
+                                 'mask_empty_bins': False}
+    if i==2:
+        config_new['config_simulation']["variable_params_names"] = ['Omega_m','sigma8',
+                                                                    'alpha_lambda','beta_lambda','gamma_lambda',
+                                                                    'sigma_lambda','rho_0']
+        config_new['config_simulation']["prior_min"] = [0.2, 0.6, 
+                                                        3.0, 1.3, 
+                                                        -0.7, 0.1,-0.2]
+        config_new['config_simulation']["prior_max"] = [0.45, 0.95, 
+                                                        4.0, 2.1, 
+                                                        0.7, 0.5,0.2]
+        config_new['name'] = 'selection_bias_corrected_standard_prior_7_params'
+    else:
+        config_new["name"] = 'selection_bias_corrected' + config_list[i]['name'].split('baseline')[1]
+    new_config_list.append(config_new)
+
+
+config_list = config_list + new_config_list
+
 for i in range(len(config_list)):
     config_list[i]['config_simulation']['output_dir'] = config_list[i]['config_simulation']["output_dir"].format('_'+config_list[i]["name"])
     config_list[i]['config_simulation']['checkpoint_dir'] = config_list[i]['config_simulation']["checkpoint_dir"].format('_'+config_list[i]["name"])

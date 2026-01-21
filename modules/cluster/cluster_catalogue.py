@@ -27,7 +27,6 @@ class ClusterCatalogue:
         """
         self.default_config = default_config
         if self.default_config['cluster_catalogue']['theory_sigma_Mwl_gal'] == 'True':
-
             name = self.name_sigma_Mwl(self.default_config)
             recompute = self.default_config['cluster_catalogue']['recompute_theory_sigma_Mwl_gal'] == 'True'
         

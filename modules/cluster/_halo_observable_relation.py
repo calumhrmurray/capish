@@ -128,13 +128,13 @@ class HaloToObservables:
 
         if self.use_stacked_sigma_Mwl_gal=='False':
             if self.use_theory_for_sigma_Mwl_gal=='False':
-                sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
+                sigma_mWLgal = self.params_mWL_sigma[0]
             else:
                 sigma_mWLgal = self.sigma_log10Mwl_gal_interp(log10M, z) 
         else: sigma_mWLgal = 0
             
         if self.use_stacked_sigma_Mwl_int=='False':
-            sigma_mWLgal, sigma_mWLint = self.params_mWL_sigma
+            sigma_mWLint = self.params_mWL_sigma[1]
         else: sigma_mWLint = 0
 
         sigma_log10mWL = np.sqrt(sigma_mWLgal ** 2 + sigma_mWLint ** 2)

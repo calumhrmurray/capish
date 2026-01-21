@@ -17,13 +17,26 @@ default_config_capish['cluster_catalogue']['add_purity'] = 'False'
 default_config_capish['parameters']['sigma_Mwl_gal'] = '0.0'
 default_config_capish['parameters']['sigma_Mwl_int'] = '0.0'
 default_config_capish['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'False'
-default_config_capish['summary_statistics']['richness_edges'] = '20, 25, 30, 35, 40, 50, 80, 100'
-default_config_capish['summary_statistics']['redshift_edges'] = '0.2, 0.5'
+default_config_capish['cluster_catalogue']['gaussian_lensing_variable'] = 'Mwl'
+default_config_capish['summary_statistics']['richness_edges'] = '20, 26, 34, 44, 58, 76, 100'
+default_config_capish['summary_statistics']['redshift_edges'] = '0.2, 0.6'
 default_config_capish['summary_statistics']['Gamma'] = '1.0'
+default_config_capish['summary_statistics']['use_stacked_sigma_Mwl_gal'] = 'False'
+default_config_capish['summary_statistics']['use_stacked_sigma_Mwl_int'] = 'False'
 
 config_1 = {}
 config_1['ini_file'] = clone_config(default_config_capish)
 config_1['name'] = 'default_capish_Gamma_1.0_noWL_noise'
+
+config_1bisbis = {}
+config_1bisbis['ini_file'] = clone_config(default_config_capish)
+config_1bisbis['ini_file']['parameters']['sigma_lambda'] = '0.00000001'
+config_1bisbis['name'] = 'default_capish_Gamma_1.0_noWL_noise_no_sigmalambda'
+
+config_1bisbisbis = {}
+config_1bisbisbis['ini_file'] = clone_config(default_config_capish)
+config_1bisbisbis['ini_file']['parameters']['sigma_lambda'] = '0.1'
+config_1bisbisbis['name'] = 'default_capish_Gamma_1.0_noWL_noise_smaller_sigmalambda'
 
 config_1bis = {}
 config_1bis['ini_file'] = clone_config(default_config_capish)
@@ -46,7 +59,7 @@ config_2bis['name'] = 'default_capish_Gamma_0.7_WL_noise'
 config_2bisbis = {}
 config_2bisbis['ini_file'] = clone_config(default_config_capish)
 config_2bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
-config_2bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+config_2bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.0'
 config_2bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_2bisbis['ini_file']['cluster_catalogue']['theory_sigma_Mwl_gal'] = 'True'
 config_2bisbis['name'] = 'default_capish_Gamma_0.7_WL_noise_model'
@@ -59,14 +72,14 @@ config_3['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
 config_3['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'True'
 config_3['name'] = 'with_photoz'
 
-config_4 = {}
-config_4['ini_file'] = clone_config(default_config_capish)
-config_4['ini_file']['summary_statistics']['Gamma'] = '0.7'
-config_4['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
-config_4['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
-config_4['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'False'
-config_4['ini_file']['cluster_catalogue']['add_completeness'] = 'True'
-config_4['name'] = 'incomplete'
+#config_4 = {}
+#config_4['ini_file'] = clone_config(default_config_capish)
+#config_4['ini_file']['summary_statistics']['Gamma'] = '0.7'
+#config_4['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+#config_4['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+#config_4['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'False'
+#config_4['ini_file']['cluster_catalogue']['add_completeness'] = 'True'
+#config_4['name'] = 'incomplete'
 
 config_4bis = {}
 config_4bis['ini_file'] = clone_config(default_config_capish)
@@ -77,15 +90,15 @@ config_4bis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'Fals
 config_4bis['ini_file']['cluster_catalogue']['add_purity'] = 'True'
 config_4bis['name'] = 'not_pure'
 
-config_4bisbis = {}
-config_4bisbis['ini_file'] = clone_config(default_config_capish)
-config_4bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
-config_4bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
-config_4bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
-config_4bisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'False'
-config_4bisbis['ini_file']['cluster_catalogue']['add_purity'] = 'True'
-config_4bisbis['ini_file']['cluster_catalogue']['add_completeness'] = 'True'
-config_4bisbis['name'] = 'not_pure_and_incomplete'
+#config_4bisbis = {}
+#config_4bisbis['ini_file'] = clone_config(default_config_capish)
+#config_4bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
+#config_4bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+#config_4bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+#config_4bisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'False'
+#config_4bisbis['ini_file']['cluster_catalogue']['add_purity'] = 'True'
+#config_4bisbis['ini_file']['cluster_catalogue']['add_completeness'] = 'True'
+#config_4bisbis['name'] = 'not_pure_and_incomplete'
 
 config_5 = {}
 config_5['ini_file'] = clone_config(default_config_capish)
@@ -126,8 +139,8 @@ config_5bisbisbis['ini_file']['parameters']['rho_alpha'] = '2'
 config_5bisbisbis['ini_file']['parameters']['rho_log10m0'] = '13.3'
 config_5bisbisbis['name'] = 'rho_model'
 
-config = [config_1, config_1bis, config_2, config_2bis, config_2bisbis, config_3,
-           config_4,config_4bis,config_4bisbis,
+config = [config_1,config_1bisbisbis, config_1bisbis, config_1bis, config_2, config_2bis, config_2bisbis, config_3,
+           config_4bis,
            config_5,config_5bis,config_5bisbis, config_5bisbisbis]
 
 print(config_5['ini_file']['parameters']['sigma_Mwl_gal'])

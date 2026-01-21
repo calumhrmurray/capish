@@ -36,6 +36,41 @@ config_sampling1= {"name":'DESlike6_corrected_standard_prior_6_params_one_sim',
                      "data_vector_count" :count,
                      "data_vector_log10mass" : log10mass,}
 
-config_list = [config_sampling,config_sampling1]
+data = np.load('../euclid_flagship_simulations/flagship_summary_stat_DES_MoR_no_Mwl_scatter_Gamma0.7_gaussian_lensing_variable_Mwl.npy', allow_pickle=True).item()
+count =  data['count_with_m200b_def']
+log10mass = data['mean_log10m200b']
+
+
+config_sampling2= {"name":'DESlike6_corrected_standard_prior_6_params_flagship',
+                     "data_vector_infos": "flagship_sim",
+                     "config_sbi" : 'DESlike6_corrected_standard_prior_6_params',
+                     "data_vector_count" :count,
+                     "data_vector_log10mass" : log10mass,}
+
+
+#####################
+data = load_pickle('../../capish_sbi_data/config_sbi_selection_bias_default_corrected_narrow_prior_1_param/simulations.pkl')
+count =  np.mean(data['x'][0], axis=0) 
+log10mass = np.mean(data['x'][1], axis=0)
+
+config_sampling3= {"name":'selection_bias_default_corrected_standard_prior_6_params',
+                     "data_vector_infos": "flagship_like_sim",
+                     "config_sbi" : 'selection_bias_default_corrected_standard_prior_6_params',
+                     "data_vector_count" :count,
+                     "data_vector_log10mass" : log10mass,}
+
+#####################
+data = load_pickle('../../capish_sbi_data/config_sbi_selection_bias_corrected_narrow_prior_1_param/simulations.pkl')
+count =  np.mean(data['x'][0], axis=0) 
+log10mass = np.mean(data['x'][1], axis=0)
+
+config_sampling4= {"name":'selection_bias_corrected_standard_prior_7_params',
+                     "data_vector_infos": "flagship_like_sim",
+                     "config_sbi" : 'selection_bias_corrected_standard_prior_7_params',
+                     "data_vector_count" :count,
+                     "data_vector_log10mass" : log10mass,}
+
+config_list = [config_sampling, config_sampling1, config_sampling2, config_sampling3, config_sampling4]
 config_dict = {config['name']: config for config in config_list}
-#python sbi_sample_posteriors.py --config_to_sample DESlike6_corrected_standard_prior_6_params_one_sim
+#python sbi_sample_posteriors.py --config_to_sample selection_bias_default_corrected_standard_prior_6_params
+#python sbi_sample_posteriors.py --config_to_sample selection_bias_corrected_standard_prior_7_params

@@ -32,12 +32,13 @@ simulator = simulation.UniverseSimulator(
 
 def f_to_map(n):
     print(f"Starting simulation" +str(n), flush=True)
+    np.random.seed(n)
     return simulator.run_simulation([float(config_file['ini_file']['parameters']['Omega_m'])])
 
 #results = map(f_to_map, np.arange(30), ncores=10)
 results = []
-for i in range(100):
+for i in range(400):
     res = f_to_map(i)
     print(res)
     results.append(res)
-save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_standard/capish_sims_at_fiducial_cosmology/'+config_file['name']+'.pkl')
+save_pickle(results, '/pbs/throng/lsst/users/cpayerne/capish/validation_capish_comparison_to_standard_approach/capish_sims_at_fiducial_cosmology/'+config_file['name']+'.pkl')
