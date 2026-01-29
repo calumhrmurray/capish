@@ -126,6 +126,7 @@ def test_posterior():
                     accepted = []
                     while sum(len(a) for a in accepted) < num_samples:
                         s = post.sample((batch_size,), x=obs).cpu().numpy()
+                        #log_prob = post.log_prob(s, x=obs,norm_posterior=True,)
                         m = in_restricted_region(s)
                         if np.any(m):
                             accepted.append(s[m])
