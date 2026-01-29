@@ -90,6 +90,16 @@ config_4bis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'Fals
 config_4bis['ini_file']['cluster_catalogue']['add_purity'] = 'True'
 config_4bis['name'] = 'not_pure'
 
+config_4bisbis = {}
+config_4bisbis['ini_file'] = clone_config(default_config_capish)
+config_4bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
+config_4bisbis['ini_file']['parameters']['sigma_Mwl_gal'] = '0.2'
+config_4bisbis['ini_file']['parameters']['sigma_Mwl_int'] = '0.05'
+config_4bisbis['ini_file']['cluster_catalogue']['add_photometric_redshift'] = 'False'
+config_4bisbis['ini_file']['cluster_catalogue']['add_purity'] = 'True'
+config_4bisbis['ini_file']['cluster_catalogue']['params_purity'] = '2.5, 0, 2.3, 0'
+config_4bisbis['name'] = 'not_pure_worse'
+
 #config_4bisbis = {}
 #config_4bisbis['ini_file'] = clone_config(default_config_capish)
 #config_4bisbis['ini_file']['summary_statistics']['Gamma'] = '0.7'
@@ -140,7 +150,7 @@ config_5bisbisbis['ini_file']['parameters']['rho_log10m0'] = '13.3'
 config_5bisbisbis['name'] = 'rho_model'
 
 config = [config_1,config_1bisbisbis, config_1bisbis, config_1bis, config_2, config_2bis, config_2bisbis, config_3,
-           config_4bis,
+           config_4bis,config_4bisbis,
            config_5,config_5bis,config_5bisbis, config_5bisbisbis]
 
 print(config_5['ini_file']['parameters']['sigma_Mwl_gal'])
