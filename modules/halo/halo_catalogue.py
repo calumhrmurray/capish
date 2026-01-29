@@ -25,6 +25,7 @@ def binning(corner):
 MASSFUNC_MAP = {
     "Despali16": ccl.halos.hmfunc.MassFuncDespali16,
     "Tinker10": ccl.halos.hmfunc.MassFuncTinker10,
+    "Tinker08": ccl.halos.hmfunc.MassFuncTinker08,
     # add all of the possible ccl hmf...
 }
 

@@ -132,7 +132,7 @@ class ClusterCatalogue:
                 for j in range(len(z_obs_center)):
                     purity_grid[i, j] = _purity.purity(richness_center[i], z_obs_center[j], params = params_purity)
     
-            Nfake_sampled = np.random.poisson(Ntrue * (1 - purity_grid))
+            Nfake_sampled = np.random.poisson(Ntrue * (1 - purity_grid)/purity_grid)
             fake_richness, fake_z_obs = [], []
             
             for i in range(len(richness_edges) - 1):
