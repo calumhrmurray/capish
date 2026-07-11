@@ -28,6 +28,7 @@ class HaloToObservables:
         self.use_stacked_sigma_Mwl_gal = config_new['summary_statistics']['use_stacked_sigma_Mwl_gal']
         self.use_stacked_sigma_Mwl_int = config_new['summary_statistics']['use_stacked_sigma_Mwl_int']
         #if self.use_stacked_sigma_Mwl_gal == 'True'
+        self.add_poisson_noise_richness = True if config_new['cluster_catalogue']['add_poisson_noise_richness']=='True' else False
         self.use_theory_for_sigma_Mwl_gal = config_new['cluster_catalogue']['theory_sigma_Mwl_gal']
         self.add_correction_to_mean_log10Mwl = add_correction_to_mean_log10Mwl
         self.sigma_log10Mwl_gal_interp = sigma_log10Mwl_gal_interp # = None if self.use_theory_for_sigma_Mwl_gal == 'False'
@@ -146,7 +147,8 @@ class HaloToObservables:
     
         # Include extra term in observable scatter (optional)
         sigma_lnobs2 = sigma_lnobs ** 2
-        sigma_lnobs2 = sigma_lnobs2 + np.exp(-mean_lnobs)
+        if self.add_poisson_noise_richness:
+            sigma_lnobs2 = sigma_lnobs2 + np.exp(-mean_lnobs)
         sigma_lnobs = np.sqrt(sigma_lnobs2)
     
         # Draw observable from Gaussian scatter
