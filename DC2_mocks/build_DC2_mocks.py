@@ -24,6 +24,10 @@ import clmm.utils as u
 from clmm import Cosmology
 from clmm.support import mock_data as mock
 
+import sys
+
+code, seed1, seed2 = sys.argv[0], int(sys.argv[1]), int(sys.argv[2])
+
 import configparser
 
 def ccl_cosmo(config_new):
@@ -68,6 +72,8 @@ cosmo_ccl_object, cosmo_clmm_object = ccl_cosmo(default_config_capish)
 sim = UniverseSimulator(default_config_path = None , default_config = default_config_capish, 
                         variable_params_names = ['Omega_m','sigma8'])
 
+np.random.seed(seed1)
+
 log10m_halo, z_true, richness, log10mWL, z_obs = sim.run_simulation_halo_and_cluster_catalogue([0.2648, 0.8])
 
 mask_cluster_catalog = (z_obs >= 0.2)*(z_obs <= 0.8)*(richness>=20)*(richness<=200)
@@ -80,7 +86,7 @@ Wl_list = []
 #indexes = np.random.choice(np.arange(len(log10m_halo))[mask_cluster_catalog], 300, replace=False)
 indexes = np.arange(len(log10m_halo))[mask_cluster_catalog]
 for index in indexes:
-    np.random.seed(index)
+    np.random.seed(seed2+index)
     r, DS, Wl = generate_profile(log10m_halo[index], z_true[index], 3.8, cosmo_clmm_object)
     radius_list.append(r)
     DS_list.append(DS)
@@ -94,4 +100,4 @@ Summary_table['binned_weights'] = np.array(Wl_list)
 Summary_table['cluster_redshift'] = z_obs[indexes]
 Summary_table['cluster_richness'] = richness[indexes]
 
-Summary_table.write('mock_DC2like_data.fits',overwrite=True)
+Summary_table.write(f'mock_DC2like_data_seed{seed1}{seed2}.fits',overwrite=True)
